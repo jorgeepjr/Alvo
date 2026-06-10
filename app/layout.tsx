@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MetaFlow",
+  title: "Alvo",
   description: "Painel de Metas de Vendas",
 };
 

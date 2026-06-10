@@ -26,7 +26,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm border-slate-800 bg-slate-900/80 backdrop-blur">
         <CardHeader className="space-y-1 text-center">
           <div className="text-3xl font-bold text-indigo-400 mb-1">🎯</div>
-          <CardTitle className="text-2xl font-bold">MetaFlow</CardTitle>
+          <CardTitle className="text-2xl font-bold">Alvo</CardTitle>
           <p className="text-sm text-muted-foreground">Faça login para continuar</p>
         </CardHeader>
         <CardContent>

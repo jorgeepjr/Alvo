@@ -19,7 +19,7 @@ export function SidebarGestor() {
 
   return (
     <aside className="w-60 shrink-0 border-r border-slate-800 bg-slate-900 flex flex-col">
-      <div className="p-4 text-xl font-bold text-indigo-400">🎯 MetaFlow</div>
+      <div className="p-4 text-xl font-bold text-indigo-400">🎯 Alvo</div>
       <nav className="flex-1 px-2 space-y-1">
         {links.map(({ href, label, icon: Icon }) => {
           const active = pathname === href
