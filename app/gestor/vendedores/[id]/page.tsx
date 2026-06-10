@@ -15,7 +15,8 @@ export default async function VendedorDetalhePage({ params }: { params: Promise<
   const ano = hoje.getFullYear()
   const mes = hoje.getMonth() + 1
   const inicioMes = `${ano}-${String(mes).padStart(2, '0')}-01`
-  const fimMes = `${ano}-${String(mes).padStart(2, '0')}-31`
+  const ultimoDia = new Date(ano, mes, 0).getDate()
+  const fimMes = `${ano}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`
 
   const { data: lancamentos } = await supabase
     .from('lancamentos')
