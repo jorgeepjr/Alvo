@@ -2,7 +2,11 @@ import { createClient } from '@/lib/supabase/server'
 import { calcularProjecao, calcularTicketMedio } from '@/lib/calculos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { notFound } from 'next/navigation'
+import { editarVendedor } from '../actions'
 
 export default async function VendedorDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -43,9 +47,40 @@ export default async function VendedorDetalhePage({ params }: { params: Promise<
   const ticketPeca = calcularTicketMedio(valorVendido, pecas)
   const percentual = valorCota > 0 ? (valorVendido / valorCota) * 100 : 0
 
+  const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
+  const admin = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+  const { data: authData } = await admin.auth.admin.getUserById(id)
+  const email = authData?.user?.email ?? ''
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">{vendedor.nome}</h1>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader>
+          <CardTitle className="text-base">Editar Vendedor</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form action={editarVendedor.bind(null, id)} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+            <div className="space-y-1">
+              <Label htmlFor="nome">Nome</Label>
+              <Input id="nome" name="nome" defaultValue={vendedor.nome} required className="bg-slate-800 border-slate-700" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="email">E-mail</Label>
+              <Input id="email" name="email" type="email" defaultValue={email} className="bg-slate-800 border-slate-700" />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="senha">Nova senha (opcional)</Label>
+              <Input id="senha" name="senha" type="password" placeholder="deixe em branco para manter" className="bg-slate-800 border-slate-700" />
+            </div>
+            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500">Salvar</Button>
+          </form>
+        </CardContent>
+      </Card>
 
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader>
