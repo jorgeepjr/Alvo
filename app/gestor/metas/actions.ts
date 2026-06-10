@@ -1,0 +1,139 @@
+'use server'
+
+import { createClient } from '@/lib/supabase/server'
+import { distribuirCotaPorPeso, calcularSugestaoMeta } from '@/lib/calculos'
+import { revalidatePath } from 'next/cache'
+
+const PESOS_DEFAULT: Record<number, number> = {
+  0: 1.4, // domingo
+  1: 0.7, // segunda
+  2: 0.8, // terça
+  3: 0.8, // quarta
+  4: 0.9, // quinta
+  5: 1.1, // sexta
+  6: 1.4, // sábado
+}
+
+export async function salvarMetaMensal(formData: FormData): Promise<void> {
+  const ano = Number(formData.get('ano'))
+  const mes = Number(formData.get('mes'))
+  const meta_valor = Number(formData.get('meta_valor'))
+  const meta_atendimentos = Number(formData.get('meta_atendimentos'))
+  const meta_pecas = Number(formData.get('meta_pecas'))
+
+  const supabase = await createClient()
+  await supabase
+    .from('metas_mensais')
+    .upsert({ ano, mes, meta_valor, meta_atendimentos, meta_pecas }, { onConflict: 'ano,mes' })
+
+  revalidatePath('/gestor/metas')
+}
+
+function diasDoMes(ano: number, mes: number): { data: string; pesoPadrao: number }[] {
+  const dias: { data: string; pesoPadrao: number }[] = []
+  const ultimoDia = new Date(ano, mes, 0).getDate()
+  for (let dia = 1; dia <= ultimoDia; dia++) {
+    const date = new Date(ano, mes - 1, dia)
+    const data = `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+    dias.push({ data, pesoPadrao: PESOS_DEFAULT[date.getDay()] })
+  }
+  return dias
+}
+
+export async function gerarDistribuicaoAutomatica(formData: FormData): Promise<void> {
+  const ano = Number(formData.get('ano'))
+  const mes = Number(formData.get('mes'))
+
+  const supabase = await createClient()
+  const { data: meta } = await supabase
+    .from('metas_mensais')
+    .select('*')
+    .eq('ano', ano)
+    .eq('mes', mes)
+    .single()
+
+  if (!meta) return
+
+  const dias = diasDoMes(ano, mes)
+  const cotasValor = distribuirCotaPorPeso(
+    dias.map((d) => ({ data: d.data, peso: d.pesoPadrao })),
+    Number(meta.meta_valor)
+  )
+  const cotasAtendimentos = distribuirCotaPorPeso(
+    dias.map((d) => ({ data: d.data, peso: d.pesoPadrao })),
+    Number(meta.meta_atendimentos)
+  )
+  const cotasPecas = distribuirCotaPorPeso(
+    dias.map((d) => ({ data: d.data, peso: d.pesoPadrao })),
+    Number(meta.meta_pecas)
+  )
+
+  const rows = dias.map((d, i) => ({
+    vendedor_id: null,
+    data: d.data,
+    cota_valor: cotasValor[i].cota,
+    cota_atendimentos: Math.round(cotasAtendimentos[i].cota),
+    cota_pecas: Math.round(cotasPecas[i].cota),
+    situacao: 'normal' as const,
+  }))
+
+  const inicioMes = dias[0].data
+  const fimMes = dias[dias.length - 1].data
+
+  // O upsert com onConflict (vendedor_id, data) não funciona de forma
+  // confiável quando vendedor_id é NULL (NULLs são distintos no índice
+  // único do Postgres), então removemos as linhas existentes da loja
+  // (vendedor_id IS NULL) para o período antes de inserir as novas.
+  await supabase
+    .from('distribuicao_diaria')
+    .delete()
+    .is('vendedor_id', null)
+    .gte('data', inicioMes)
+    .lte('data', fimMes)
+
+  await supabase.from('distribuicao_diaria').insert(rows)
+
+  revalidatePath('/gestor/metas')
+}
+
+export async function ajustarDiaSituacao(
+  distribuicaoId: string,
+  situacao: 'normal' | 'feriado' | 'fechado'
+): Promise<void> {
+  const supabase = await createClient()
+  const update: Record<string, unknown> = { situacao }
+  if (situacao !== 'normal') {
+    update.cota_valor = 0
+    update.cota_atendimentos = 0
+    update.cota_pecas = 0
+  }
+  await supabase.from('distribuicao_diaria').update(update).eq('id', distribuicaoId)
+  revalidatePath('/gestor/metas')
+}
+
+export async function ajustarCotaDia(distribuicaoId: string, formData: FormData): Promise<void> {
+  const cota_valor = Number(formData.get('cota_valor'))
+  const cota_atendimentos = Number(formData.get('cota_atendimentos'))
+  const cota_pecas = Number(formData.get('cota_pecas'))
+
+  const supabase = await createClient()
+  await supabase
+    .from('distribuicao_diaria')
+    .update({ cota_valor, cota_atendimentos, cota_pecas })
+    .eq('id', distribuicaoId)
+
+  revalidatePath('/gestor/metas')
+}
+
+export async function buscarSugestaoMeta(ano: number, mes: number) {
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('historico_loja')
+    .select('ano, venda_total')
+    .eq('mes', mes)
+    .in('ano', [ano - 3, ano - 2, ano - 1])
+
+  const valores = (data ?? []).map((d) => Number(d.venda_total)).filter((v) => v > 0)
+  if (valores.length === 0) return null
+  return { sugestao: calcularSugestaoMeta(valores), historico: data }
+}
