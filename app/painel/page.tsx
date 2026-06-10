@@ -1,3 +1,143 @@
-export default function PainelVendedor() {
-  return <h1 className="text-2xl font-bold">Meu Painel</h1>
+import { createClient } from '@/lib/supabase/server'
+import { calcularProjecao, calcularTicketMedio } from '@/lib/calculos'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { ProgressBar } from '@/components/progress-bar'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+
+function inicioFimSemana(data: Date): { inicio: string; fim: string } {
+  const dia = data.getDay()
+  const inicio = new Date(data)
+  inicio.setDate(data.getDate() - dia)
+  const fim = new Date(inicio)
+  fim.setDate(inicio.getDate() + 6)
+  const fmt = (d: Date) => d.toISOString().slice(0, 10)
+  return { inicio: fmt(inicio), fim: fmt(fim) }
+}
+
+export default async function PainelVendedor() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', user!.id).single()
+
+  const hoje = new Date()
+  const hojeStr = hoje.toISOString().slice(0, 10)
+  const ano = hoje.getFullYear()
+  const mes = hoje.getMonth() + 1
+  const inicioMes = `${ano}-${String(mes).padStart(2, '0')}-01`
+  const ultimoDia = new Date(ano, mes, 0).getDate()
+  const fimMes = `${ano}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`
+  const { inicio: inicioSemana, fim: fimSemana } = inicioFimSemana(hoje)
+
+  const { data: lancHoje } = await supabase.from('lancamentos').select('*').eq('vendedor_id', user!.id).eq('data', hojeStr).maybeSingle()
+  const { data: cotaHoje } = await supabase.from('distribuicao_diaria').select('*').eq('vendedor_id', user!.id).eq('data', hojeStr).maybeSingle()
+
+  const { data: lancSemana } = await supabase.from('lancamentos').select('*').eq('vendedor_id', user!.id).gte('data', inicioSemana).lte('data', fimSemana)
+  const { data: cotaSemana } = await supabase.from('distribuicao_diaria').select('*').eq('vendedor_id', user!.id).gte('data', inicioSemana).lte('data', fimSemana)
+
+  const { data: lancMes } = await supabase.from('lancamentos').select('*').eq('vendedor_id', user!.id).gte('data', inicioMes).lte('data', fimMes).order('data')
+  const { data: cotaMes } = await supabase.from('distribuicao_diaria').select('*').eq('vendedor_id', user!.id).gte('data', inicioMes).lte('data', fimMes)
+
+  const valorHoje = Number(lancHoje?.valor ?? 0)
+  const cotaValorHoje = Number(cotaHoje?.cota_valor ?? 0)
+  const faltaHoje = cotaValorHoje - valorHoje
+
+  const valorSemana = lancSemana?.reduce((acc, l) => acc + Number(l.valor), 0) ?? 0
+  const cotaValorSemana = cotaSemana?.reduce((acc, d) => acc + Number(d.cota_valor), 0) ?? 0
+
+  const valorMes = lancMes?.reduce((acc, l) => acc + Number(l.valor), 0) ?? 0
+  const cotaValorMes = cotaMes?.reduce((acc, d) => acc + Number(d.cota_valor), 0) ?? 0
+  const diasTrabalhados = lancMes?.filter((l) => l.situacao_vendedor === 'normal').length ?? 0
+  const totalDiasUteis = cotaMes?.filter((d) => d.situacao === 'normal').length ?? 0
+  const projecaoMes = calcularProjecao(valorMes, diasTrabalhados, totalDiasUteis)
+
+  const atendimentosHoje = lancHoje?.atendimentos ?? 0
+  const pecasHoje = lancHoje?.pecas ?? 0
+  const ticketCliente = calcularTicketMedio(valorHoje, atendimentosHoje)
+  const ticketPeca = calcularTicketMedio(valorHoje, pecasHoje)
+  const esforco = atendimentosHoje > 0 ? pecasHoje / atendimentosHoje : 0
+
+  const { data: historico30 } = await supabase
+    .from('lancamentos')
+    .select('*')
+    .eq('vendedor_id', user!.id)
+    .order('data', { ascending: false })
+    .limit(30)
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold">Olá, {profile?.nome}</h1>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader><CardTitle className="text-base">Progresso de Hoje</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <ProgressBar label="Valor" atual={valorHoje} meta={cotaValorHoje} formatar={(v) => `R$ ${v.toFixed(2)}`} />
+          <ProgressBar label="Atendimentos" atual={atendimentosHoje} meta={cotaHoje?.cota_atendimentos ?? 0} />
+          <ProgressBar label="Peças" atual={pecasHoje} meta={cotaHoje?.cota_pecas ?? 0} />
+          {faltaHoje > 0 ? (
+            <p className="text-sm text-yellow-400">Falta R$ {faltaHoje.toFixed(2)} para bater a meta de hoje.</p>
+          ) : (
+            <p className="text-sm text-green-400">Você bateu a meta de hoje! 🎯</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="border-slate-800 bg-slate-900">
+          <CardHeader><CardTitle className="text-sm text-slate-400">Ticket Médio / Cliente</CardTitle></CardHeader>
+          <CardContent className="text-xl font-bold">R$ {ticketCliente.toFixed(2)}</CardContent>
+        </Card>
+        <Card className="border-slate-800 bg-slate-900">
+          <CardHeader><CardTitle className="text-sm text-slate-400">Ticket Médio / Peça</CardTitle></CardHeader>
+          <CardContent className="text-xl font-bold">R$ {ticketPeca.toFixed(2)}</CardContent>
+        </Card>
+        <Card className="border-slate-800 bg-slate-900">
+          <CardHeader><CardTitle className="text-sm text-slate-400">Esforço Diário (peças/atend.)</CardTitle></CardHeader>
+          <CardContent className="text-xl font-bold">{esforco.toFixed(2)}</CardContent>
+        </Card>
+      </div>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader><CardTitle className="text-base">Progresso da Semana</CardTitle></CardHeader>
+        <CardContent>
+          <ProgressBar label="Valor" atual={valorSemana} meta={cotaValorSemana} formatar={(v) => `R$ ${v.toFixed(2)}`} />
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader><CardTitle className="text-base">Progresso do Mês</CardTitle></CardHeader>
+        <CardContent className="space-y-2">
+          <ProgressBar label="Valor" atual={valorMes} meta={cotaValorMes} formatar={(v) => `R$ ${v.toFixed(2)}`} />
+          <p className="text-sm text-slate-400">
+            Projeção: R$ {projecaoMes.toFixed(2)} ({cotaValorMes > 0 ? ((projecaoMes / cotaValorMes) * 100).toFixed(1) : '0'}% da meta)
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader><CardTitle className="text-base">Histórico Pessoal (últimos 30 dias)</CardTitle></CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Data</TableHead>
+                <TableHead>Atend.</TableHead>
+                <TableHead>Peças</TableHead>
+                <TableHead>Valor</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {historico30?.map((l) => (
+                <TableRow key={l.id}>
+                  <TableCell>{l.data.split('-').reverse().join('/')}</TableCell>
+                  <TableCell>{l.atendimentos}</TableCell>
+                  <TableCell>{l.pecas}</TableCell>
+                  <TableCell>R$ {Number(l.valor).toFixed(2)}</TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+    </div>
+  )
 }
