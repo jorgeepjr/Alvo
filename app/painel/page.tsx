@@ -66,11 +66,27 @@ export default async function PainelVendedor() {
     .order('criado_em')
 
   const diaSemanaHoje = hoje.getDay()
-  const { data: rotinaHoje } = await supabase
+  const { data: rotinaHojeTodos } = await supabase
     .from('rotina_modelo')
     .select('*')
     .eq('dia_semana', diaSemanaHoje)
     .order('ordem')
+
+  // Define em qual "metade" da rotina este vendedor está (0 ou 1), com base
+  // na posição dele entre os vendedores ativos, para dividir as tarefas dos blocos.
+  const { data: vendedoresAtivos } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('perfil', 'vendedor')
+    .eq('ativo', true)
+    .order('nome')
+
+  const meuIndice = (vendedoresAtivos ?? []).findIndex((v) => v.id === user!.id)
+  const minhaMetade = meuIndice >= 0 ? meuIndice % 2 : 0
+
+  const rotinaHoje = (rotinaHojeTodos ?? []).filter(
+    (item) => item.atribuido_a === null || item.atribuido_a === minhaMetade
+  )
 
   const { data: rotinaConcluidaHoje } = await supabase
     .from('rotina_concluida')

@@ -70,6 +70,7 @@ export interface RotinaModelo {
   bloco: string
   descricao: string
   ordem: number
+  atribuido_a: number | null
 }
 
 export interface RotinaConcluida {
