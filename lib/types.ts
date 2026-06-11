@@ -63,6 +63,23 @@ export interface Tarefa {
   criado_em: string
 }
 
+export interface RotinaModelo {
+  id: string
+  dia_semana: number
+  horario: string
+  bloco: string
+  descricao: string
+  ordem: number
+}
+
+export interface RotinaConcluida {
+  id: string
+  vendedor_id: string
+  data: string
+  item_id: string
+  concluida_em: string
+}
+
 export interface HistoricoLoja {
   id: string
   ano: number

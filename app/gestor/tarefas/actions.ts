@@ -39,3 +39,17 @@ export async function alternarConclusaoTarefa(tarefaId: string, concluida: boole
   revalidatePath('/gestor/tarefas')
   revalidatePath('/painel')
 }
+
+export async function alternarItemRotina(itemId: string, data: string, concluido: boolean): Promise<void> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return
+
+  if (concluido) {
+    await supabase.from('rotina_concluida').insert({ vendedor_id: user.id, data, item_id: itemId })
+  } else {
+    await supabase.from('rotina_concluida').delete().eq('vendedor_id', user.id).eq('data', data).eq('item_id', itemId)
+  }
+
+  revalidatePath('/painel')
+}

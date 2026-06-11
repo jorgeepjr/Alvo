@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProgressBar } from '@/components/progress-bar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { alternarConclusaoTarefa } from '@/app/gestor/tarefas/actions'
+import { alternarConclusaoTarefa, alternarItemRotina } from '@/app/gestor/tarefas/actions'
 
 function inicioFimSemana(data: Date): { inicio: string; fim: string } {
   const dia = data.getDay()
@@ -65,6 +65,34 @@ export default async function PainelVendedor() {
     .or(`vendedor_id.eq.${user!.id},vendedor_id.is.null`)
     .order('criado_em')
 
+  const diaSemanaHoje = hoje.getDay()
+  const { data: rotinaHoje } = await supabase
+    .from('rotina_modelo')
+    .select('*')
+    .eq('dia_semana', diaSemanaHoje)
+    .order('ordem')
+
+  const { data: rotinaConcluidaHoje } = await supabase
+    .from('rotina_concluida')
+    .select('item_id')
+    .eq('vendedor_id', user!.id)
+    .eq('data', hojeStr)
+
+  const concluidosSet = new Set(rotinaConcluidaHoje?.map((r) => r.item_id) ?? [])
+
+  const blocosRotina: { horario: string; bloco: string; itens: { id: string; descricao: string; concluido: boolean }[] }[] = []
+  for (const item of rotinaHoje ?? []) {
+    let grupo = blocosRotina.find((b) => b.horario === item.horario && b.bloco === item.bloco)
+    if (!grupo) {
+      grupo = { horario: item.horario, bloco: item.bloco, itens: [] }
+      blocosRotina.push(grupo)
+    }
+    grupo.itens.push({ id: item.id, descricao: item.descricao, concluido: concluidosSet.has(item.id) })
+  }
+
+  const totalItensRotina = rotinaHoje?.length ?? 0
+  const totalConcluidosRotina = concluidosSet.size
+
   const { data: historico30 } = await supabase
     .from('lancamentos')
     .select('*')
@@ -75,6 +103,37 @@ export default async function PainelVendedor() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Olá, {profile?.nome}</h1>
+
+      {blocosRotina.length > 0 && (
+        <Card className="border-slate-800 bg-slate-900">
+          <CardHeader>
+            <CardTitle className="text-base">
+              Rotina do Dia ({totalConcluidosRotina}/{totalItensRotina})
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {blocosRotina.map((grupo) => (
+              <div key={`${grupo.horario}-${grupo.bloco}`}>
+                <p className="text-sm font-semibold text-indigo-400 mb-1">
+                  {grupo.horario} — {grupo.bloco}
+                </p>
+                <div className="space-y-1 pl-2">
+                  {grupo.itens.map((item) => (
+                    <div key={item.id} className="flex items-center justify-between gap-2 text-sm">
+                      <span className={item.concluido ? 'line-through text-slate-500' : ''}>{item.descricao}</span>
+                      <form action={alternarItemRotina.bind(null, item.id, hojeStr, !item.concluido)}>
+                        <Button type="submit" size="sm" variant="outline">
+                          {item.concluido ? '↺' : '✓'}
+                        </Button>
+                      </form>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {tarefasHoje && tarefasHoje.length > 0 && (
         <Card className="border-slate-800 bg-slate-900">
