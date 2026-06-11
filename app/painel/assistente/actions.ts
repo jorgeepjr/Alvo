@@ -42,6 +42,13 @@ export async function enviarMensagemAssistente(
       .map((b) => b.text)
       .join('\n')
 
+    const ultimaPergunta = historico[historico.length - 1]?.content ?? ''
+    await supabase.from('assistente_mensagens').insert({
+      vendedor_id: user.id,
+      pergunta: ultimaPergunta,
+      resposta: texto,
+    })
+
     return { resposta: texto }
   } catch (err) {
     console.error('Erro no assistente IA:', err)

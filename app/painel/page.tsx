@@ -5,6 +5,7 @@ import { ProgressBar } from '@/components/progress-bar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { alternarConclusaoTarefa, alternarItemRotina } from '@/app/gestor/tarefas/actions'
+import { fraseDoDia } from '@/lib/frases-motivacionais'
 
 function inicioFimSemana(data: Date): { inicio: string; fim: string } {
   const dia = data.getDay()
@@ -130,6 +131,12 @@ export default async function PainelVendedor() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Olá, {profile?.nome}</h1>
+
+      <Card className="border-indigo-800 bg-indigo-950/40">
+        <CardContent className="py-4">
+          <p className="text-sm text-indigo-200 italic">💡 {fraseDoDia(hoje)}</p>
+        </CardContent>
+      </Card>
 
       {blocosRotina.length > 0 && (
         <Card className="border-slate-800 bg-slate-900">
