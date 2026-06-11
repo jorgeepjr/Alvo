@@ -123,15 +123,6 @@ export async function ajustarCotaDia(
 
   const supabase = await createClient()
 
-  // Atualiza o dia editado
-  await supabase
-    .from('distribuicao_diaria')
-    .update({ cota_valor, cota_atendimentos, cota_pecas })
-    .eq('id', distribuicaoId)
-
-  // Recalcula os demais dias para que a soma do mês continue batendo
-  // com a Meta Valor (Passo 1), redistribuindo proporcionalmente entre
-  // os outros dias "normais" do mês.
   const { data: meta } = await supabase
     .from('metas_mensais')
     .select('meta_valor')
@@ -139,6 +130,24 @@ export async function ajustarCotaDia(
     .eq('mes', mes)
     .single()
 
+  // Se o valor digitado sozinho já ultrapassa (ou consome todo) o valor
+  // da Meta Mensal, limita o dia editado à própria meta para a soma do
+  // mês nunca passar da Meta Valor.
+  let cotaValorFinal = cota_valor
+  if (meta && cotaValorFinal > Number(meta.meta_valor)) {
+    cotaValorFinal = Number(meta.meta_valor)
+  }
+
+  // Atualiza o dia editado
+  await supabase
+    .from('distribuicao_diaria')
+    .update({ cota_valor: cotaValorFinal, cota_atendimentos, cota_pecas })
+    .eq('id', distribuicaoId)
+
+  // Recalcula os demais dias para que a soma do mês continue batendo
+  // com a Meta Valor (Passo 1), redistribuindo proporcionalmente entre
+  // os dias seguintes "normais" do mês (e, se não houver dias seguintes,
+  // entre os demais dias normais do mês).
   if (meta) {
     const dias = diasDoMes(ano, mes)
     const inicioMes = dias[0].data
@@ -151,16 +160,25 @@ export async function ajustarCotaDia(
       .gte('data', inicioMes)
       .lte('data', fimMes)
 
-    const outros = (todos ?? []).filter((d) => d.id !== distribuicaoId && d.situacao === 'normal')
-    const restante = Number(meta.meta_valor) - cota_valor
+    const diaEditado = (todos ?? []).find((d) => d.id === distribuicaoId)
+    const restante = Number(meta.meta_valor) - cotaValorFinal
+
+    let outros = (todos ?? []).filter(
+      (d) => d.id !== distribuicaoId && d.situacao === 'normal' && diaEditado && d.data > diaEditado.data
+    )
+    if (outros.length === 0) {
+      outros = (todos ?? []).filter((d) => d.id !== distribuicaoId && d.situacao === 'normal')
+    }
+
     const somaOutrosAtual = outros.reduce((acc, d) => acc + Number(d.cota_valor), 0)
 
-    if (outros.length > 0 && restante >= 0) {
+    if (outros.length > 0) {
+      const restanteAjustado = Math.max(restante, 0)
       for (const d of outros) {
         const novaCota =
           somaOutrosAtual > 0
-            ? (Number(d.cota_valor) / somaOutrosAtual) * restante
-            : restante / outros.length
+            ? (Number(d.cota_valor) / somaOutrosAtual) * restanteAjustado
+            : restanteAjustado / outros.length
         await supabase
           .from('distribuicao_diaria')
           .update({ cota_valor: novaCota })
