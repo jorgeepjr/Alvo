@@ -111,16 +111,63 @@ export async function ajustarDiaSituacao(
   revalidatePath('/gestor/metas')
 }
 
-export async function ajustarCotaDia(distribuicaoId: string, formData: FormData): Promise<void> {
+export async function ajustarCotaDia(
+  distribuicaoId: string,
+  ano: number,
+  mes: number,
+  formData: FormData
+): Promise<void> {
   const cota_valor = Number(formData.get('cota_valor'))
   const cota_atendimentos = Number(formData.get('cota_atendimentos'))
   const cota_pecas = Number(formData.get('cota_pecas'))
 
   const supabase = await createClient()
+
+  // Atualiza o dia editado
   await supabase
     .from('distribuicao_diaria')
     .update({ cota_valor, cota_atendimentos, cota_pecas })
     .eq('id', distribuicaoId)
+
+  // Recalcula os demais dias para que a soma do mês continue batendo
+  // com a Meta Valor (Passo 1), redistribuindo proporcionalmente entre
+  // os outros dias "normais" do mês.
+  const { data: meta } = await supabase
+    .from('metas_mensais')
+    .select('meta_valor')
+    .eq('ano', ano)
+    .eq('mes', mes)
+    .single()
+
+  if (meta) {
+    const dias = diasDoMes(ano, mes)
+    const inicioMes = dias[0].data
+    const fimMes = dias[dias.length - 1].data
+
+    const { data: todos } = await supabase
+      .from('distribuicao_diaria')
+      .select('*')
+      .is('vendedor_id', null)
+      .gte('data', inicioMes)
+      .lte('data', fimMes)
+
+    const outros = (todos ?? []).filter((d) => d.id !== distribuicaoId && d.situacao === 'normal')
+    const restante = Number(meta.meta_valor) - cota_valor
+    const somaOutrosAtual = outros.reduce((acc, d) => acc + Number(d.cota_valor), 0)
+
+    if (outros.length > 0 && restante >= 0) {
+      for (const d of outros) {
+        const novaCota =
+          somaOutrosAtual > 0
+            ? (Number(d.cota_valor) / somaOutrosAtual) * restante
+            : restante / outros.length
+        await supabase
+          .from('distribuicao_diaria')
+          .update({ cota_valor: novaCota })
+          .eq('id', d.id)
+      }
+    }
+  }
 
   revalidatePath('/gestor/metas')
 }

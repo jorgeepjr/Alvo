@@ -144,7 +144,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                   <TableRow key={d.id}>
                     <TableCell>{d.data.split('-').reverse().join('/')}</TableCell>
                     <TableCell>
-                      <form action={ajustarCotaDia.bind(null, d.id)} className="flex gap-1">
+                      <form action={ajustarCotaDia.bind(null, d.id, ano, mes)} className="flex gap-1">
                         <Input name="cota_valor" type="number" step="1" defaultValue={Math.round(Number(d.cota_valor))} className="bg-slate-800 border-slate-700 w-24 h-8" />
                         <Input name="cota_atendimentos" type="number" defaultValue={d.cota_atendimentos} className="hidden" />
                         <Input name="cota_pecas" type="number" defaultValue={d.cota_pecas} className="hidden" />
