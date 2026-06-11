@@ -18,6 +18,15 @@ export default async function LancamentoVendedorPage({ searchParams }: { searchP
     .eq('vendedor_id', user!.id)
     .maybeSingle()
 
+  const { data: distribuicaoDia } = await supabase
+    .from('distribuicao_diaria')
+    .select('situacao')
+    .eq('data', data)
+    .is('vendedor_id', null)
+    .maybeSingle()
+
+  const diaBloqueado = distribuicaoDia?.situacao === 'feriado' || distribuicaoDia?.situacao === 'fechado'
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Lançar Vendas do Dia</h1>
@@ -33,7 +42,12 @@ export default async function LancamentoVendedorPage({ searchParams }: { searchP
       {existente?.dia_fechado && (
         <p className="text-sm text-red-400">O gestor fechou este dia. Os lançamentos estão bloqueados para edição.</p>
       )}
-      {existente && !existente.dia_fechado && (
+      {!existente?.dia_fechado && diaBloqueado && (
+        <p className="text-sm text-red-400">
+          {distribuicaoDia?.situacao === 'feriado' ? 'Este dia está marcado como feriado.' : 'A loja está fechada neste dia.'} Não é necessário lançar vendas.
+        </p>
+      )}
+      {existente && !existente.dia_fechado && !diaBloqueado && (
         <p className="text-sm text-yellow-400">Já existe um lançamento para esta data. Salvar irá atualizá-lo.</p>
       )}
 
@@ -42,7 +56,7 @@ export default async function LancamentoVendedorPage({ searchParams }: { searchP
           <CardTitle className="text-base">{data.split('-').reverse().join('/')}</CardTitle>
         </CardHeader>
         <CardContent>
-          <LancamentoForm data={data} existente={existente ?? null} />
+          <LancamentoForm data={data} existente={existente ?? null} bloqueado={diaBloqueado && !existente?.dia_fechado} />
         </CardContent>
       </Card>
     </div>

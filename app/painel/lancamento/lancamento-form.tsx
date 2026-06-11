@@ -15,9 +15,9 @@ type Lancamento = {
   dia_fechado: boolean
 } | null
 
-export function LancamentoForm({ data, existente }: { data: string; existente: Lancamento }) {
+export function LancamentoForm({ data, existente, bloqueado }: { data: string; existente: Lancamento; bloqueado?: boolean }) {
   const [state, formAction] = useActionState(salvarLancamentoVendedor, null)
-  const fechado = existente?.dia_fechado ?? false
+  const fechado = (existente?.dia_fechado ?? false) || (bloqueado ?? false)
 
   return (
     <form action={formAction} className="grid grid-cols-1 sm:grid-cols-2 gap-3">

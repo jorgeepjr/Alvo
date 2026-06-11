@@ -100,6 +100,17 @@ export default async function PainelVendedor() {
     .order('data', { ascending: false })
     .limit(30)
 
+  const data30diasAtras = new Date(hoje)
+  data30diasAtras.setDate(hoje.getDate() - 30)
+  const { data: situacoes30 } = await supabase
+    .from('distribuicao_diaria')
+    .select('data, situacao')
+    .is('vendedor_id', null)
+    .gte('data', data30diasAtras.toISOString().slice(0, 10))
+    .lte('data', hojeStr)
+
+  const situacaoMap = new Map(situacoes30?.map((s) => [s.data, s.situacao]) ?? [])
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Olá, {profile?.nome}</h1>
@@ -209,17 +220,36 @@ export default async function PainelVendedor() {
                 <TableHead>Atend.</TableHead>
                 <TableHead>Peças</TableHead>
                 <TableHead>Valor</TableHead>
+                <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {historico30?.map((l) => (
-                <TableRow key={l.id}>
-                  <TableCell>{l.data.split('-').reverse().join('/')}</TableCell>
-                  <TableCell>{l.atendimentos}</TableCell>
-                  <TableCell>{l.pecas}</TableCell>
-                  <TableCell>R$ {Number(l.valor).toFixed(2)}</TableCell>
-                </TableRow>
-              ))}
+              {historico30?.map((l) => {
+                const situacaoDia = situacaoMap.get(l.data)
+                const status =
+                  situacaoDia === 'feriado' ? 'Feriado' : situacaoDia === 'fechado' ? 'Fechado' : '—'
+                return (
+                  <TableRow key={l.id}>
+                    <TableCell>{l.data.split('-').reverse().join('/')}</TableCell>
+                    <TableCell>{l.atendimentos}</TableCell>
+                    <TableCell>{l.pecas}</TableCell>
+                    <TableCell>R$ {Number(l.valor).toFixed(2)}</TableCell>
+                    <TableCell>{status}</TableCell>
+                  </TableRow>
+                )
+              })}
+              {Array.from(situacaoMap.entries())
+                .filter(([dia, sit]) => (sit === 'feriado' || sit === 'fechado') && !historico30?.some((l) => l.data === dia))
+                .sort(([a], [b]) => (a < b ? 1 : -1))
+                .map(([dia, sit]) => (
+                  <TableRow key={dia}>
+                    <TableCell>{dia.split('-').reverse().join('/')}</TableCell>
+                    <TableCell>—</TableCell>
+                    <TableCell>—</TableCell>
+                    <TableCell>—</TableCell>
+                    <TableCell>{sit === 'feriado' ? 'Feriado' : 'Fechado'}</TableCell>
+                  </TableRow>
+                ))}
             </TableBody>
           </Table>
         </CardContent>

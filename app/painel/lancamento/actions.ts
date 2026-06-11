@@ -29,6 +29,17 @@ export async function salvarLancamentoVendedor(
     return { error: 'O gestor fechou este dia. Não é possível editar.' }
   }
 
+  const { data: distribuicaoDia } = await supabase
+    .from('distribuicao_diaria')
+    .select('situacao')
+    .eq('data', data)
+    .is('vendedor_id', null)
+    .maybeSingle()
+
+  if (distribuicaoDia?.situacao === 'feriado' || distribuicaoDia?.situacao === 'fechado') {
+    return { error: 'Este dia está marcado como feriado/fechado. Não é possível lançar vendas.' }
+  }
+
   if (existente) {
     await supabase
       .from('lancamentos')
