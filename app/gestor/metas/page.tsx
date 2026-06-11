@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { salvarMetaMensal, gerarDistribuicaoAutomatica, ajustarDiaSituacao, ajustarCotaDia, buscarSugestaoMeta, salvarPercentuaisVendedores, gerarDistribuicaoVendedores } from './actions'
+import { salvarMetaMensal, gerarDistribuicaoAutomatica, ajustarDiaSituacao, ajustarCotaDia, buscarSugestaoMeta, salvarPercentuaisVendedores, gerarDistribuicaoVendedores, aplicarSugestaoTendencia } from './actions'
 import { formatBRL } from '@/lib/calculos'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -89,9 +89,31 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
               <div>
                 <p className="text-slate-400">Tendência (evolução vs. ano anterior)</p>
                 <p className="text-lg font-bold">R$ {formatBRL(sugestao.sugestao.tendencia)}</p>
+                {sugestao.sugestao.tendenciaAtendimentos !== null && (
+                  <p className="text-xs text-slate-400 mt-1">
+                    Atendimentos: {Math.round(sugestao.sugestao.tendenciaAtendimentos)}
+                  </p>
+                )}
+                {sugestao.sugestao.tendenciaPecas !== null && (
+                  <p className="text-xs text-slate-400">
+                    Peças: {Math.round(sugestao.sugestao.tendenciaPecas)}
+                  </p>
+                )}
               </div>
             )}
           </CardContent>
+          {sugestao.sugestao.tendencia !== null && (
+            <CardContent className="pt-0">
+              <form action={aplicarSugestaoTendencia}>
+                <input type="hidden" name="ano" value={ano} />
+                <input type="hidden" name="mes" value={mes} />
+                <input type="hidden" name="tendencia_valor" value={sugestao.sugestao.tendencia} />
+                <input type="hidden" name="tendencia_atendimentos" value={sugestao.sugestao.tendenciaAtendimentos ?? 0} />
+                <input type="hidden" name="tendencia_pecas" value={sugestao.sugestao.tendenciaPecas ?? 0} />
+                <Button type="submit" variant="outline">Usar Projeção de Tendência (valor + atendimentos + peças)</Button>
+              </form>
+            </CardContent>
+          )}
         </Card>
       )}
 

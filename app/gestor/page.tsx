@@ -66,7 +66,12 @@ export default async function GestorDashboard() {
     })
   )
 
-  const alertasMeta = ranking.filter((r) => r.percentual < 50 && hoje.getDate() > 14)
+  // Ritmo esperado até hoje = % de dias úteis já decorridos no mês.
+  const diasUteisTotais = distribuicaoMes?.filter((d) => d.situacao === 'normal').length ?? 0
+  const diasUteisDecorridos = distribuicaoMes?.filter((d) => d.situacao === 'normal' && d.data <= hojeStr).length ?? 0
+  const ritmoEsperado = diasUteisTotais > 0 ? (diasUteisDecorridos / diasUteisTotais) * 100 : 0
+
+  const alertasMeta = ranking.filter((r) => ritmoEsperado > 0 && r.percentual < ritmoEsperado * 0.8)
 
   return (
     <div className="space-y-6">
@@ -125,7 +130,9 @@ export default async function GestorDashboard() {
           <CardHeader><CardTitle className="text-base text-red-400">Alertas</CardTitle></CardHeader>
           <CardContent className="space-y-1 text-sm">
             {alertasMeta.map((r) => (
-              <p key={r.id}>⚠️ {r.nome} está abaixo de 50% da meta no meio do mês.</p>
+              <p key={r.id}>
+                ⚠️ {r.nome} está em {r.percentual.toFixed(0)}% da meta, abaixo do ritmo esperado para o dia ({ritmoEsperado.toFixed(0)}%).
+              </p>
             ))}
             {ranking.filter((r) => r.alertaTicket).map((r) => (
               <p key={`ticket-${r.id}`}>⚠️ Ticket médio de {r.nome} caiu mais de 20% em relação à média histórica.</p>

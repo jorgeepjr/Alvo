@@ -275,15 +275,40 @@ export async function buscarSugestaoMeta(ano: number, mes: number) {
   // anterior corrigido por essa tendência.
   const { data: historicoCompleto } = await supabase
     .from('historico_loja')
-    .select('ano, mes, venda_total')
+    .select('ano, mes, venda_total, atendimentos, pecas')
 
-  const tendencia = historicoCompleto
-    ? calcularSugestaoTendencia(
-        historicoCompleto.map((h) => ({ ano: h.ano, mes: h.mes, venda_total: Number(h.venda_total) })),
-        ano,
-        mes
-      )
-    : null
+  const hist = historicoCompleto?.map((h) => ({
+    ano: h.ano,
+    mes: h.mes,
+    venda_total: Number(h.venda_total),
+    atendimentos: Number(h.atendimentos),
+    pecas: Number(h.pecas),
+  }))
 
-  return { sugestao: calcularSugestaoMeta(valores, tendencia), historico: data }
+  const tendencia = hist ? calcularSugestaoTendencia(hist, ano, mes, 'venda_total') : null
+  const tendenciaAtendimentos = hist ? calcularSugestaoTendencia(hist, ano, mes, 'atendimentos') : null
+  const tendenciaPecas = hist ? calcularSugestaoTendencia(hist, ano, mes, 'pecas') : null
+
+  return {
+    sugestao: calcularSugestaoMeta(valores, tendencia, tendenciaAtendimentos, tendenciaPecas),
+    historico: data,
+  }
+}
+
+export async function aplicarSugestaoTendencia(formData: FormData): Promise<void> {
+  const ano = Number(formData.get('ano'))
+  const mes = Number(formData.get('mes'))
+  const meta_valor = Number(formData.get('tendencia_valor'))
+  const meta_atendimentos = Number(formData.get('tendencia_atendimentos'))
+  const meta_pecas = Number(formData.get('tendencia_pecas'))
+
+  const supabase = await createClient()
+  await supabase
+    .from('metas_mensais')
+    .upsert(
+      { ano, mes, meta_valor, meta_atendimentos: Math.round(meta_atendimentos), meta_pecas: Math.round(meta_pecas) },
+      { onConflict: 'ano,mes' }
+    )
+
+  revalidatePath('/gestor/metas')
 }

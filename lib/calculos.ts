@@ -57,24 +57,32 @@ interface SugestaoMeta {
   moderada: number
   agressiva: number
   tendencia: number | null
+  tendenciaAtendimentos: number | null
+  tendenciaPecas: number | null
 }
 
 interface HistoricoMes {
   ano: number
   mes: number
   venda_total: number
+  atendimentos?: number
+  pecas?: number
 }
 
 /**
  * Calcula a taxa de crescimento média ano-a-ano (ex: 1.10 = +10%) com base
- * no histórico completo de vendas, comparando cada mês com o mesmo mês do
- * ano anterior (estilo "evolução vs. ano anterior" usado por grandes redes).
+ * no histórico, comparando cada mês com o mesmo mês do ano anterior
+ * (estilo "evolução vs. ano anterior" usado por grandes redes).
+ * `campo` define qual métrica do histórico é usada (vendas, atendimentos, peças).
  */
-export function calcularCrescimentoMedioAnual(historico: HistoricoMes[]): number {
+export function calcularCrescimentoMedioAnual(
+  historico: HistoricoMes[],
+  campo: 'venda_total' | 'atendimentos' | 'pecas' = 'venda_total'
+): number {
   const porMes = new Map<number, { ano: number; valor: number }[]>()
   for (const h of historico) {
     if (!porMes.has(h.mes)) porMes.set(h.mes, [])
-    porMes.get(h.mes)!.push({ ano: h.ano, valor: Number(h.venda_total) })
+    porMes.get(h.mes)!.push({ ano: h.ano, valor: Number(h[campo] ?? 0) })
   }
 
   const taxas: number[] = []
@@ -92,15 +100,22 @@ export function calcularCrescimentoMedioAnual(historico: HistoricoMes[]): number
 }
 
 /**
- * Sugestão de meta por tendência: pega o valor do mesmo mês no ano
- * anterior e aplica a taxa de crescimento média histórica da loja.
+ * Sugestão por tendência: pega o valor do mesmo mês no ano anterior e
+ * aplica a taxa de crescimento média histórica da loja para essa métrica.
  * Retorna null se não houver dado do mesmo mês no ano anterior.
  */
-export function calcularSugestaoTendencia(historico: HistoricoMes[], ano: number, mes: number): number | null {
+export function calcularSugestaoTendencia(
+  historico: HistoricoMes[],
+  ano: number,
+  mes: number,
+  campo: 'venda_total' | 'atendimentos' | 'pecas' = 'venda_total'
+): number | null {
   const anoAnterior = historico.find((h) => h.ano === ano - 1 && h.mes === mes)
   if (!anoAnterior) return null
-  const crescimento = calcularCrescimentoMedioAnual(historico)
-  return Number(anoAnterior.venda_total) * crescimento
+  const valorBase = Number(anoAnterior[campo] ?? 0)
+  if (valorBase <= 0) return null
+  const crescimento = calcularCrescimentoMedioAnual(historico, campo)
+  return valorBase * crescimento
 }
 
 /**
@@ -110,7 +125,12 @@ export function calcularSugestaoTendencia(historico: HistoricoMes[], ano: number
  * - moderada: +10% sobre o melhor resultado
  * - agressiva: +15% sobre o melhor resultado
  */
-export function calcularSugestaoMeta(historico: number[], tendencia: number | null = null): SugestaoMeta {
+export function calcularSugestaoMeta(
+  historico: number[],
+  tendencia: number | null = null,
+  tendenciaAtendimentos: number | null = null,
+  tendenciaPecas: number | null = null
+): SugestaoMeta {
   const media = historico.reduce((a, b) => a + b, 0) / historico.length
   const melhor = Math.max(...historico)
   return {
@@ -118,5 +138,7 @@ export function calcularSugestaoMeta(historico: number[], tendencia: number | nu
     moderada: melhor * 1.1,
     agressiva: melhor * 1.15,
     tendencia,
+    tendenciaAtendimentos,
+    tendenciaPecas,
   }
 }
