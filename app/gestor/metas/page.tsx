@@ -99,7 +99,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
             <input type="hidden" name="mes" value={mes} />
             <div className="space-y-1">
               <Label htmlFor="meta_valor">Meta Valor (R$)</Label>
-              <Input id="meta_valor" name="meta_valor" type="number" step="0.01" defaultValue={meta?.meta_valor ?? sugestao?.sugestao.moderada ?? 0} className="bg-slate-800 border-slate-700" />
+              <Input id="meta_valor" name="meta_valor" type="number" step="any" defaultValue={meta?.meta_valor ?? sugestao?.sugestao.moderada ?? 0} className="bg-slate-800 border-slate-700" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="meta_atendimentos">Meta Atendimentos</Label>
