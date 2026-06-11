@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { distribuirCotaPorPeso, calcularSugestaoMeta } from '@/lib/calculos'
+import { distribuirCotaPorPeso, calcularSugestaoMeta, calcularSugestaoTendencia } from '@/lib/calculos'
 import { revalidatePath } from 'next/cache'
 
 const PESOS_DEFAULT: Record<number, number> = {
@@ -269,5 +269,21 @@ export async function buscarSugestaoMeta(ano: number, mes: number) {
 
   const valores = (data ?? []).map((d) => Number(d.venda_total)).filter((v) => v > 0)
   if (valores.length === 0) return null
-  return { sugestao: calcularSugestaoMeta(valores), historico: data }
+
+  // Histórico completo (todos os meses) para calcular a evolução/crescimento
+  // médio da loja e sugerir a meta deste mês a partir do mesmo mês do ano
+  // anterior corrigido por essa tendência.
+  const { data: historicoCompleto } = await supabase
+    .from('historico_loja')
+    .select('ano, mes, venda_total')
+
+  const tendencia = historicoCompleto
+    ? calcularSugestaoTendencia(
+        historicoCompleto.map((h) => ({ ano: h.ano, mes: h.mes, venda_total: Number(h.venda_total) })),
+        ano,
+        mes
+      )
+    : null
+
+  return { sugestao: calcularSugestaoMeta(valores, tendencia), historico: data }
 }

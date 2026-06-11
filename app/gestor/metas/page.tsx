@@ -72,7 +72,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
           <CardHeader>
             <CardTitle className="text-base">Sugestão de Meta (baseada nos últimos 3 anos)</CardTitle>
           </CardHeader>
-          <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+          <CardContent className="grid grid-cols-1 sm:grid-cols-4 gap-4 text-sm">
             <div>
               <p className="text-slate-400">Conservadora</p>
               <p className="text-lg font-bold">R$ {formatBRL(sugestao.sugestao.conservadora)}</p>
@@ -85,6 +85,12 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
               <p className="text-slate-400">Agressiva (+15%)</p>
               <p className="text-lg font-bold">R$ {formatBRL(sugestao.sugestao.agressiva)}</p>
             </div>
+            {sugestao.sugestao.tendencia !== null && (
+              <div>
+                <p className="text-slate-400">Tendência (evolução vs. ano anterior)</p>
+                <p className="text-lg font-bold">R$ {formatBRL(sugestao.sugestao.tendencia)}</p>
+              </div>
+            )}
           </CardContent>
         </Card>
       )}

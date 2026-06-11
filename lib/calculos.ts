@@ -56,6 +56,51 @@ interface SugestaoMeta {
   conservadora: number
   moderada: number
   agressiva: number
+  tendencia: number | null
+}
+
+interface HistoricoMes {
+  ano: number
+  mes: number
+  venda_total: number
+}
+
+/**
+ * Calcula a taxa de crescimento média ano-a-ano (ex: 1.10 = +10%) com base
+ * no histórico completo de vendas, comparando cada mês com o mesmo mês do
+ * ano anterior (estilo "evolução vs. ano anterior" usado por grandes redes).
+ */
+export function calcularCrescimentoMedioAnual(historico: HistoricoMes[]): number {
+  const porMes = new Map<number, { ano: number; valor: number }[]>()
+  for (const h of historico) {
+    if (!porMes.has(h.mes)) porMes.set(h.mes, [])
+    porMes.get(h.mes)!.push({ ano: h.ano, valor: Number(h.venda_total) })
+  }
+
+  const taxas: number[] = []
+  for (const registros of porMes.values()) {
+    registros.sort((a, b) => a.ano - b.ano)
+    for (let i = 1; i < registros.length; i++) {
+      const anterior = registros[i - 1].valor
+      const atual = registros[i].valor
+      if (anterior > 0) taxas.push(atual / anterior)
+    }
+  }
+
+  if (taxas.length === 0) return 1
+  return taxas.reduce((a, b) => a + b, 0) / taxas.length
+}
+
+/**
+ * Sugestão de meta por tendência: pega o valor do mesmo mês no ano
+ * anterior e aplica a taxa de crescimento média histórica da loja.
+ * Retorna null se não houver dado do mesmo mês no ano anterior.
+ */
+export function calcularSugestaoTendencia(historico: HistoricoMes[], ano: number, mes: number): number | null {
+  const anoAnterior = historico.find((h) => h.ano === ano - 1 && h.mes === mes)
+  if (!anoAnterior) return null
+  const crescimento = calcularCrescimentoMedioAnual(historico)
+  return Number(anoAnterior.venda_total) * crescimento
 }
 
 /**
@@ -65,12 +110,13 @@ interface SugestaoMeta {
  * - moderada: +10% sobre o melhor resultado
  * - agressiva: +15% sobre o melhor resultado
  */
-export function calcularSugestaoMeta(historico: number[]): SugestaoMeta {
+export function calcularSugestaoMeta(historico: number[], tendencia: number | null = null): SugestaoMeta {
   const media = historico.reduce((a, b) => a + b, 0) / historico.length
   const melhor = Math.max(...historico)
   return {
     conservadora: media,
     moderada: melhor * 1.1,
     agressiva: melhor * 1.15,
+    tendencia,
   }
 }
