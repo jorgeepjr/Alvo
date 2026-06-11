@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/app/login/actions'
-import { LayoutDashboard, FilePlus, LogOut, Menu, ChevronLeft, ChevronRight } from 'lucide-react'
+import { LayoutDashboard, FilePlus, LogOut, Menu, ChevronLeft, ChevronRight, Sparkles } from 'lucide-react'
 
 const links = [
   { href: '/painel', label: 'Meu Painel', icon: LayoutDashboard },
   { href: '/painel/lancamento', label: 'Lançar Vendas', icon: FilePlus },
+  { href: '/painel/assistente', label: 'Assistente IA', icon: Sparkles },
 ]
 
 export function SidebarVendedor() {
