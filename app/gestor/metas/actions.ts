@@ -125,6 +125,75 @@ export async function ajustarCotaDia(distribuicaoId: string, formData: FormData)
   revalidatePath('/gestor/metas')
 }
 
+export async function salvarPercentuaisVendedores(ano: number, mes: number, formData: FormData): Promise<void> {
+  const supabase = await createClient()
+  const { data: vendedores } = await supabase
+    .from('profiles')
+    .select('id')
+    .eq('perfil', 'vendedor')
+    .eq('ativo', true)
+
+  for (const v of vendedores ?? []) {
+    const percentual = Number(formData.get(`pct_${v.id}`) ?? 0)
+    await supabase
+      .from('metas_vendedor_percentual')
+      .upsert({ ano, mes, vendedor_id: v.id, percentual }, { onConflict: 'ano,mes,vendedor_id' })
+  }
+
+  revalidatePath('/gestor/metas')
+}
+
+export async function gerarDistribuicaoVendedores(formData: FormData): Promise<void> {
+  const ano = Number(formData.get('ano'))
+  const mes = Number(formData.get('mes'))
+
+  const dias = diasDoMes(ano, mes)
+  const inicioMes = dias[0].data
+  const fimMes = dias[dias.length - 1].data
+
+  const supabase = await createClient()
+
+  const { data: lojaDist } = await supabase
+    .from('distribuicao_diaria')
+    .select('*')
+    .is('vendedor_id', null)
+    .gte('data', inicioMes)
+    .lte('data', fimMes)
+
+  const { data: percentuais } = await supabase
+    .from('metas_vendedor_percentual')
+    .select('*')
+    .eq('ano', ano)
+    .eq('mes', mes)
+
+  if (!lojaDist || !percentuais || percentuais.length === 0) return
+
+  await supabase
+    .from('distribuicao_diaria')
+    .delete()
+    .not('vendedor_id', 'is', null)
+    .gte('data', inicioMes)
+    .lte('data', fimMes)
+
+  const rows = percentuais.flatMap((p) => {
+    const frac = Number(p.percentual) / 100
+    return lojaDist.map((d) => ({
+      vendedor_id: p.vendedor_id,
+      data: d.data,
+      cota_valor: Number(d.cota_valor) * frac,
+      cota_atendimentos: Math.round(Number(d.cota_atendimentos) * frac),
+      cota_pecas: Math.round(Number(d.cota_pecas) * frac),
+      situacao: d.situacao,
+    }))
+  })
+
+  if (rows.length > 0) {
+    await supabase.from('distribuicao_diaria').insert(rows)
+  }
+
+  revalidatePath('/gestor/metas')
+}
+
 export async function buscarSugestaoMeta(ano: number, mes: number) {
   const supabase = await createClient()
   const { data } = await supabase

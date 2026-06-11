@@ -45,6 +45,14 @@ export interface Lancamento {
   criado_em: string
 }
 
+export interface MetaVendedorPercentual {
+  id: string
+  ano: number
+  mes: number
+  vendedor_id: string
+  percentual: number
+}
+
 export interface HistoricoLoja {
   id: string
   ano: number

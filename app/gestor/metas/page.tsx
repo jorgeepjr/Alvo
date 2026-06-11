@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
-import { salvarMetaMensal, gerarDistribuicaoAutomatica, ajustarDiaSituacao, ajustarCotaDia, buscarSugestaoMeta } from './actions'
+import { salvarMetaMensal, gerarDistribuicaoAutomatica, ajustarDiaSituacao, ajustarCotaDia, buscarSugestaoMeta, salvarPercentuaisVendedores, gerarDistribuicaoVendedores } from './actions'
+import { formatBRL } from '@/lib/calculos'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,6 +36,21 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
 
   const sugestao = !meta ? await buscarSugestaoMeta(ano, mes) : null
 
+  const { data: vendedores } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('perfil', 'vendedor')
+    .eq('ativo', true)
+    .order('nome')
+
+  const { data: percentuais } = await supabase
+    .from('metas_vendedor_percentual')
+    .select('*')
+    .eq('ano', ano)
+    .eq('mes', mes)
+
+  const pctMap = new Map((percentuais ?? []).map((p) => [p.vendedor_id, Number(p.percentual)]))
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Configuração de Metas — {MESES[mes - 1]}/{ano}</h1>
@@ -59,15 +75,15 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
           <CardContent className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
             <div>
               <p className="text-slate-400">Conservadora</p>
-              <p className="text-lg font-bold">R$ {sugestao.sugestao.conservadora.toFixed(2)}</p>
+              <p className="text-lg font-bold">R$ {formatBRL(sugestao.sugestao.conservadora)}</p>
             </div>
             <div>
               <p className="text-slate-400">Moderada (+10%)</p>
-              <p className="text-lg font-bold">R$ {sugestao.sugestao.moderada.toFixed(2)}</p>
+              <p className="text-lg font-bold">R$ {formatBRL(sugestao.sugestao.moderada)}</p>
             </div>
             <div>
               <p className="text-slate-400">Agressiva (+15%)</p>
-              <p className="text-lg font-bold">R$ {sugestao.sugestao.agressiva.toFixed(2)}</p>
+              <p className="text-lg font-bold">R$ {formatBRL(sugestao.sugestao.agressiva)}</p>
             </div>
           </CardContent>
         </Card>
@@ -129,7 +145,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                     <TableCell>{d.data.split('-').reverse().join('/')}</TableCell>
                     <TableCell>
                       <form action={ajustarCotaDia.bind(null, d.id)} className="flex gap-1">
-                        <Input name="cota_valor" type="number" step="0.01" defaultValue={d.cota_valor} className="bg-slate-800 border-slate-700 w-24 h-8" />
+                        <Input name="cota_valor" type="number" step="0.01" defaultValue={Number(d.cota_valor).toFixed(2)} className="bg-slate-800 border-slate-700 w-24 h-8" />
                         <Input name="cota_atendimentos" type="number" defaultValue={d.cota_atendimentos} className="hidden" />
                         <Input name="cota_pecas" type="number" defaultValue={d.cota_pecas} className="hidden" />
                         <Button type="submit" size="sm" variant="outline">Salvar</Button>
@@ -154,6 +170,57 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
               </TableBody>
             </Table>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader>
+          <CardTitle className="text-base">Passo 3 — Divisão da Meta por Vendedor</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <form action={salvarPercentuaisVendedores.bind(null, ano, mes)} className="space-y-3">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Vendedor</TableHead>
+                  <TableHead>%</TableHead>
+                  <TableHead>Valor (R$)</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {vendedores?.map((v) => {
+                  const pct = pctMap.get(v.id) ?? 0
+                  const valorVendedor = (Number(meta?.meta_valor ?? 0) * pct) / 100
+                  return (
+                    <TableRow key={v.id}>
+                      <TableCell>{v.nome}</TableCell>
+                      <TableCell>
+                        <Input
+                          name={`pct_${v.id}`}
+                          type="number"
+                          step="0.01"
+                          min={0}
+                          max={100}
+                          defaultValue={pct}
+                          className="bg-slate-800 border-slate-700 w-24 h-8"
+                        />
+                      </TableCell>
+                      <TableCell>R$ {formatBRL(valorVendedor)}</TableCell>
+                    </TableRow>
+                  )
+                })}
+              </TableBody>
+            </Table>
+            <Button type="submit" variant="outline">Salvar Percentuais</Button>
+          </form>
+
+          <form action={gerarDistribuicaoVendedores}>
+            <input type="hidden" name="ano" value={ano} />
+            <input type="hidden" name="mes" value={mes} />
+            <Button type="submit" variant="outline" disabled={!meta || !vendedores || vendedores.length === 0}>
+              Gerar Distribuição por Vendedor (a partir dos percentuais)
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>

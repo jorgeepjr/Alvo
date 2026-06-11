@@ -1,4 +1,12 @@
 /**
+ * Formata um valor numérico como moeda brasileira (separador de milhar "."
+ * e 2 casas decimais), sem o prefixo "R$".
+ */
+export function formatBRL(valor: number): string {
+  return valor.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+}
+
+/**
  * Projeta o valor final do mês com base no ritmo atual de vendas.
  * Fórmula: (valor_acumulado / dias_trabalhados) * total_dias_uteis_no_mes
  */
