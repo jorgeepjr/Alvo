@@ -3,6 +3,8 @@ import { calcularProjecao, calcularTicketMedio } from '@/lib/calculos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProgressBar } from '@/components/progress-bar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
+import { alternarConclusaoTarefa } from '@/app/gestor/tarefas/actions'
 
 function inicioFimSemana(data: Date): { inicio: string; fim: string } {
   const dia = data.getDay()
@@ -56,6 +58,13 @@ export default async function PainelVendedor() {
   const ticketPeca = calcularTicketMedio(valorHoje, pecasHoje)
   const esforco = atendimentosHoje > 0 ? pecasHoje / atendimentosHoje : 0
 
+  const { data: tarefasHoje } = await supabase
+    .from('tarefas')
+    .select('*')
+    .eq('data', hojeStr)
+    .or(`vendedor_id.eq.${user!.id},vendedor_id.is.null`)
+    .order('criado_em')
+
   const { data: historico30 } = await supabase
     .from('lancamentos')
     .select('*')
@@ -66,6 +75,24 @@ export default async function PainelVendedor() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Olá, {profile?.nome}</h1>
+
+      {tarefasHoje && tarefasHoje.length > 0 && (
+        <Card className="border-slate-800 bg-slate-900">
+          <CardHeader><CardTitle className="text-base">Tarefas de Hoje</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {tarefasHoje.map((t) => (
+              <div key={t.id} className="flex items-center justify-between gap-2 text-sm">
+                <span className={t.concluida ? 'line-through text-slate-500' : ''}>{t.descricao}</span>
+                <form action={alternarConclusaoTarefa.bind(null, t.id, !t.concluida)}>
+                  <Button type="submit" size="sm" variant="outline">
+                    {t.concluida ? 'Reabrir' : 'Concluir'}
+                  </Button>
+                </form>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader><CardTitle className="text-base">Progresso de Hoje</CardTitle></CardHeader>

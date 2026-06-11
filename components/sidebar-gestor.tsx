@@ -15,6 +15,7 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
+  ListChecks,
 } from 'lucide-react'
 
 const links = [
@@ -22,6 +23,7 @@ const links = [
   { href: '/gestor/vendedores', label: 'Vendedores', icon: Users },
   { href: '/gestor/metas', label: 'Metas', icon: Target },
   { href: '/gestor/lancamento', label: 'Lançamento', icon: FilePlus },
+  { href: '/gestor/tarefas', label: 'Rotina Diária', icon: ListChecks },
   { href: '/gestor/historico', label: 'Histórico', icon: BarChart3 },
   { href: '/gestor/importar', label: 'Importar', icon: Upload },
 ]

@@ -53,6 +53,16 @@ export interface MetaVendedorPercentual {
   percentual: number
 }
 
+export interface Tarefa {
+  id: string
+  vendedor_id: string | null
+  data: string
+  descricao: string
+  concluida: boolean
+  criado_por: string
+  criado_em: string
+}
+
 export interface HistoricoLoja {
   id: string
   ano: number
