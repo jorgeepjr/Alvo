@@ -25,7 +25,14 @@ export async function chamarGemini(
 
   if (!res.ok) {
     const erro = await res.text()
-    throw new Error(`Gemini API ${res.status}: ${erro}`)
+    console.error(`Gemini API ${res.status}:`, erro)
+    if (res.status === 400 && erro.includes('API key not valid')) {
+      throw new Error('CHAVE_INVALIDA')
+    }
+    if (res.status === 429) {
+      throw new Error('LIMITE_EXCEDIDO')
+    }
+    throw new Error(`Gemini API ${res.status}`)
   }
 
   const json = await res.json()

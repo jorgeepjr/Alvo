@@ -82,6 +82,13 @@ Use esses números para personalizar suas dicas e estratégias. Se o usuário es
     return { resposta: texto }
   } catch (err) {
     console.error('Erro no assistente IA:', err)
-    return { error: 'Não foi possível falar com o assistente agora. Tente novamente em instantes.' }
+    const msg = err instanceof Error ? err.message : ''
+    if (msg === 'CHAVE_INVALIDA') {
+      return { error: 'A chave GEMINI_API_KEY configurada não é válida. Verifique se foi copiada completa, sem espaços.' }
+    }
+    if (msg === 'LIMITE_EXCEDIDO') {
+      return { error: 'Limite gratuito de uso atingido por agora. Aguarde alguns minutos e tente de novo.' }
+    }
+    return { error: `Não foi possível falar com o assistente agora (${msg || 'erro desconhecido'}). Tente novamente em instantes.` }
   }
 }
