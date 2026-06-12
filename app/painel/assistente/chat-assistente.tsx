@@ -6,10 +6,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { enviarMensagemAssistente, type ChatMessage } from './actions'
 
 const SUGESTOES = [
+  'Como estou indo este mês? O que preciso fazer para bater a meta?',
+  'Me dê uma estratégia para melhorar meu ticket médio com base nos meus números',
   'Me dê 3 ideias de vídeo para hoje destacando uma peça parada no estoque',
   'Crie uma campanha de condicional para o fim de semana',
-  'Como aumentar o número de peças por atendimento?',
-  'Ideias de combos/looks para aumentar o ticket médio',
 ]
 
 export function ChatAssistente() {

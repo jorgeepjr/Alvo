@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { alternarConclusaoTarefa, alternarItemRotina } from '@/app/gestor/tarefas/actions'
 import { fraseDoDia } from '@/lib/frases-motivacionais'
 import { LancamentoForm } from '@/app/painel/lancamento/lancamento-form'
+import { MeuMesChart } from '@/components/meu-mes-chart'
 
 function inicioFimSemana(data: Date): { inicio: string; fim: string } {
   const dia = data.getDay()
@@ -159,6 +160,38 @@ export default async function PainelVendedor() {
     if (bateu) streak++
     else break
   }
+
+  // Gráfico do mês: acumulado real vs cota acumulada vs projeção do ritmo atual
+  const vendaDiaMap = new Map<string, number>()
+  for (const l of lancMes ?? []) {
+    vendaDiaMap.set(l.data, (vendaDiaMap.get(l.data) ?? 0) + Number(l.valor))
+  }
+  const cotaDiaMap = new Map<string, number>()
+  for (const c of cotaMes ?? []) {
+    cotaDiaMap.set(c.data, (cotaDiaMap.get(c.data) ?? 0) + Number(c.cota_valor))
+  }
+
+  const diaHoje = hoje.getDate()
+  const ritmoDiario = diasTrabalhados > 0 ? valorMes / diasTrabalhados : 0
+  let acumReal = 0
+  let acumCota = 0
+  let diasUteisAcum = 0
+  const dadosMeuMes = Array.from({ length: ultimoDia }, (_, i) => {
+    const dia = i + 1
+    const dataStr = `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+    acumReal += vendaDiaMap.get(dataStr) ?? 0
+    acumCota += cotaDiaMap.get(dataStr) ?? 0
+    const ehDiaUtil = (cotaDiaMap.get(dataStr) ?? 0) > 0
+    if (ehDiaUtil) diasUteisAcum++
+    return {
+      dia,
+      atual: dia <= diaHoje ? Math.round(acumReal * 100) / 100 : null,
+      meta: Math.round(acumCota * 100) / 100,
+      projecao: dia >= diaHoje ? Math.round(diasUteisAcum * ritmoDiario * 100) / 100 : null,
+    }
+  })
+
+  const vaiBaterMeta = projecaoMes >= cotaValorMes && cotaValorMes > 0
 
   const metaHojeBatida = cotaValorHoje > 0 && faltaHoje <= 0
   const situacaoHoje = situacaoMap.get(hojeStr)
@@ -336,6 +369,35 @@ export default async function PainelVendedor() {
         <CardHeader><CardTitle className="text-base">Progresso da Semana</CardTitle></CardHeader>
         <CardContent>
           <ProgressBar label="Valor" atual={valorSemana} meta={cotaValorSemana} formatar={(v) => `R$ ${v.toFixed(2)}`} />
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="text-base">Meu Mês — Dia a Dia</CardTitle>
+            {cotaValorMes > 0 && (
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  vaiBaterMeta
+                    ? 'bg-green-600/20 text-green-400 border border-green-700'
+                    : 'bg-red-600/20 text-red-400 border border-red-700'
+                }`}
+              >
+                {vaiBaterMeta
+                  ? `✅ No ritmo atual você bate a meta (${((projecaoMes / cotaValorMes) * 100).toFixed(0)}%)`
+                  : `⚠️ No ritmo atual você chega a ${((projecaoMes / cotaValorMes) * 100).toFixed(0)}% da meta`}
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <MeuMesChart dados={dadosMeuMes} />
+          {cotaValorMes > 0 && !vaiBaterMeta && (
+            <p className="mt-2 text-sm text-yellow-400">
+              💪 Pergunte ao Assistente IA uma estratégia para acelerar: ele conhece seus números e pode sugerir ações práticas.
+            </p>
+          )}
         </CardContent>
       </Card>
 

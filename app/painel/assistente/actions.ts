@@ -28,12 +28,53 @@ export async function enviarMensagemAssistente(
     return { error: 'Assistente de IA não configurado. Peça ao administrador para definir ANTHROPIC_API_KEY.' }
   }
 
+  // Contexto real do vendedor: números do mês para dicas personalizadas
+  const hoje = new Date()
+  const hojeStr = hoje.toISOString().slice(0, 10)
+  const ano = hoje.getFullYear()
+  const mes = hoje.getMonth() + 1
+  const inicioMes = `${ano}-${String(mes).padStart(2, '0')}-01`
+
+  const { data: profile } = await supabase.from('profiles').select('nome, perfil').eq('id', user.id).single()
+
+  const { data: lancMes } = await supabase
+    .from('lancamentos')
+    .select('data, valor, atendimentos, pecas')
+    .eq('vendedor_id', user.id)
+    .gte('data', inicioMes)
+    .lte('data', hojeStr)
+
+  const { data: cotasMes } = await supabase
+    .from('distribuicao_diaria')
+    .select('data, cota_valor')
+    .eq('vendedor_id', user.id)
+    .gte('data', inicioMes)
+
+  const valorMes = lancMes?.reduce((acc, l) => acc + Number(l.valor), 0) ?? 0
+  const atendMes = lancMes?.reduce((acc, l) => acc + l.atendimentos, 0) ?? 0
+  const pecasMes = lancMes?.reduce((acc, l) => acc + l.pecas, 0) ?? 0
+  const cotaMesTotal = cotasMes?.reduce((acc, c) => acc + Number(c.cota_valor), 0) ?? 0
+  const cotaAteHoje = cotasMes?.filter((c) => c.data <= hojeStr).reduce((acc, c) => acc + Number(c.cota_valor), 0) ?? 0
+  const ticketCliente = atendMes > 0 ? valorMes / atendMes : 0
+  const pecasPorAtendimento = atendMes > 0 ? pecasMes / atendMes : 0
+
+  const contextoDados = `
+DADOS REAIS DO USUÁRIO NESTE MÊS (${mes}/${ano}, até hoje, dia ${hoje.getDate()}):
+- Nome: ${profile?.nome ?? '—'} (perfil: ${profile?.perfil ?? 'vendedor'})
+- Vendido no mês: R$ ${valorMes.toFixed(2)}
+- Meta do mês: R$ ${cotaMesTotal.toFixed(2)} | Meta acumulada até hoje: R$ ${cotaAteHoje.toFixed(2)}
+- Situação: ${cotaAteHoje > 0 ? (valorMes >= cotaAteHoje ? 'ACIMA do ritmo da meta' : `ABAIXO do ritmo da meta (falta R$ ${(cotaAteHoje - valorMes).toFixed(2)} para o acumulado de hoje)`) : 'sem meta definida'}
+- Atendimentos: ${atendMes} | Peças vendidas: ${pecasMes}
+- Ticket médio por cliente: R$ ${ticketCliente.toFixed(2)} | Peças por atendimento: ${pecasPorAtendimento.toFixed(2)}
+
+Use esses números para personalizar suas dicas e estratégias. Se o usuário estiver abaixo do ritmo, priorize ações de recuperação concretas (quanto precisa vender por dia, como aumentar ticket/peças por atendimento). Cite os números reais quando relevante.`
+
   try {
     const anthropic = new Anthropic({ apiKey })
     const response = await anthropic.messages.create({
       model: 'claude-haiku-4-5',
       max_tokens: 1024,
-      system: SYSTEM_PROMPT,
+      system: SYSTEM_PROMPT + '\n' + contextoDados,
       messages: historico.map((m) => ({ role: m.role, content: m.content })),
     })
 
