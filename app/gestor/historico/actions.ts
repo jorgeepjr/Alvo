@@ -41,6 +41,32 @@ export async function buscarHistorico(metrica: 'valor' | 'atendimentos' | 'pecas
   return { vendas, cotas, series }
 }
 
+const MESES_NOMES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+
+export async function buscarComparativoAnual(metrica: 'valor' | 'atendimentos' | 'pecas') {
+  const supabase = await createClient()
+  const { data } = await supabase.from('historico_loja').select('*').order('ano').order('mes')
+
+  const campo = metrica === 'valor' ? 'venda_total' : metrica
+  const anos = Array.from(new Set((data ?? []).map((d) => d.ano))).sort()
+
+  const linhas = Array.from({ length: 12 }, (_, i) => {
+    const mes = i + 1
+    const valoresPorAno = anos.map((ano) => {
+      const row = data?.find((d) => d.ano === ano && d.mes === mes)
+      return row ? Number(row[campo as keyof typeof row]) : null
+    })
+    const variacoes = valoresPorAno.map((valor, idx) => {
+      const anterior = valoresPorAno[idx - 1]
+      if (idx === 0 || valor === null || anterior === null || anterior === 0) return null
+      return ((valor - anterior) / anterior) * 100
+    })
+    return { mes, nome: MESES_NOMES[i], valoresPorAno, variacoes }
+  })
+
+  return { anos, linhas }
+}
+
 export async function consolidarMesAtual(): Promise<void> {
   const supabase = await createClient()
   const hoje = new Date()

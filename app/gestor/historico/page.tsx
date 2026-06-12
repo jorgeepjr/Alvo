@@ -1,5 +1,6 @@
-import { buscarHistorico, consolidarMesAtual } from './actions'
+import { buscarHistorico, buscarComparativoAnual, consolidarMesAtual } from './actions'
 import { HistoricoTable } from '@/components/historico-table'
+import { ComparativoTable } from '@/components/comparativo-table'
 import { CrescimentoChart } from '@/components/crescimento-chart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,6 +10,7 @@ export default async function HistoricoPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams
   const metrica = sp.metrica ?? 'valor'
   const { vendas, cotas, series } = await buscarHistorico(metrica)
+  const { anos: anosComp, linhas: linhasComp } = await buscarComparativoAnual(metrica)
 
   return (
     <div className="space-y-6">
@@ -27,6 +29,13 @@ export default async function HistoricoPage({ searchParams }: { searchParams: Pr
         <CardHeader><CardTitle className="text-base">Crescimento Acumulado por Ano</CardTitle></CardHeader>
         <CardContent>
           <CrescimentoChart series={series} />
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader><CardTitle className="text-base">Comparativo Mês a Mês (crescimento/queda) — {metrica}</CardTitle></CardHeader>
+        <CardContent className="overflow-x-auto">
+          <ComparativoTable anos={anosComp} linhas={linhasComp} metrica={metrica} />
         </CardContent>
       </Card>
 
