@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button'
 import { alternarConclusaoTarefa, alternarItemRotina } from '@/app/gestor/tarefas/actions'
 import { fraseDoDia } from '@/lib/frases-motivacionais'
+import { LancamentoForm } from '@/app/painel/lancamento/lancamento-form'
 
 function inicioFimSemana(data: Date): { inicio: string; fim: string } {
   const dia = data.getDay()
@@ -128,6 +129,41 @@ export default async function PainelVendedor() {
 
   const situacaoMap = new Map(situacoes30?.map((s) => [s.data, s.situacao]) ?? [])
 
+  // Streak: dias consecutivos batendo a meta (últimos 60 dias)
+  const data60diasAtras = new Date(hoje)
+  data60diasAtras.setDate(hoje.getDate() - 60)
+  const inicio60 = data60diasAtras.toISOString().slice(0, 10)
+  const { data: cotas60 } = await supabase
+    .from('distribuicao_diaria')
+    .select('data, cota_valor, situacao')
+    .eq('vendedor_id', user!.id)
+    .gte('data', inicio60)
+    .lte('data', hojeStr)
+  const { data: lanc60 } = await supabase
+    .from('lancamentos')
+    .select('data, valor')
+    .eq('vendedor_id', user!.id)
+    .gte('data', inicio60)
+    .lte('data', hojeStr)
+
+  const lancMap60 = new Map(lanc60?.map((l) => [l.data, Number(l.valor)]) ?? [])
+  const cotasOrdenadas = (cotas60 ?? [])
+    .filter((c) => c.situacao === 'normal' && Number(c.cota_valor) > 0)
+    .sort((a, b) => (a.data < b.data ? 1 : -1))
+
+  let streak = 0
+  for (const c of cotasOrdenadas) {
+    const vendido = lancMap60.get(c.data) ?? 0
+    const bateu = vendido >= Number(c.cota_valor)
+    if (c.data === hojeStr && !bateu) continue // hoje ainda em andamento não quebra a sequência
+    if (bateu) streak++
+    else break
+  }
+
+  const metaHojeBatida = cotaValorHoje > 0 && faltaHoje <= 0
+  const situacaoHoje = situacaoMap.get(hojeStr)
+  const diaBloqueadoHoje = situacaoHoje === 'feriado' || situacaoHoje === 'fechado'
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -137,20 +173,41 @@ export default async function PainelVendedor() {
             {hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
           </p>
         </div>
-        <span
-          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-            faltaHoje <= 0 && cotaValorHoje > 0
-              ? 'bg-green-600/20 text-green-400 border border-green-700'
-              : 'bg-yellow-600/20 text-yellow-300 border border-yellow-700'
-          }`}
-        >
-          {cotaValorHoje <= 0
-            ? 'Sem cota definida hoje'
-            : faltaHoje <= 0
-            ? '🎯 Meta do dia batida!'
-            : `Falta R$ ${faltaHoje.toFixed(2)} hoje`}
-        </span>
+        <div className="flex items-center gap-2">
+          {streak > 1 && (
+            <span className="rounded-full px-3 py-1 text-xs font-semibold bg-orange-600/20 text-orange-300 border border-orange-700">
+              🔥 {streak} dias batendo meta
+            </span>
+          )}
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              metaHojeBatida
+                ? 'bg-green-600/20 text-green-400 border border-green-700'
+                : 'bg-yellow-600/20 text-yellow-300 border border-yellow-700'
+            }`}
+          >
+            {cotaValorHoje <= 0
+              ? 'Sem cota definida hoje'
+              : metaHojeBatida
+              ? '🎯 Meta do dia batida!'
+              : `Falta R$ ${faltaHoje.toFixed(2)} hoje`}
+          </span>
+        </div>
       </div>
+
+      {metaHojeBatida && (
+        <Card className="border-green-700 bg-gradient-to-r from-green-950/60 to-emerald-900/30">
+          <CardContent className="py-4 flex items-center gap-3">
+            <span className="text-3xl animate-bounce">🏆</span>
+            <div>
+              <p className="font-bold text-green-300">Parabéns! Você bateu a meta de hoje!</p>
+              <p className="text-sm text-green-400/80">
+                {streak > 1 ? `Sequência de ${streak} dias — continue assim!` : 'Que tal começar uma sequência? Amanhã tem mais!'}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-indigo-800 bg-gradient-to-r from-indigo-950/60 to-slate-900">
         <CardContent className="py-4">
@@ -232,6 +289,21 @@ export default async function PainelVendedor() {
       )}
 
       <Card className="border-slate-800 bg-slate-900">
+        <CardHeader>
+          <CardTitle className="text-base">⚡ Lançamento Rápido — Hoje</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {diaBloqueadoHoje ? (
+            <p className="text-sm text-slate-400">
+              {situacaoHoje === 'feriado' ? 'Hoje é feriado.' : 'A loja está fechada hoje.'} Não é necessário lançar vendas.
+            </p>
+          ) : (
+            <LancamentoForm data={hojeStr} existente={lancHoje} />
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
         <CardHeader><CardTitle className="text-base">Progresso de Hoje</CardTitle></CardHeader>
         <CardContent className="space-y-3">
           <ProgressBar label="Valor" atual={valorHoje} meta={cotaValorHoje} formatar={(v) => `R$ ${v.toFixed(2)}`} />
@@ -279,7 +351,7 @@ export default async function PainelVendedor() {
 
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader><CardTitle className="text-base">Histórico Pessoal (últimos 30 dias)</CardTitle></CardHeader>
-        <CardContent>
+        <CardContent className="overflow-x-auto">
           <Table>
             <TableHeader>
               <TableRow>
