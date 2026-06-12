@@ -130,9 +130,29 @@ export default async function PainelVendedor() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Olá, {profile?.nome}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <h1 className="text-2xl font-bold">Olá, {profile?.nome} 👋</h1>
+          <p className="text-sm text-slate-400 capitalize">
+            {hoje.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+          </p>
+        </div>
+        <span
+          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+            faltaHoje <= 0 && cotaValorHoje > 0
+              ? 'bg-green-600/20 text-green-400 border border-green-700'
+              : 'bg-yellow-600/20 text-yellow-300 border border-yellow-700'
+          }`}
+        >
+          {cotaValorHoje <= 0
+            ? 'Sem cota definida hoje'
+            : faltaHoje <= 0
+            ? '🎯 Meta do dia batida!'
+            : `Falta R$ ${faltaHoje.toFixed(2)} hoje`}
+        </span>
+      </div>
 
-      <Card className="border-indigo-800 bg-indigo-950/40">
+      <Card className="border-indigo-800 bg-gradient-to-r from-indigo-950/60 to-slate-900">
         <CardContent className="py-4">
           <p className="text-sm text-indigo-200 italic">💡 {fraseDoDia(hoje)}</p>
         </CardContent>
@@ -141,30 +161,54 @@ export default async function PainelVendedor() {
       {blocosRotina.length > 0 && (
         <Card className="border-slate-800 bg-slate-900">
           <CardHeader>
-            <CardTitle className="text-base">
-              Rotina do Dia ({totalConcluidosRotina}/{totalItensRotina})
-            </CardTitle>
+            <div className="flex items-center justify-between gap-3">
+              <CardTitle className="text-base">Rotina do Dia</CardTitle>
+              <span className="text-xs text-slate-400">
+                {totalConcluidosRotina}/{totalItensRotina} concluídos
+              </span>
+            </div>
+            <div className="mt-2 h-2 w-full rounded-full bg-slate-800 overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${
+                  totalConcluidosRotina >= totalItensRotina ? 'bg-green-500' : 'bg-indigo-500'
+                }`}
+                style={{ width: `${totalItensRotina > 0 ? (totalConcluidosRotina / totalItensRotina) * 100 : 0}%` }}
+              />
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
-            {blocosRotina.map((grupo) => (
-              <div key={`${grupo.horario}-${grupo.bloco}`}>
-                <p className="text-sm font-semibold text-indigo-400 mb-1">
-                  {grupo.horario} — {grupo.bloco}
-                </p>
-                <div className="space-y-1 pl-2">
-                  {grupo.itens.map((item) => (
-                    <div key={item.id} className="flex items-center justify-between gap-2 text-sm">
-                      <span className={item.concluido ? 'line-through text-slate-500' : ''}>{item.descricao}</span>
-                      <form action={alternarItemRotina.bind(null, item.id, hojeStr, !item.concluido)}>
-                        <Button type="submit" size="sm" variant="outline">
-                          {item.concluido ? '↺' : '✓'}
-                        </Button>
-                      </form>
-                    </div>
-                  ))}
+            {blocosRotina.map((grupo) => {
+              const blocoCompleto = grupo.itens.every((i) => i.concluido)
+              return (
+                <div
+                  key={`${grupo.horario}-${grupo.bloco}`}
+                  className={`rounded-lg border p-3 ${
+                    blocoCompleto ? 'border-green-900/60 bg-green-950/20' : 'border-slate-800 bg-slate-950/40'
+                  }`}
+                >
+                  <p className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <span className="rounded bg-indigo-600/20 text-indigo-300 px-2 py-0.5 text-xs">{grupo.horario}</span>
+                    <span className={blocoCompleto ? 'text-green-400' : 'text-slate-200'}>
+                      {grupo.bloco} {blocoCompleto && '✓'}
+                    </span>
+                  </p>
+                  <div className="space-y-1">
+                    {grupo.itens.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between gap-2 text-sm">
+                        <span className={item.concluido ? 'line-through text-slate-500' : 'text-slate-300'}>
+                          {item.descricao}
+                        </span>
+                        <form action={alternarItemRotina.bind(null, item.id, hojeStr, !item.concluido)}>
+                          <Button type="submit" size="sm" variant={item.concluido ? 'ghost' : 'outline'}>
+                            {item.concluido ? '↺' : '✓'}
+                          </Button>
+                        </form>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
           </CardContent>
         </Card>
       )}
@@ -249,15 +293,21 @@ export default async function PainelVendedor() {
             <TableBody>
               {historico30?.map((l) => {
                 const situacaoDia = situacaoMap.get(l.data)
-                const status =
-                  situacaoDia === 'feriado' ? 'Feriado' : situacaoDia === 'fechado' ? 'Fechado' : '—'
                 return (
                   <TableRow key={l.id}>
                     <TableCell>{l.data.split('-').reverse().join('/')}</TableCell>
                     <TableCell>{l.atendimentos}</TableCell>
                     <TableCell>{l.pecas}</TableCell>
                     <TableCell>R$ {Number(l.valor).toFixed(2)}</TableCell>
-                    <TableCell>{status}</TableCell>
+                    <TableCell>
+                      {situacaoDia === 'feriado' ? (
+                        <span className="rounded bg-blue-600/20 text-blue-300 px-2 py-0.5 text-xs">Feriado</span>
+                      ) : situacaoDia === 'fechado' ? (
+                        <span className="rounded bg-slate-600/30 text-slate-300 px-2 py-0.5 text-xs">Fechado</span>
+                      ) : (
+                        '—'
+                      )}
+                    </TableCell>
                   </TableRow>
                 )
               })}
@@ -270,7 +320,13 @@ export default async function PainelVendedor() {
                     <TableCell>—</TableCell>
                     <TableCell>—</TableCell>
                     <TableCell>—</TableCell>
-                    <TableCell>{sit === 'feriado' ? 'Feriado' : 'Fechado'}</TableCell>
+                    <TableCell>
+                      {sit === 'feriado' ? (
+                        <span className="rounded bg-blue-600/20 text-blue-300 px-2 py-0.5 text-xs">Feriado</span>
+                      ) : (
+                        <span className="rounded bg-slate-600/30 text-slate-300 px-2 py-0.5 text-xs">Fechado</span>
+                      )}
+                    </TableCell>
                   </TableRow>
                 ))}
             </TableBody>
