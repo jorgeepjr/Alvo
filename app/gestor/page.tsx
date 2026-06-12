@@ -3,6 +3,7 @@ import { calcularProjecao, calcularTicketMedio } from '@/lib/calculos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProgressBar } from '@/components/progress-bar'
 import { RankingList } from '@/components/ranking-list'
+import { MesAtualChart } from '@/components/mes-atual-chart'
 
 export default async function GestorDashboard() {
   const supabase = await createClient()
@@ -73,6 +74,38 @@ export default async function GestorDashboard() {
 
   const alertasMeta = ranking.filter((r) => ritmoEsperado > 0 && r.percentual < ritmoEsperado * 0.8)
 
+  // Gráfico diário do mês: acumulado real vs ritmo do mesmo mês do ano passado vs ritmo da meta
+  const { data: histAnoPassado } = await supabase
+    .from('historico_loja')
+    .select('venda_total')
+    .eq('ano', ano - 1)
+    .eq('mes', mes)
+    .maybeSingle()
+
+  const totalAnoPassado = Number(histAnoPassado?.venda_total ?? 0)
+  const vendaPorDia = new Map<string, number>()
+  for (const l of lancamentosMes ?? []) {
+    vendaPorDia.set(l.data, (vendaPorDia.get(l.data) ?? 0) + Number(l.valor))
+  }
+
+  const diaHoje = hoje.getDate()
+  let acumulado = 0
+  const dadosGrafico = Array.from({ length: ultimoDia }, (_, i) => {
+    const dia = i + 1
+    const dataStr = `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+    acumulado += vendaPorDia.get(dataStr) ?? 0
+    return {
+      dia,
+      atual: dia <= diaHoje ? Math.round(acumulado * 100) / 100 : null,
+      anoPassado: totalAnoPassado > 0 ? Math.round((totalAnoPassado / ultimoDia) * dia * 100) / 100 : null,
+      meta: cotaMes > 0 ? Math.round((cotaMes / ultimoDia) * dia * 100) / 100 : null,
+    }
+  })
+
+  const acumuladoHoje = dadosGrafico[diaHoje - 1]?.atual ?? 0
+  const ritmoAnoPassadoHoje = totalAnoPassado > 0 ? (totalAnoPassado / ultimoDia) * diaHoje : 0
+  const vsAnoPassado = ritmoAnoPassadoHoje > 0 ? ((Number(acumuladoHoje) - ritmoAnoPassadoHoje) / ritmoAnoPassadoHoje) * 100 : null
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard da Loja</h1>
@@ -106,6 +139,33 @@ export default async function GestorDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="text-base">Mês Atual — Dia a Dia vs {ano - 1}</CardTitle>
+            {vsAnoPassado !== null && (
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                  vsAnoPassado >= 0
+                    ? 'bg-green-600/20 text-green-400 border border-green-700'
+                    : 'bg-red-600/20 text-red-400 border border-red-700'
+                }`}
+              >
+                {vsAnoPassado >= 0 ? '▲' : '▼'} {Math.abs(vsAnoPassado).toFixed(1)}% vs ritmo de {ano - 1}
+              </span>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <MesAtualChart dados={dadosGrafico} anoAtual={ano} anoPassado={ano - 1} />
+          {vsAnoPassado !== null && vsAnoPassado < 0 && (
+            <p className="mt-2 text-sm text-yellow-400">
+              ⚠️ O mês está abaixo do ritmo de {ano - 1}. Considere uma ação de vendas (campanha, condicional, produto do dia) para recuperar.
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader><CardTitle className="text-base">Progresso do Mês</CardTitle></CardHeader>
