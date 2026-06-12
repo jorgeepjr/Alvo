@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { chamarGemini } from '@/lib/gemini'
 
 export type ChatMessage = { role: 'user' | 'assistant'; content: string }
 
@@ -23,9 +23,9 @@ export async function enviarMensagemAssistente(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado.' }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    return { error: 'Assistente de IA não configurado. Peça ao administrador para definir ANTHROPIC_API_KEY.' }
+    return { error: 'Assistente de IA não configurado. Peça ao administrador para definir GEMINI_API_KEY.' }
   }
 
   // Contexto real do vendedor: números do mês para dicas personalizadas
@@ -70,18 +70,7 @@ DADOS REAIS DO USUÁRIO NESTE MÊS (${mes}/${ano}, até hoje, dia ${hoje.getDate
 Use esses números para personalizar suas dicas e estratégias. Se o usuário estiver abaixo do ritmo, priorize ações de recuperação concretas (quanto precisa vender por dia, como aumentar ticket/peças por atendimento). Cite os números reais quando relevante.`
 
   try {
-    const anthropic = new Anthropic({ apiKey })
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 1024,
-      system: SYSTEM_PROMPT + '\n' + contextoDados,
-      messages: historico.map((m) => ({ role: m.role, content: m.content })),
-    })
-
-    const texto = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('\n')
+    const texto = await chamarGemini(apiKey, SYSTEM_PROMPT + '\n' + contextoDados, historico)
 
     const ultimaPergunta = historico[historico.length - 1]?.content ?? ''
     await supabase.from('assistente_mensagens').insert({

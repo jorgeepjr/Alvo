@@ -1,16 +1,16 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { chamarGemini } from '@/lib/gemini'
 
 export async function gerarAnaliseSemanal(): Promise<{ analise?: string; error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'Não autenticado.' }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY
+  const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    return { error: 'Assistente de IA não configurado. Defina ANTHROPIC_API_KEY.' }
+    return { error: 'Assistente de IA não configurado. Defina GEMINI_API_KEY.' }
   }
 
   const hoje = new Date()
@@ -76,24 +76,17 @@ export async function gerarAnaliseSemanal(): Promise<{ analise?: string; error?:
   })
 
   try {
-    const anthropic = new Anthropic({ apiKey })
-    const response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5',
-      max_tokens: 1200,
-      system: `Você é o analista de vendas de uma loja de roupas femininas. Receberá dados dos últimos 14 dias (semana atual vs semana anterior) por vendedor.
+    const texto = await chamarGemini(
+      apiKey,
+      `Você é o analista de vendas de uma loja de roupas femininas. Receberá dados dos últimos 14 dias (semana atual vs semana anterior) por vendedor.
 Gere um relatório curto em português do Brasil para a gestora, com:
 1. Resumo geral da semana (crescimento ou queda vs semana anterior).
 2. Destaque individual de cada vendedor: vendas vs cota, ticket médio (valor/atendimentos), peças por atendimento, e empenho na rotina.
 3. Um alerta se algum indicador caiu de forma relevante.
 4. Uma sugestão prática de foco para a próxima semana.
 Use listas curtas e números formatados em reais. Seja direto.`,
-      messages: [{ role: 'user', content: `Dados:\n${JSON.stringify(resumo, null, 2)}` }],
-    })
-
-    const texto = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === 'text')
-      .map((b) => b.text)
-      .join('\n')
+      [{ role: 'user', content: `Dados:\n${JSON.stringify(resumo, null, 2)}` }]
+    )
 
     return { analise: texto }
   } catch (err) {
