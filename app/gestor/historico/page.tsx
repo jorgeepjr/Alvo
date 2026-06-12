@@ -1,4 +1,4 @@
-import { buscarHistorico, buscarComparativoAnual, consolidarMesAtual } from './actions'
+import { buscarHistorico, buscarComparativoCompleto, consolidarMesAtual } from './actions'
 import { HistoricoTable } from '@/components/historico-table'
 import { ComparativoTable } from '@/components/comparativo-table'
 import { CrescimentoChart } from '@/components/crescimento-chart'
@@ -10,7 +10,7 @@ export default async function HistoricoPage({ searchParams }: { searchParams: Pr
   const sp = await searchParams
   const metrica = sp.metrica ?? 'valor'
   const { vendas, cotas, series } = await buscarHistorico(metrica)
-  const { anos: anosComp, linhas: linhasComp } = await buscarComparativoAnual(metrica)
+  const comparativo = await buscarComparativoCompleto()
 
   return (
     <div className="space-y-6">
@@ -33,9 +33,23 @@ export default async function HistoricoPage({ searchParams }: { searchParams: Pr
       </Card>
 
       <Card className="border-slate-800 bg-slate-900">
-        <CardHeader><CardTitle className="text-base">Comparativo Mês a Mês (crescimento/queda) — {metrica}</CardTitle></CardHeader>
+        <CardHeader><CardTitle className="text-base">Comparativo Mês a Mês — Valor (R$)</CardTitle></CardHeader>
         <CardContent className="overflow-x-auto">
-          <ComparativoTable anos={anosComp} linhas={linhasComp} metrica={metrica} />
+          <ComparativoTable anos={comparativo.valor.anos} linhas={comparativo.valor.linhas} metrica="valor" />
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader><CardTitle className="text-base">Comparativo Mês a Mês — Atendimentos</CardTitle></CardHeader>
+        <CardContent className="overflow-x-auto">
+          <ComparativoTable anos={comparativo.atendimentos.anos} linhas={comparativo.atendimentos.linhas} metrica="atendimentos" />
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader><CardTitle className="text-base">Comparativo Mês a Mês — Peças</CardTitle></CardHeader>
+        <CardContent className="overflow-x-auto">
+          <ComparativoTable anos={comparativo.pecas.anos} linhas={comparativo.pecas.linhas} metrica="pecas" />
         </CardContent>
       </Card>
 

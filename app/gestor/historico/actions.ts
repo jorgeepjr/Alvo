@@ -67,6 +67,13 @@ export async function buscarComparativoAnual(metrica: 'valor' | 'atendimentos' |
   return { anos, linhas }
 }
 
+export async function buscarComparativoCompleto() {
+  const valor = await buscarComparativoAnual('valor')
+  const atendimentos = await buscarComparativoAnual('atendimentos')
+  const pecas = await buscarComparativoAnual('pecas')
+  return { valor, atendimentos, pecas }
+}
+
 export async function consolidarMesAtual(): Promise<void> {
   const supabase = await createClient()
   const hoje = new Date()

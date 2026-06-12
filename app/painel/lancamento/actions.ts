@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { atualizarHistoricoMes } from '@/lib/historico'
 
 export async function salvarLancamentoVendedor(
   _prevState: { error?: string; success?: boolean } | null,
@@ -58,7 +59,10 @@ export async function salvarLancamentoVendedor(
     })
   }
 
+  await atualizarHistoricoMes(supabase, data)
+
   revalidatePath('/painel/lancamento')
   revalidatePath('/painel')
+  revalidatePath('/gestor/historico')
   return { success: true }
 }

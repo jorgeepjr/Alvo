@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { atualizarHistoricoMes } from '@/lib/historico'
 
 export async function salvarLancamentoGestor(formData: FormData): Promise<void> {
   const supabase = await createClient()
@@ -39,9 +40,12 @@ export async function salvarLancamentoGestor(formData: FormData): Promise<void> 
     })
   }
 
+  await atualizarHistoricoMes(supabase, data)
+
   revalidatePath('/gestor/lancamento')
   revalidatePath('/gestor')
   revalidatePath('/painel')
+  revalidatePath('/gestor/historico')
 }
 
 export async function fecharDia(data: string): Promise<void> {
