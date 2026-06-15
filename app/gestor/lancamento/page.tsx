@@ -16,6 +16,12 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
 
   const lancamentoLoja = lancamentos?.find((l) => l.vendedor_id === null)
 
+  // Soma de todos os vendedores (exclui a "Venda da Loja")
+  const lancamentosVendedores = lancamentos?.filter((l) => l.vendedor_id !== null) ?? []
+  const totalAtendimentos = lancamentosVendedores.reduce((acc, l) => acc + (l.atendimentos ?? 0), 0)
+  const totalPecas = lancamentosVendedores.reduce((acc, l) => acc + (l.pecas ?? 0), 0)
+  const totalValor = lancamentosVendedores.reduce((acc, l) => acc + Number(l.valor ?? 0), 0)
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Lançamento de Vendas</h1>
@@ -115,6 +121,13 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
                   </TableRow>
                 )
               })}
+              <TableRow className="border-t-2 border-slate-700 font-semibold">
+                <TableCell className="text-indigo-300">Total dos Vendedores</TableCell>
+                <TableCell className="text-indigo-300">{totalAtendimentos}</TableCell>
+                <TableCell className="text-indigo-300">{totalPecas}</TableCell>
+                <TableCell className="text-indigo-300">R$ {totalValor.toFixed(2)}</TableCell>
+                <TableCell>-</TableCell>
+              </TableRow>
             </TableBody>
           </Table>
         </CardContent>
