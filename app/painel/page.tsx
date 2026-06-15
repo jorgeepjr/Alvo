@@ -6,7 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Button } from '@/components/ui/button'
 import { alternarConclusaoTarefa, alternarItemRotina } from '@/app/gestor/tarefas/actions'
 import { fraseDoDia } from '@/lib/frases-motivacionais'
-import { LancamentoForm } from '@/app/painel/lancamento/lancamento-form'
+import { VendaRapidaForm } from '@/app/painel/venda-rapida-form'
 import { MeuMesChart } from '@/components/meu-mes-chart'
 
 function inicioFimSemana(data: Date): { inicio: string; fim: string } {
@@ -331,7 +331,10 @@ export default async function PainelVendedor() {
               {situacaoHoje === 'feriado' ? 'Hoje é feriado.' : 'A loja está fechada hoje.'} Não é necessário lançar vendas.
             </p>
           ) : (
-            <LancamentoForm data={hojeStr} existente={lancHoje} />
+            <VendaRapidaForm
+              data={hojeStr}
+              totalDia={{ atendimentos: atendimentosHoje, pecas: pecasHoje, valor: valorHoje }}
+            />
           )}
         </CardContent>
       </Card>
