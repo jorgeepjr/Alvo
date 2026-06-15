@@ -16,11 +16,16 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
 
   const lancamentoLoja = lancamentos?.find((l) => l.vendedor_id === null)
 
-  // Soma de todos os vendedores (exclui a "Venda da Loja")
+  // Soma de todos os vendedores (exclui a "Venda da Loja") — base da cota
   const lancamentosVendedores = lancamentos?.filter((l) => l.vendedor_id !== null) ?? []
   const totalAtendimentos = lancamentosVendedores.reduce((acc, l) => acc + (l.atendimentos ?? 0), 0)
   const totalPecas = lancamentosVendedores.reduce((acc, l) => acc + (l.pecas ?? 0), 0)
   const totalValor = lancamentosVendedores.reduce((acc, l) => acc + Number(l.valor ?? 0), 0)
+
+  // Total Geral = vendedores + Venda da Loja
+  const totalGeralAtendimentos = totalAtendimentos + (lancamentoLoja?.atendimentos ?? 0)
+  const totalGeralPecas = totalPecas + (lancamentoLoja?.pecas ?? 0)
+  const totalGeralValor = totalValor + Number(lancamentoLoja?.valor ?? 0)
 
   return (
     <div className="space-y-6">
@@ -122,10 +127,17 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
                 )
               })}
               <TableRow className="border-t-2 border-slate-700 font-semibold">
-                <TableCell className="text-indigo-300">Total dos Vendedores</TableCell>
-                <TableCell className="text-indigo-300">{totalAtendimentos}</TableCell>
-                <TableCell className="text-indigo-300">{totalPecas}</TableCell>
-                <TableCell className="text-indigo-300">R$ {totalValor.toFixed(2)}</TableCell>
+                <TableCell className="text-slate-300">Total dos Vendedores (cota)</TableCell>
+                <TableCell className="text-slate-300">{totalAtendimentos}</TableCell>
+                <TableCell className="text-slate-300">{totalPecas}</TableCell>
+                <TableCell className="text-slate-300">R$ {totalValor.toFixed(2)}</TableCell>
+                <TableCell>-</TableCell>
+              </TableRow>
+              <TableRow className="font-bold">
+                <TableCell className="text-green-400">Total Geral (vendedores + loja)</TableCell>
+                <TableCell className="text-green-400">{totalGeralAtendimentos}</TableCell>
+                <TableCell className="text-green-400">{totalGeralPecas}</TableCell>
+                <TableCell className="text-green-400">R$ {totalGeralValor.toFixed(2)}</TableCell>
                 <TableCell>-</TableCell>
               </TableRow>
             </TableBody>
