@@ -5,7 +5,7 @@ import { distribuirCotaInteira, calcularSugestaoMeta, calcularSugestaoTendencia 
 import { revalidatePath } from 'next/cache'
 
 const PESOS_DEFAULT: Record<number, number> = {
-  0: 1.4, // domingo
+  0: 0, // domingo — sem cota por padrão (loja normalmente fechada)
   1: 0.7, // segunda
   2: 0.8, // terça
   3: 0.8, // quarta
@@ -29,13 +29,13 @@ export async function salvarMetaMensal(formData: FormData): Promise<void> {
   revalidatePath('/gestor/metas')
 }
 
-function diasDoMes(ano: number, mes: number): { data: string; pesoPadrao: number }[] {
-  const dias: { data: string; pesoPadrao: number }[] = []
+function diasDoMes(ano: number, mes: number): { data: string; pesoPadrao: number; diaSemana: number }[] {
+  const dias: { data: string; pesoPadrao: number; diaSemana: number }[] = []
   const ultimoDia = new Date(ano, mes, 0).getDate()
   for (let dia = 1; dia <= ultimoDia; dia++) {
     const date = new Date(ano, mes - 1, dia)
     const data = `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
-    dias.push({ data, pesoPadrao: PESOS_DEFAULT[date.getDay()] })
+    dias.push({ data, pesoPadrao: PESOS_DEFAULT[date.getDay()], diaSemana: date.getDay() })
   }
   return dias
 }
@@ -66,7 +66,9 @@ export async function gerarDistribuicaoAutomatica(formData: FormData): Promise<v
     cota_valor: cotasValor[i].cota,
     cota_atendimentos: cotasAtendimentos[i].cota,
     cota_pecas: cotasPecas[i].cota,
-    situacao: 'normal' as const,
+    // Domingo entra fechado por padrão (sem cota). O gestor pode marcar como
+    // "Normal" e ajustar a cota num domingo de data festiva.
+    situacao: d.diaSemana === 0 ? ('fechado' as const) : ('normal' as const),
   }))
 
   const inicioMes = dias[0].data
