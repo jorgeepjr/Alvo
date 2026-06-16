@@ -17,6 +17,7 @@ export type Manual = {
   titulo: string
   descricao: string
   publico?: Publico
+  oculto?: boolean // não aparece na lista (ex: conteúdo já coberto pelo sistema)
   secoes: Secao[]
 }
 
@@ -25,6 +26,7 @@ export const MANUAIS: Manual[] = [
     slug: 'rotina-de-vendas',
     titulo: 'Rotina de Vendas',
     descricao: 'A rotina diária da loja, hora a hora — do abrir ao fechar.',
+    oculto: true, // já disponível como checklist diário no painel do sistema
     secoes: [
       {
         titulo: '09:00 — Organização Interna',
@@ -791,7 +793,7 @@ export function getManual(slug: string): Manual | undefined {
 // Lista de manuais visíveis para o perfil. Gestor vê tudo; vendedor não vê
 // os manuais marcados como 'gestor'.
 export function manuaisVisiveis(isGestor: boolean): Manual[] {
-  return MANUAIS.filter((m) => isGestor || m.publico !== 'gestor')
+  return MANUAIS.filter((m) => !m.oculto && (isGestor || m.publico !== 'gestor'))
 }
 
 // Retorna o manual com as seções filtradas conforme o perfil. Devolve
@@ -799,6 +801,7 @@ export function manuaisVisiveis(isGestor: boolean): Manual[] {
 export function getManualVisivel(slug: string, isGestor: boolean): Manual | undefined {
   const manual = getManual(slug)
   if (!manual) return undefined
+  if (manual.oculto) return undefined
   if (!isGestor && manual.publico === 'gestor') return undefined
   if (isGestor) return manual
   return { ...manual, secoes: manual.secoes.filter((s) => s.publico !== 'gestor') }

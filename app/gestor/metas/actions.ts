@@ -111,9 +111,9 @@ export async function ajustarCotaDia(
   mes: number,
   formData: FormData
 ): Promise<void> {
-  const cota_valor = Number(formData.get('cota_valor'))
-  const cota_atendimentos = Number(formData.get('cota_atendimentos'))
-  const cota_pecas = Number(formData.get('cota_pecas'))
+  const cota_valor = Math.round(Number(formData.get('cota_valor')))
+  const cota_atendimentos = Math.round(Number(formData.get('cota_atendimentos')))
+  const cota_pecas = Math.round(Number(formData.get('cota_pecas')))
 
   const supabase = await createClient()
 
