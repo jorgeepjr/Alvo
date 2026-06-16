@@ -17,9 +17,9 @@ const PESOS_DEFAULT: Record<number, number> = {
 export async function salvarMetaMensal(formData: FormData): Promise<void> {
   const ano = Number(formData.get('ano'))
   const mes = Number(formData.get('mes'))
-  const meta_valor = Number(formData.get('meta_valor'))
-  const meta_atendimentos = Number(formData.get('meta_atendimentos'))
-  const meta_pecas = Number(formData.get('meta_pecas'))
+  const meta_valor = Math.round(Number(formData.get('meta_valor')))
+  const meta_atendimentos = Math.round(Number(formData.get('meta_atendimentos')))
+  const meta_pecas = Math.round(Number(formData.get('meta_pecas')))
 
   const supabase = await createClient()
   await supabase

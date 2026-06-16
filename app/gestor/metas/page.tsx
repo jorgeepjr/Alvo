@@ -132,15 +132,15 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
             <input type="hidden" name="mes" value={mes} />
             <div className="space-y-1">
               <Label htmlFor="meta_valor">Meta Valor (R$)</Label>
-              <Input id="meta_valor" name="meta_valor" type="number" step="any" defaultValue={meta?.meta_valor ?? sugestao?.sugestao.moderada ?? 0} className="bg-slate-800 border-slate-700" />
+              <Input id="meta_valor" name="meta_valor" type="number" step="1" min="0" defaultValue={meta?.meta_valor != null ? Math.round(Number(meta.meta_valor)) : sugestao ? Math.round(sugestao.sugestao.moderada) : 0} className="bg-slate-800 border-slate-700" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="meta_atendimentos">Meta Atendimentos</Label>
-              <Input id="meta_atendimentos" name="meta_atendimentos" type="number" defaultValue={meta?.meta_atendimentos ?? 0} className="bg-slate-800 border-slate-700" />
+              <Input id="meta_atendimentos" name="meta_atendimentos" type="number" step="1" min="0" defaultValue={meta?.meta_atendimentos ?? 0} className="bg-slate-800 border-slate-700" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="meta_pecas">Meta Peças</Label>
-              <Input id="meta_pecas" name="meta_pecas" type="number" defaultValue={meta?.meta_pecas ?? 0} className="bg-slate-800 border-slate-700" />
+              <Input id="meta_pecas" name="meta_pecas" type="number" step="1" min="0" defaultValue={meta?.meta_pecas ?? 0} className="bg-slate-800 border-slate-700" />
             </div>
             <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Salvar Meta</Button>
           </form>
