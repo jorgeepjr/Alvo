@@ -71,7 +71,7 @@ export function distribuirCotaInteira(dias: DiaPeso[], total: number): DiaCota[]
   }))
   const base = exatos.map((e) => ({ data: e.data, cota: Math.floor(e.valor), resto: e.valor - Math.floor(e.valor) }))
 
-  let alocado = base.reduce((acc, b) => acc + b.cota, 0)
+  const alocado = base.reduce((acc, b) => acc + b.cota, 0)
   let sobra = totalInt - alocado
 
   // Distribui as unidades restantes para os dias com maior resto
