@@ -202,15 +202,18 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                 ))}
                 <TableRow className="border-t-2 border-slate-700 font-semibold">
                   <TableCell className="text-zinc-300">Total distribuído</TableCell>
-                  <TableCell className="text-zinc-300">R$ {formatBRL(somaCotaValor)}</TableCell>
-                  <TableCell className="text-zinc-300">{somaCotaAtend}</TableCell>
-                  <TableCell className="text-zinc-300">{somaCotaPecas}</TableCell>
-                  <TableCell colSpan={2}>
+                  <TableCell className={meta && Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? 'text-green-400' : 'text-yellow-400'}>
+                    R$ {formatBRL(somaCotaValor)} {meta && (Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? '✓' : '⚠')}
+                  </TableCell>
+                  <TableCell className={meta && somaCotaAtend === Number(meta.meta_atendimentos) ? 'text-green-400' : 'text-yellow-400'}>
+                    {somaCotaAtend} {meta && (somaCotaAtend === Number(meta.meta_atendimentos) ? '✓' : '⚠')}
+                  </TableCell>
+                  <TableCell className={meta && somaCotaPecas === Number(meta.meta_pecas) ? 'text-green-400' : 'text-yellow-400'}>
+                    {somaCotaPecas} {meta && (somaCotaPecas === Number(meta.meta_pecas) ? '✓' : '⚠')}
+                  </TableCell>
+                  <TableCell colSpan={2} className="text-xs text-slate-400">
                     {meta && (
-                      <span className={Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? 'text-green-400' : 'text-yellow-400'}>
-                        Meta: R$ {formatBRL(Number(meta.meta_valor))}
-                        {Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? ' ✓' : ` (dif. R$ ${formatBRL(somaCotaValor - Number(meta.meta_valor))})`}
-                      </span>
+                      <>Meta: R$ {formatBRL(Number(meta.meta_valor))} · {meta.meta_atendimentos} atend · {meta.meta_pecas} peças</>
                     )}
                   </TableCell>
                 </TableRow>
