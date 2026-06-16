@@ -45,7 +45,15 @@ export async function proxy(request: NextRequest) {
     if (profile?.perfil !== 'gestor' && request.nextUrl.pathname.startsWith('/gestor')) {
       return NextResponse.redirect(new URL('/painel', request.url))
     }
-    if (profile?.perfil === 'gestor' && request.nextUrl.pathname.startsWith('/painel')) {
+    // Páginas de /painel compartilhadas com o gestor (não redirecionar).
+    const painelCompartilhado =
+      request.nextUrl.pathname.startsWith('/painel/assistente') ||
+      request.nextUrl.pathname.startsWith('/painel/manuais')
+    if (
+      profile?.perfil === 'gestor' &&
+      request.nextUrl.pathname.startsWith('/painel') &&
+      !painelCompartilhado
+    ) {
       return NextResponse.redirect(new URL('/gestor', request.url))
     }
   }
