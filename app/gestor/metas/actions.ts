@@ -155,8 +155,9 @@ export async function ajustarCotaDia(
       .lte('data', fimMes)
 
     const diaEditado = (todos ?? []).find((d) => d.id === distribuicaoId)
-    const restante = Number(meta.meta_valor) - cotaValorFinal
 
+    // Dias "redistribuíveis": dias normais APÓS o dia editado. Se não houver
+    // dias seguintes, redistribui entre todos os demais dias normais.
     let outros = (todos ?? []).filter(
       (d) => d.id !== distribuicaoId && d.situacao === 'normal' && diaEditado && d.data > diaEditado.data
     )
@@ -164,19 +165,26 @@ export async function ajustarCotaDia(
       outros = (todos ?? []).filter((d) => d.id !== distribuicaoId && d.situacao === 'normal')
     }
 
-    const somaOutrosAtual = outros.reduce((acc, d) => acc + Number(d.cota_valor), 0)
+    const idsRedistribuiveis = new Set(outros.map((d) => d.id))
+
+    // Soma dos dias FIXOS (não editados e não redistribuíveis): dias anteriores
+    // já ajustados e dias fechados/feriado. Esses NÃO podem ser contados de novo.
+    const somaFixos = (todos ?? [])
+      .filter((d) => d.id !== distribuicaoId && !idsRedistribuiveis.has(d.id))
+      .reduce((acc, d) => acc + Number(d.cota_valor), 0)
+
+    // O que sobra da meta para os dias redistribuíveis.
+    const restante = Math.max(Math.round(Number(meta.meta_valor)) - cotaValorFinal - somaFixos, 0)
 
     if (outros.length > 0) {
-      const restanteAjustado = Math.max(restante, 0)
-      for (const d of outros) {
-        const novaCota =
-          somaOutrosAtual > 0
-            ? (Number(d.cota_valor) / somaOutrosAtual) * restanteAjustado
-            : restanteAjustado / outros.length
+      const somaPesos = outros.reduce((acc, d) => acc + Number(d.cota_valor), 0)
+      const pesos = outros.map((d) => ({ data: d.data, peso: somaPesos > 0 ? Number(d.cota_valor) : 1 }))
+      const novas = distribuirCotaInteira(pesos, restante)
+      for (let k = 0; k < outros.length; k++) {
         await supabase
           .from('distribuicao_diaria')
-          .update({ cota_valor: novaCota })
-          .eq('id', d.id)
+          .update({ cota_valor: novas[k].cota })
+          .eq('id', outros[k].id)
       }
     }
   }
