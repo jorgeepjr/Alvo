@@ -67,7 +67,7 @@ export function ChatAssistente() {
             key={i}
             className={`rounded-md px-3 py-2 text-sm whitespace-pre-wrap ${
               m.role === 'user'
-                ? 'bg-indigo-600/20 text-indigo-100 ml-auto max-w-[85%]'
+                ? 'bg-zinc-100/10 text-zinc-100 ml-auto max-w-[85%]'
                 : 'bg-slate-800 text-slate-200 max-w-[85%]'
             }`}
           >
@@ -104,7 +104,7 @@ export function ChatAssistente() {
           rows={2}
           className="bg-slate-800 border-slate-700"
         />
-        <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500" disabled={loading}>
+        <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium" disabled={loading}>
           Enviar
         </Button>
       </form>

@@ -78,7 +78,7 @@ export async function gerarAnaliseSemanal(): Promise<{ analise?: string; error?:
   try {
     const texto = await chamarGemini(
       apiKey,
-      `Você é o analista de vendas de uma loja de roupas femininas. Receberá dados dos últimos 14 dias (semana atual vs semana anterior) por vendedor.
+      `Você é o analista de vendas da ZYNK, loja de moda masculina. Receberá dados dos últimos 14 dias (semana atual vs semana anterior) por vendedor.
 Gere um relatório curto em português do Brasil para a gestora, com:
 1. Resumo geral da semana (crescimento ou queda vs semana anterior).
 2. Destaque individual de cada vendedor: vendas vs cota, ticket médio (valor/atendimentos), peças por atendimento, e empenho na rotina.

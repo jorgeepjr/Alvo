@@ -73,7 +73,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
       </form>
 
       {sugestao && (
-        <Card className="border-indigo-800 bg-indigo-950/40">
+        <Card className="border-zinc-700 bg-zinc-900/40">
           <CardHeader>
             <CardTitle className="text-base">Sugestão de Meta (baseada nos últimos 3 anos)</CardTitle>
           </CardHeader>
@@ -142,7 +142,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
               <Label htmlFor="meta_pecas">Meta Peças</Label>
               <Input id="meta_pecas" name="meta_pecas" type="number" defaultValue={meta?.meta_pecas ?? 0} className="bg-slate-800 border-slate-700" />
             </div>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500">Salvar Meta</Button>
+            <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Salvar Meta</Button>
           </form>
         </CardContent>
       </Card>
@@ -201,10 +201,10 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                   </TableRow>
                 ))}
                 <TableRow className="border-t-2 border-slate-700 font-semibold">
-                  <TableCell className="text-indigo-300">Total distribuído</TableCell>
-                  <TableCell className="text-indigo-300">R$ {formatBRL(somaCotaValor)}</TableCell>
-                  <TableCell className="text-indigo-300">{somaCotaAtend}</TableCell>
-                  <TableCell className="text-indigo-300">{somaCotaPecas}</TableCell>
+                  <TableCell className="text-zinc-300">Total distribuído</TableCell>
+                  <TableCell className="text-zinc-300">R$ {formatBRL(somaCotaValor)}</TableCell>
+                  <TableCell className="text-zinc-300">{somaCotaAtend}</TableCell>
+                  <TableCell className="text-zinc-300">{somaCotaPecas}</TableCell>
                   <TableCell colSpan={2}>
                     {meta && (
                       <span className={Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? 'text-green-400' : 'text-yellow-400'}>

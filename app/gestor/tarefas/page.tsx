@@ -52,7 +52,7 @@ export default async function TarefasPage({ searchParams }: { searchParams: Prom
                 ))}
               </select>
             </div>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500">Adicionar</Button>
+            <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Adicionar</Button>
           </form>
         </CardContent>
       </Card>

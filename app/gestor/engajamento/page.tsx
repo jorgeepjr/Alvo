@@ -67,7 +67,7 @@ export default async function EngajamentoPage() {
         Assistente IA (podem trazer ideias de melhoria).
       </p>
 
-      <Card className="border-indigo-800 bg-slate-900">
+      <Card className="border-zinc-700 bg-slate-900">
         <CardHeader>
           <CardTitle className="text-base">Análise Semanal com IA</CardTitle>
         </CardHeader>

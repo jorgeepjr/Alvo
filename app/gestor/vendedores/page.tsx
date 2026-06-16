@@ -38,7 +38,7 @@ export default async function VendedoresPage() {
               <Label htmlFor="senha">Senha</Label>
               <Input id="senha" name="senha" type="password" required className="bg-slate-800 border-slate-700" />
             </div>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500">Cadastrar</Button>
+            <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Cadastrar</Button>
           </form>
         </CardContent>
       </Card>
@@ -57,7 +57,7 @@ export default async function VendedoresPage() {
               {vendedores?.map((v) => (
                 <TableRow key={v.id}>
                   <TableCell>
-                    <Link href={`/gestor/vendedores/${v.id}`} className="text-indigo-400 hover:underline">
+                    <Link href={`/gestor/vendedores/${v.id}`} className="text-zinc-300 hover:underline">
                       {v.nome}
                     </Link>
                   </TableCell>

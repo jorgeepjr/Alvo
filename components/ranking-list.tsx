@@ -14,7 +14,7 @@ export function RankingList({ items }: { items: RankingItem[] }) {
     <div className="space-y-2">
       {ordenado.map((item, i) => (
         <div key={item.id} className="flex items-center gap-3 rounded-md border border-slate-800 p-3">
-          <span className="text-lg font-bold text-indigo-400 w-6 text-center">{i + 1}</span>
+          <span className="text-lg font-bold text-zinc-300 w-6 text-center">{i + 1}</span>
           <div className="flex-1">
             <p className="font-medium">{item.nome}</p>
             <p className="text-xs text-slate-400">

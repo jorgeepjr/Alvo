@@ -5,7 +5,8 @@ import { signIn } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader } from '@/components/ui/card'
+import Image from 'next/image'
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
@@ -22,12 +23,11 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 to-slate-900">
-      <Card className="w-full max-w-sm border-slate-800 bg-slate-900/80 backdrop-blur">
-        <CardHeader className="space-y-1 text-center">
-          <div className="text-3xl font-bold text-indigo-400 mb-1">🎯</div>
-          <CardTitle className="text-2xl font-bold">Alvo</CardTitle>
-          <p className="text-sm text-muted-foreground">Faça login para continuar</p>
+    <div className="min-h-screen flex items-center justify-center bg-[#0c1014]">
+      <Card className="w-full max-w-sm border-white/10 bg-[#11161b]">
+        <CardHeader className="space-y-3 text-center">
+          <Image src="/brand/zynk-logo-branco.png" alt="ZYNK" width={160} height={48} className="h-10 w-auto mx-auto" priority />
+          <p className="text-sm text-zinc-400">Faça login para continuar</p>
         </CardHeader>
         <CardContent>
           <form action={handleSubmit} className="space-y-4">
@@ -40,7 +40,7 @@ export default function LoginPage() {
               <Input id="password" name="password" type="password" placeholder="••••••••" required className="bg-slate-800 border-slate-700" />
             </div>
             {error && <p className="text-sm text-red-400 text-center">{error}</p>}
-            <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-500" disabled={loading}>
+            <Button type="submit" className="w-full bg-zinc-100 text-zinc-950 hover:bg-white font-medium" disabled={loading}>
               {loading ? 'Aguarde...' : 'Entrar'}
             </Button>
           </form>

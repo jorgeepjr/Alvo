@@ -89,7 +89,7 @@ export default function ImportarPage() {
                 ))}
               </TableBody>
             </Table>
-            <Button onClick={handleConfirmar} className="bg-indigo-600 hover:bg-indigo-500">Confirmar Importação</Button>
+            <Button onClick={handleConfirmar} className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Confirmar Importação</Button>
           </CardContent>
         </Card>
       )}

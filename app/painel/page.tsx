@@ -242,9 +242,9 @@ export default async function PainelVendedor() {
         </Card>
       )}
 
-      <Card className="border-indigo-800 bg-gradient-to-r from-indigo-950/60 to-slate-900">
+      <Card className="border-zinc-700 bg-gradient-to-r from-zinc-900/70 to-slate-900">
         <CardContent className="py-4">
-          <p className="text-sm text-indigo-200 italic">💡 {fraseDoDia(hoje)}</p>
+          <p className="text-sm text-zinc-200 italic">💡 {fraseDoDia(hoje)}</p>
         </CardContent>
       </Card>
 
@@ -260,7 +260,7 @@ export default async function PainelVendedor() {
             <div className="mt-2 h-2 w-full rounded-full bg-slate-800 overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${
-                  totalConcluidosRotina >= totalItensRotina ? 'bg-green-500' : 'bg-indigo-500'
+                  totalConcluidosRotina >= totalItensRotina ? 'bg-green-500' : 'bg-white'
                 }`}
                 style={{ width: `${totalItensRotina > 0 ? (totalConcluidosRotina / totalItensRotina) * 100 : 0}%` }}
               />
@@ -277,7 +277,7 @@ export default async function PainelVendedor() {
                   }`}
                 >
                   <p className="text-sm font-semibold mb-2 flex items-center gap-2">
-                    <span className="rounded bg-indigo-600/20 text-indigo-300 px-2 py-0.5 text-xs">{grupo.horario}</span>
+                    <span className="rounded bg-zinc-100/10 text-zinc-300 px-2 py-0.5 text-xs">{grupo.horario}</span>
                     <span className={blocoCompleto ? 'text-green-400' : 'text-slate-200'}>
                       {grupo.bloco} {blocoCompleto && '✓'}
                     </span>

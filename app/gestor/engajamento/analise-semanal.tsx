@@ -20,7 +20,7 @@ export function AnaliseSemanal() {
 
   return (
     <div className="space-y-3">
-      <Button onClick={gerar} disabled={loading} className="bg-indigo-600 hover:bg-indigo-500">
+      <Button onClick={gerar} disabled={loading} className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">
         {loading ? 'Analisando...' : analise ? 'Gerar novamente' : '✨ Gerar análise da semana (IA)'}
       </Button>
       {erro && <p className="text-sm text-red-400">{erro}</p>}

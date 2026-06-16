@@ -1,20 +1,21 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const cormorant = Cormorant_Garamond({
+  variable: "--font-heading",
+  weight: ["500", "600", "700"],
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Alvo",
-  description: "Painel de Metas de Vendas",
+  title: "ZYNK",
+  description: "Painel de Metas e Performance de Vendas — ZYNK",
 };
 
 export default function RootLayout({
@@ -25,9 +26,9 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`dark ${geistSans.variable} ${geistMono.variable}`}
+      className={`dark ${inter.variable} ${cormorant.variable}`}
     >
-      <body className="bg-slate-950 text-slate-100 antialiased">
+      <body className="bg-[#0c1014] text-[#efefef] antialiased">
         {children}
       </body>
     </html>

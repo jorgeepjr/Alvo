@@ -54,7 +54,7 @@ export function LancamentoForm({ data, existente, bloqueado }: { data: string; e
         <Label htmlFor="observacao">Observação</Label>
         <Input id="observacao" name="observacao" defaultValue={existente?.observacao ?? ''} disabled={fechado} className="bg-slate-800 border-slate-700" />
       </div>
-      <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500 sm:col-span-2" disabled={fechado}>
+      <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium sm:col-span-2" disabled={fechado}>
         Salvar
       </Button>
     </form>

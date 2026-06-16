@@ -84,7 +84,7 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
               <Label htmlFor="observacao">Observação</Label>
               <Input id="observacao" name="observacao" className="bg-slate-800 border-slate-700" />
             </div>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500">Salvar</Button>
+            <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Salvar</Button>
           </form>
         </CardContent>
       </Card>

@@ -77,7 +77,7 @@ export default async function VendedorDetalhePage({ params }: { params: Promise<
               <Label htmlFor="senha">Nova senha (opcional)</Label>
               <Input id="senha" name="senha" type="password" placeholder="deixe em branco para manter" className="bg-slate-800 border-slate-700" />
             </div>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-500">Salvar</Button>
+            <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Salvar</Button>
           </form>
         </CardContent>
       </Card>

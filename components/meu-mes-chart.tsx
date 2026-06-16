@@ -22,7 +22,7 @@ export function MeuMesChart({ dados }: { dados: PontoDia[] }) {
           labelFormatter={(dia) => `Dia ${dia}`}
         />
         <Legend />
-        <Line type="monotone" dataKey="atual" name="Vendido (real)" stroke="#6366f1" strokeWidth={3} connectNulls dot={false} />
+        <Line type="monotone" dataKey="atual" name="Vendido (real)" stroke="#efefef" strokeWidth={3} connectNulls dot={false} />
         <Line type="monotone" dataKey="projecao" name="Se continuar no ritmo" stroke="#94a3b8" strokeWidth={2} strokeDasharray="6 4" connectNulls dot={false} />
         <Line type="monotone" dataKey="meta" name="Minha meta" stroke="#22c55e" strokeWidth={2} strokeDasharray="3 3" dot={false} />
       </LineChart>

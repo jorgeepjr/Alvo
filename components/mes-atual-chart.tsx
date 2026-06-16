@@ -30,7 +30,7 @@ export function MesAtualChart({
           labelFormatter={(dia) => `Dia ${dia}`}
         />
         <Legend />
-        <Line type="monotone" dataKey="atual" name={`${anoAtual} (real)`} stroke="#6366f1" strokeWidth={3} connectNulls dot={false} />
+        <Line type="monotone" dataKey="atual" name={`${anoAtual} (real)`} stroke="#efefef" strokeWidth={3} connectNulls dot={false} />
         <Line type="monotone" dataKey="anoPassado" name={`Ritmo ${anoPassado}`} stroke="#f59e0b" strokeWidth={2} strokeDasharray="6 4" dot={false} />
         <Line type="monotone" dataKey="meta" name="Ritmo da meta" stroke="#22c55e" strokeWidth={2} strokeDasharray="3 3" dot={false} />
       </LineChart>
