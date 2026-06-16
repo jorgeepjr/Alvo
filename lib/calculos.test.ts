@@ -1,5 +1,21 @@
 import { describe, it, expect } from 'vitest'
-import { calcularProjecao, calcularTicketMedio, distribuirCotaPorPeso, calcularSugestaoMeta } from './calculos'
+import { calcularProjecao, calcularTicketMedio, distribuirCotaPorPeso, distribuirCotaInteira, calcularSugestaoMeta } from './calculos'
+
+describe('distribuirCotaInteira', () => {
+  it('soma exatamente igual ao total (sem perder por arredondamento)', () => {
+    const dias = Array.from({ length: 30 }, (_, i) => ({ data: `2026-06-${String(i + 1).padStart(2, '0')}`, peso: [1.4, 0.7, 0.8, 0.8, 0.9, 1.1, 1.4][i % 7] }))
+    const cotas = distribuirCotaInteira(dias, 50000)
+    const soma = cotas.reduce((acc, c) => acc + c.cota, 0)
+    expect(soma).toBe(50000)
+    expect(cotas.every((c) => Number.isInteger(c.cota))).toBe(true)
+  })
+
+  it('dias com peso 0 recebem cota 0', () => {
+    const cotas = distribuirCotaInteira([{ data: 'a', peso: 0 }, { data: 'b', peso: 1 }], 100)
+    expect(cotas[0].cota).toBe(0)
+    expect(cotas[1].cota).toBe(100)
+  })
+})
 
 describe('calcularProjecao', () => {
   it('projeta o valor final do mês com base no ritmo atual', () => {

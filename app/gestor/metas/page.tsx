@@ -51,6 +51,11 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
 
   const pctMap = new Map((percentuais ?? []).map((p) => [p.vendedor_id, Number(p.percentual)]))
 
+  // Somatórios para conferência da distribuição vs. meta
+  const somaCotaValor = (distribuicao ?? []).reduce((acc, d) => acc + Number(d.cota_valor), 0)
+  const somaCotaAtend = (distribuicao ?? []).reduce((acc, d) => acc + Number(d.cota_atendimentos), 0)
+  const somaCotaPecas = (distribuicao ?? []).reduce((acc, d) => acc + Number(d.cota_pecas), 0)
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Configuração de Metas — {MESES[mes - 1]}/{ano}</h1>
@@ -173,7 +178,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                     <TableCell>{d.data.split('-').reverse().join('/')}</TableCell>
                     <TableCell>
                       <form action={ajustarCotaDia.bind(null, d.id, ano, mes)} className="flex gap-1">
-                        <Input name="cota_valor" type="number" step="1" defaultValue={Math.round(Number(d.cota_valor))} className="bg-slate-800 border-slate-700 w-24 h-8" />
+                        <Input name="cota_valor" type="number" step="1" defaultValue={Number(d.cota_valor)} className="bg-slate-800 border-slate-700 w-24 h-8" />
                         <Input name="cota_atendimentos" type="number" defaultValue={d.cota_atendimentos} className="hidden" />
                         <Input name="cota_pecas" type="number" defaultValue={d.cota_pecas} className="hidden" />
                         <Button type="submit" size="sm" variant="outline">Salvar</Button>
@@ -195,6 +200,20 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                     </TableCell>
                   </TableRow>
                 ))}
+                <TableRow className="border-t-2 border-slate-700 font-semibold">
+                  <TableCell className="text-indigo-300">Total distribuído</TableCell>
+                  <TableCell className="text-indigo-300">R$ {formatBRL(somaCotaValor)}</TableCell>
+                  <TableCell className="text-indigo-300">{somaCotaAtend}</TableCell>
+                  <TableCell className="text-indigo-300">{somaCotaPecas}</TableCell>
+                  <TableCell colSpan={2}>
+                    {meta && (
+                      <span className={Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? 'text-green-400' : 'text-yellow-400'}>
+                        Meta: R$ {formatBRL(Number(meta.meta_valor))}
+                        {Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? ' ✓' : ` (dif. R$ ${formatBRL(somaCotaValor - Number(meta.meta_valor))})`}
+                      </span>
+                    )}
+                  </TableCell>
+                </TableRow>
               </TableBody>
             </Table>
           )}

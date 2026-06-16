@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { distribuirCotaPorPeso, calcularSugestaoMeta, calcularSugestaoTendencia } from '@/lib/calculos'
+import { distribuirCotaInteira, calcularSugestaoMeta, calcularSugestaoTendencia } from '@/lib/calculos'
 import { revalidatePath } from 'next/cache'
 
 const PESOS_DEFAULT: Record<number, number> = {
@@ -55,25 +55,17 @@ export async function gerarDistribuicaoAutomatica(formData: FormData): Promise<v
   if (!meta) return
 
   const dias = diasDoMes(ano, mes)
-  const cotasValor = distribuirCotaPorPeso(
-    dias.map((d) => ({ data: d.data, peso: d.pesoPadrao })),
-    Number(meta.meta_valor)
-  )
-  const cotasAtendimentos = distribuirCotaPorPeso(
-    dias.map((d) => ({ data: d.data, peso: d.pesoPadrao })),
-    Number(meta.meta_atendimentos)
-  )
-  const cotasPecas = distribuirCotaPorPeso(
-    dias.map((d) => ({ data: d.data, peso: d.pesoPadrao })),
-    Number(meta.meta_pecas)
-  )
+  const pesos = dias.map((d) => ({ data: d.data, peso: d.pesoPadrao }))
+  const cotasValor = distribuirCotaInteira(pesos, Number(meta.meta_valor))
+  const cotasAtendimentos = distribuirCotaInteira(pesos, Number(meta.meta_atendimentos))
+  const cotasPecas = distribuirCotaInteira(pesos, Number(meta.meta_pecas))
 
   const rows = dias.map((d, i) => ({
     vendedor_id: null,
     data: d.data,
     cota_valor: cotasValor[i].cota,
-    cota_atendimentos: Math.round(cotasAtendimentos[i].cota),
-    cota_pecas: Math.round(cotasPecas[i].cota),
+    cota_atendimentos: cotasAtendimentos[i].cota,
+    cota_pecas: cotasPecas[i].cota,
     situacao: 'normal' as const,
   }))
 

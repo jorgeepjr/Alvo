@@ -52,6 +52,40 @@ export function distribuirCotaPorPeso(dias: DiaPeso[], metaMensal: number): DiaC
   }))
 }
 
+/**
+ * Distribui um total inteiro entre os dias proporcionalmente ao peso,
+ * arredondando para inteiros de forma que a SOMA seja exatamente igual
+ * ao total (método do maior resto). Dias com peso 0 recebem 0.
+ */
+export function distribuirCotaInteira(dias: DiaPeso[], total: number): DiaCota[] {
+  const totalInt = Math.round(total)
+  const somaPesos = dias.reduce((acc, d) => acc + d.peso, 0)
+  if (somaPesos === 0 || totalInt === 0) {
+    return dias.map((d) => ({ data: d.data, cota: 0 }))
+  }
+
+  // Valor exato por dia + parte inteira (piso) e resto fracionário
+  const exatos = dias.map((d) => ({
+    data: d.data,
+    valor: (d.peso / somaPesos) * totalInt,
+  }))
+  const base = exatos.map((e) => ({ data: e.data, cota: Math.floor(e.valor), resto: e.valor - Math.floor(e.valor) }))
+
+  let alocado = base.reduce((acc, b) => acc + b.cota, 0)
+  let sobra = totalInt - alocado
+
+  // Distribui as unidades restantes para os dias com maior resto
+  const ordenadosPorResto = [...base].sort((a, b) => b.resto - a.resto)
+  let i = 0
+  while (sobra > 0 && ordenadosPorResto.length > 0) {
+    ordenadosPorResto[i % ordenadosPorResto.length].cota += 1
+    sobra--
+    i++
+  }
+
+  return base.map((b) => ({ data: b.data, cota: b.cota }))
+}
+
 interface SugestaoMeta {
   conservadora: number
   moderada: number
