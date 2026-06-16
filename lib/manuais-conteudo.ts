@@ -1,0 +1,783 @@
+// Conteúdo dos manuais ZYNK transcrito dos PDFs originais, para leitura
+// dentro do sistema (sem precisar baixar anexos).
+
+export type Bloco =
+  | { tipo: 'paragrafo'; texto: string }
+  | { tipo: 'subtitulo'; texto: string }
+  | { tipo: 'lista'; itens: string[] }
+  | { tipo: 'citacao'; texto: string }
+
+export type Secao = { titulo: string; blocos: Bloco[] }
+
+export type Manual = {
+  slug: string
+  titulo: string
+  descricao: string
+  secoes: Secao[]
+}
+
+export const MANUAIS: Manual[] = [
+  {
+    slug: 'rotina-de-vendas',
+    titulo: 'Rotina de Vendas',
+    descricao: 'A rotina diária da loja, hora a hora — do abrir ao fechar.',
+    secoes: [
+      {
+        titulo: '09:00 — Organização Interna',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Organização geral (cabideiros, provadores, vitrines internas)',
+              'Reposição de peças no salão de vendas',
+              'Revisão de etiquetas e preços',
+              'Conferência dos provadores',
+              'Fazer café para a área do cliente',
+              'Organização de estoque',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '09:30 — Ação Pessoal de Marketing (Instagram Pessoal)',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Fazer selfie ou vídeo mostrando o início do dia na loja',
+              'Usar hashtags e marcar a @ da loja para engajar seguidores',
+              'Mostrar bastidores e humanizar a equipe (ex: "Bom dia direto da ...")',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '10:00 — Montagem de Looks & Vitrine',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Criar combinações estratégicas com peças-chave e novidades',
+              'Atualizar manequins e exposição da vitrine com foco em tendências e promoções',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '11:00 — Estratégia Digital do Dia (Instagram da Loja)',
+        blocos: [
+          { tipo: 'paragrafo', texto: 'Reunião rápida para decidir:' },
+          {
+            tipo: 'lista',
+            itens: [
+              'O que vamos postar hoje? (ex: lançamentos, promoções, dicas)',
+              'Qual dor/necessidade do cliente vamos resolver com esse conteúdo?',
+              'Confirmar com o responsável a pauta do dia',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: 'Prospecção via mensagem (WhatsApp / Instagram / Sistema)',
+        blocos: [
+          { tipo: 'paragrafo', texto: 'Enviar mensagens personalizadas para:' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Clientes inativos',
+              'Amigos e conhecidos',
+              'Aniversariantes do dia',
+              'Seguidores que ainda não compraram',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '13:30 — Condicionais do Dia (para saída até 16:30)',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Enviar mensagens para clientes com perfil de condicional',
+              'Alvo: no mínimo 25 contatos',
+              'Linguagem pessoal: áudio com estilo da marca',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '14:30 — Organização de Looks para Conteúdo da Tarde',
+        blocos: [
+          { tipo: 'paragrafo', texto: 'Separar peças para vídeos, reels e TikToks. Pensar em temas como:' },
+          {
+            tipo: 'lista',
+            itens: ['"3 looks com uma peça"', '"Looks para o fim de semana"', '"Achadinhos da semana"'],
+          },
+        ],
+      },
+      {
+        titulo: '15:30 — Produto do Dia (Story/Reel)',
+        blocos: [
+          { tipo: 'paragrafo', texto: 'Apresentar uma peça nova:' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Falar sobre tecido, modelagem, como usar',
+              'Mostrar a peça no corpo se possível (comprovando caimento)',
+              'Criar desejo de compra com storytelling',
+              'Criar combinações com peças de promoção ou últimas unidades',
+              'Fotografar e postar com destaque nos stories',
+              'Incentivar vendas rápidas com urgência ("últimos tamanhos", "só hoje")',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '16:30 — Pós-Venda',
+        blocos: [
+          { tipo: 'paragrafo', texto: 'Acessar sistema/listas para contato com:' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Clientes que compraram nos últimos 7 dias',
+              'Clientes do mês anterior',
+              'Agradecer a compra, verificar satisfação, oferecer assistência ou novidades',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '17:40 — Preparar para Fechamento',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: ['Máquinas de cartão carregando', 'Celular da loja na tomada', 'Looks de vitrine em ordem'],
+          },
+        ],
+      },
+      {
+        titulo: '18:00 — Fechamento',
+        blocos: [
+          { tipo: 'lista', itens: ['Luzes apagadas', 'Portas fechadas', 'Ar desligado'] },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: 'cartilha-de-conduta',
+    titulo: 'Cartilha de Conduta',
+    descricao: 'Manual de excelência em atendimento da ZYNK.',
+    secoes: [
+      {
+        titulo: 'Introdução',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Esta cartilha foi desenvolvida para estabelecer os padrões de conduta e excelência operacional em nossa loja de roupas. Nosso objetivo é criar uma experiência única para nossos clientes, transformando cada visita em um momento especial através do atendimento diferenciado e da organização exemplar.',
+          },
+          {
+            tipo: 'paragrafo',
+            texto:
+              'O documento a seguir contém diretrizes práticas para garantir que nossa equipe mantenha sempre o mais alto nível de profissionalismo e eficiência.',
+          },
+        ],
+      },
+      {
+        titulo: 'Objetivo do processo',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Padronizar o atendimento ao cliente em todos os pontos de contato',
+              'Garantir a organização e limpeza constante do ambiente de vendas',
+              'Criar experiências memoráveis que gerem fidelização e indicações',
+              'Estabelecer rotinas operacionais que maximizem as vendas',
+              'Manter a cultura de excelência e respeito entre toda a equipe',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: 'Materiais e ferramentas necessárias',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Equipamentos: celular da empresa, máquina de cartão, sistema de vendas',
+              'Materiais de limpeza: produtos de higienização, panos, aspirador',
+              'Itens de organização: cabides, etiquetas, sacolas perfumadas',
+              'Materiais para alfaiataria: máquina de costura, materiais de ajuste',
+              'Lista de verificação diária (checklist de tarefas)',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '01. Fundamentos da Excelência (regras para ser exceção)',
+        blocos: [
+          { tipo: 'subtitulo', texto: '1.1 Disposição ao Acordar' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Inicie cada dia com energia positiva e propósito claro',
+              'Lembre-se: sua atitude influencia toda a equipe e os clientes',
+            ],
+          },
+          { tipo: 'subtitulo', texto: '1.2 Higiene Pessoal' },
+          {
+            tipo: 'lista',
+            itens: ['Apresentação impecável é obrigatória', 'Cabelos arrumados, uniformes limpos e bem passados'],
+          },
+          { tipo: 'subtitulo', texto: '1.3 Uniformes Limpos e Cheirosos' },
+          { tipo: 'lista', itens: ['Uniforme sempre impecável', 'Use perfume suave e discreto'] },
+          { tipo: 'subtitulo', texto: '1.4 Compromisso com Horário' },
+          { tipo: 'lista', itens: ['Pontualidade é fundamental', 'Chegue sempre 10 minutos antes do horário'] },
+          { tipo: 'subtitulo', texto: '1.5 Comprometimento com Organização' },
+          {
+            tipo: 'lista',
+            itens: ['Mantenha seu espaço de trabalho sempre organizado', 'Organização reflete profissionalismo'],
+          },
+          { tipo: 'subtitulo', texto: '1.6 Atenção aos Detalhes e Foco para Escutar' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Observe cada detalhe do cliente e do ambiente',
+              'Pratique escuta ativa - entenda verdadeiramente o que o cliente precisa',
+            ],
+          },
+          { tipo: 'subtitulo', texto: '1.7 Respeito Entre Colaboradores' },
+          {
+            tipo: 'lista',
+            itens: ['Trate todos com cordialidade e profissionalismo', 'Trabalho em equipe é essencial para o sucesso'],
+          },
+          { tipo: 'subtitulo', texto: '1.8 Pensamentos Positivos e de Vencedores' },
+          { tipo: 'lista', itens: ['Mantenha mentalidade focada em soluções', 'Celebre as conquistas da equipe'] },
+        ],
+      },
+      {
+        titulo: '02. Organização da Loja',
+        blocos: [
+          { tipo: 'subtitulo', texto: '2.1 Rotina de Entrada - Checklist Diário (chegada 10:00)' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Verificar planilha de afazeres do dia anterior',
+              'Dedicar 20 minutos para organização pessoal',
+              'Revisar agenda do dia (semanal ou diário)',
+              'Responsabilizar-se pelos afazeres pessoais (limpar piso, tirar pó)',
+              'Avaliar disposição para cobrir tarefas de colegas (se necessário)',
+              'Prestar atenção em detalhes: sujeira, looks desarrumados, objetos fora do lugar',
+            ],
+          },
+          { tipo: 'subtitulo', texto: '2.2 Limpeza e Manutenção' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Organizar looks e visualizar vitrine',
+              'Apagar luzes desnecessárias e ajustar ar condicionado',
+              'Verificar celulares da empresa na tomada',
+              'Conferir máquinas de cartão',
+              'Verificar alarme e trancar portas adequadamente',
+              'INADMISSÍVEL: vitrine desorganizada',
+            ],
+          },
+          {
+            tipo: 'citacao',
+            texto:
+              'LEMBRE-SE: um lugar limpo e organizado vende mais e proporciona melhor ambiente de trabalho. OBRIGATÓRIO: revisar tudo 10 minutos antes do fechamento.',
+          },
+        ],
+      },
+      {
+        titulo: '03. Execução do Bom Atendimento',
+        blocos: [
+          { tipo: 'subtitulo', texto: '3.1 Comunicação com Clientes' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Avisar chegada de produtos solicitados',
+              'Manter contato com clientes que fizeram pedidos',
+              'Captar novos clientes potenciais',
+              'Reativar clientes inativos',
+              'Focar em clientes que compram novidades de marcas específicas',
+              'Métodos de contato: ligação, mensagem, visitas presenciais na loja',
+            ],
+          },
+          { tipo: 'subtitulo', texto: '3.2 Roteiro de Vendas - Redes Sociais' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Resposta rápida no WhatsApp e Instagram, com clareza, bom humor e disposição',
+              'Usar fotos atualizadas e vídeos detalhados dos produtos',
+              'Manter tom acolhedor e profissional',
+              'Captação de novos seguidores: enviar boas-vindas e se apresentar como representante da loja',
+              'Cuidar da qualidade das postagens, legendas e ortografia',
+              'Instagram como vitrine virtual: ser autêntico, transmitir confiança e manter feed organizado',
+            ],
+          },
+          { tipo: 'subtitulo', texto: '3.3 Conteúdo para Redes Sociais — o que postar' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Detalhes dos produtos e suas características',
+              'Curiosidades sobre as peças',
+              'Informações sobre garantias',
+              'Nosso diferencial competitivo',
+              'História da empresa e propósito',
+              'Dia a dia e bastidores',
+              'Conteúdo de entretenimento para equipe e clientes',
+            ],
+          },
+          {
+            tipo: 'citacao',
+            texto:
+              'IMPORTANTE: manter relatórios de vendas atualizados para avisar, lembrar, convidar, cuidar e manter clientes sempre próximos.',
+          },
+        ],
+      },
+      {
+        titulo: '04. Atendimento Presencial',
+        blocos: [
+          { tipo: 'subtitulo', texto: '4.1 WhatsApp - Atendimento Digital' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Rapidez e clareza em todas as respostas',
+              'Resolver problemas com agilidade',
+              'Áudios em prioridade para criar intimidade',
+              'Sempre agradecer pelo contato',
+              'Postar stories também no WhatsApp',
+              'Manter catálogo atualizado com fotos recentes',
+              'Criar lista de transmissão com ofertas exclusivas',
+            ],
+          },
+          {
+            tipo: 'citacao',
+            texto:
+              'IMPORTANTE: solicitar autorização do cliente para incluí-lo na "SALA VIP" onde enviamos ofertas exclusivas.',
+          },
+          { tipo: 'subtitulo', texto: '4.2 Atendimento com Excelência — Primeira Impressão' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Sorriso no rosto - sempre!',
+              'Apresentação impecável (higiene e uniforme)',
+              'Receber com animação e chamar pelo nome quando possível',
+              'Se não conhecer o nome: perguntar rapidamente e continuar usando o nome durante todo o atendimento',
+            ],
+          },
+          { tipo: 'subtitulo', texto: 'Saudação Profissional' },
+          {
+            tipo: 'lista',
+            itens: [
+              'EVITAR: "Posso ajudar?"',
+              'USAR: "Bem-vindo(a), [nome]! Que bom ter você aqui, vamos te ajudar da melhor maneira possível."',
+              'Sempre oferecer: água, café ou cerveja para cada cliente e acompanhante',
+              'Renovar a oferta periodicamente, demonstrando atenção',
+            ],
+          },
+          { tipo: 'subtitulo', texto: '4.3 Processo de Venda Consultiva' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Conhecimento do cliente: oferecer um tour pela loja antes de mostrar o produto específico',
+              'Identificação de necessidades: entender a ocasião de uso (trabalho, viagem, festas). Ex: "Preciso de roupa para o trabalho" → "Com o que você trabalha?"',
+              'Apresentação de produtos: mostrar opções variadas além do solicitado; é obrigação do vendedor levar as peças até o provador (não deixar o cliente carregar)',
+              'Criação de vínculos: conversar sobre assuntos pessoais, mencionar amigos em comum, times e interesses; perguntar o que trouxe o cliente até a loja',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '05. Processos Específicos',
+        blocos: [
+          { tipo: 'subtitulo', texto: '5.1 Condicional - Passo a Passo (solicitado pelo WhatsApp)' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Agradecer o contato e confirmar interesse',
+              'Solicitar informações: tamanhos, gostos, cores',
+              'Consultar histórico no sistema se cliente já cadastrado',
+              'Cadastro completo: nome completo, CPF, data de nascimento, endereço completo, celular',
+              'Conferir cada peça no sistema',
+              'Preparar sacola perfumada com adesivos e brindes',
+              'Organizar as roupas adequadamente na sacola',
+              'Informar horário ideal para entrega (preferência: final da tarde, após 17h)',
+              'Avisar sobre a saída do motoboy para entrega',
+              'Definir prazo limite de 24 horas para o condicional',
+              'Acompanhar via Instagram como estão as peças',
+            ],
+          },
+          { tipo: 'subtitulo', texto: '5.2 Processo de Devolução' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Solicitar peças que não ficaram adequadas',
+              'Confirmar itens e forma de pagamento previamente estabelecida',
+              'Levar máquina ou troco com o motoboy',
+              'Agradecer novamente e confirmar disponibilidade',
+            ],
+          },
+          { tipo: 'subtitulo', texto: '5.3 Alfaiataria - Serviço Especializado' },
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Processo de ajuste personalizado para entregar o produto exatamente como o cliente deseja. Benefícios: peça única e exclusiva, caimento perfeito e valorização do investimento.',
+          },
+          {
+            tipo: 'lista',
+            itens: [
+              'Comprimento: manga, barra de calça, barra de camiseta',
+              'Largura: ajustes em calça (deixar mais justa), manga de camiseta (deixar mais slim)',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '06. Pós-Venda',
+        blocos: [
+          { tipo: 'subtitulo', texto: 'Ações Obrigatórias' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Salvar contato do cliente e pesquisar compras anteriores',
+              'Perguntar sobre satisfação com o último atendimento',
+              'Verificar adequação do produto adquirido',
+              'Solicitar feedback sobre possíveis ajustes',
+              'Convidar para retorno - perguntar melhor dia e horário',
+              'Solicitar indicações de amigos e familiares',
+              'Investigar ocasiões especiais: viagens, trabalho, festas',
+              'Criar conexão emocional com presentes e aniversários',
+              'SEMPRE AGRADECER antes de tudo',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '07. Comportamentos Inaceitáveis',
+        blocos: [
+          { tipo: 'subtitulo', texto: 'O que NÃO aceitamos em nossa equipe:' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Falta de pontualidade',
+              'Egocentrismo e individualismo',
+              'Falta de criatividade e disposição',
+              'Não compreender o conceito de "servir"',
+              'Falta de empatia com colegas e clientes',
+              'Não ser comunicativo nas redes sociais',
+              'Desorganização pessoal no ambiente de trabalho',
+              'Não se comprometer com os objetivos da empresa',
+              'Pensamento pequeno, fora do coletivo',
+              'Qualquer forma de discriminação',
+              'Dar apenas 100% - esperamos sempre mais',
+              'Falta de respeito com colegas e clientes',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '08. Missão e Propósito — Nossa Essência',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Chegamos até aqui seguindo todos esses passos com excelência, com um só objetivo: "SERVIR". Servir pessoas que são nossos clientes, mas ao entrarem pela porta se tornam nossos amigos. E como recebemos nossos amigos? Com muita conversa e cerveja gelada.',
+          },
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Sua venda será consequência quando você servir nosso cliente com sorriso sincero, com o coração de quem só quer atender bem para que ele volte com um amigo, parente ou namorada.',
+          },
+          {
+            tipo: 'citacao',
+            texto:
+              'Usando as técnicas de persuasão aliadas ao atendimento de excelência, é impossível nossos clientes saírem sem levar uma sacola, postando fotos e indicando para amigos. Essa é nossa essência.',
+          },
+        ],
+      },
+      {
+        titulo: '09. Conclusão',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Esta cartilha representa nosso compromisso com a excelência. Cada colaborador é responsável por manter e elevar nossos padrões de qualidade.',
+          },
+          {
+            tipo: 'citacao',
+            texto:
+              'Lembre-se: não vendemos apenas roupas, criamos experiências memoráveis e construímos relacionamentos duradouros.',
+          },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: 'manual-do-instagram',
+    titulo: 'Manual do Instagram',
+    descricao: 'Como usar o Instagram da loja e o pessoal para gerar vendas.',
+    secoes: [
+      {
+        titulo: 'Introdução',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Já estruturamos o Instagram para ter uma presença sólida, organizada e confiável. Agora é hora de ser intencional: transformar o engajamento em ações que geram vendas.',
+          },
+          { tipo: 'citacao', texto: '"Não adianta só ser bonito — tem que vender."' },
+        ],
+      },
+      {
+        titulo: 'Objetivo',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Ensinar lojistas e equipe a usar o Instagram (loja e pessoal) para fazer o cliente dar o primeiro passo',
+              'Mostrar como, por que e quando incentivar o cliente a chamar, comprar, marcar ou visitar',
+            ],
+          },
+          { tipo: 'paragrafo', texto: 'Responsável: dono, gerente e vendedores. Frequência: diária. Ferramentas: Instagram da loja, Instagram pessoal, WhatsApp.' },
+        ],
+      },
+      {
+        titulo: '1. Stories de Bom Dia — Instagram da Loja',
+        blocos: [
+          { tipo: 'paragrafo', texto: 'Uma rotina fixa de stories logo cedo, no perfil oficial da loja, para mostrar vida e convidar o cliente.' },
+          { tipo: 'subtitulo', texto: 'Como fazer' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Grave vídeo ou foto real da loja',
+              'Fale de forma acolhedora, como recepcionista de hotel: "Bom dia! Hoje a loja tá pronta te esperando."',
+              '"Chegaram novidades que vou te mostrar!"',
+              'Mostre vitrines, looks montados, reposição',
+              'Fale dos bastidores: equipe organizando, café pronto',
+            ],
+          },
+          { tipo: 'subtitulo', texto: 'Por quê' },
+          { tipo: 'lista', itens: ['Aquece o cliente logo cedo', 'Mostra vida e movimento', 'Cria hábito no seguidor'] },
+        ],
+      },
+      {
+        titulo: '2. Stories de Bom Dia — Instagram Pessoal de Cada Vendedor',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Cada vendedor é porta-voz direto e humano da marca. Usar o Instagram pessoal não é só divulgar produtos, mas construir uma relação íntima e confiável. Quando o cliente segue o vendedor, sente que fala com um amigo ou consultor de confiança — isso diminui barreiras para perguntar, negociar e comprar.',
+          },
+          { tipo: 'subtitulo', texto: 'Conteúdos sugeridos' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Look do dia do vendedor',
+              'Bastidores do deslocamento para a loja',
+              'Mostrando o café ou a preparação da loja',
+              'Comentando sobre novidades que chegaram',
+              'Mostrando combinações de peças novas',
+              'Falando da expectativa de receber clientes hoje',
+            ],
+          },
+          {
+            tipo: 'citacao',
+            texto:
+              'Exemplo de fala: "Bom dia, pessoal! Já tô aqui na loja hoje. Chegaram umas novidades ontem que eu quero muito mostrar pra vocês. Quem quiser já me chama por aqui!"',
+          },
+        ],
+      },
+      {
+        titulo: '2.1 Ideias de conteúdo (loja e pessoal)',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Takes rápidos da fachada + VM interno com música + "loja aberta"',
+              'Foto da bancada do café organizada: "venha tomar um café"',
+              'Fotos de presentes em cima do caixa mostrando a logo',
+              'Vídeo mostrando os presentes saindo, falando do cuidado e capricho',
+              'Foto das sacolas de condicionais avisando como solicitar: "chame aqui, mande o endereço e seus tamanhos, o resto deixa com a gente"',
+              'Vídeo montando um condicional',
+              'Mostrar diferenças de modelagens de marcas e como encaixar em cada estilo',
+              'Mostrar características únicas: tênis (palmilha, conforto), camisas (slim x regular), calça jeans (slim, skinny, regular, comfort), cintos, bonés, relógios',
+              'Mostrar a variedade de algodões da loja (pima, modal, piquet, etc.)',
+              'Mostrar a linha de acessórios: carteiras, cintos, chinelos, óculos',
+              '"Vote: qual tênis você usaria no rolê?"',
+              'Mostrar a playlist do dia com QR Code no story',
+              '"Hoje tem cervejinha gelada" — mostrar no freezer',
+              'Mostrar a equipe comemorando meta batida',
+              'Mostrar passo a passo para pedir condicional via WhatsApp',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: '3. Postagens no Instagram Pessoal do Vendedor',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto:
+              'O perfil pessoal serve para criar conexão individual, como uma conversa entre amigos. É aqui que o vendedor se posiciona como consultor de confiança — alguém real, que usa as peças e dá dicas sinceras.',
+          },
+          { tipo: 'subtitulo', texto: 'O que postar' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Look do dia com dica real e prática',
+              'Combinação fácil para um evento específico (trabalho, festa, reunião)',
+              'Bastidores escolhendo peças para um cliente (sem expor rosto/dados sem autorização)',
+              'Atendimento personalizado (explicando como ajuda a resolver dúvidas)',
+              'Momentos reais do dia a dia: "Hoje tô usando essa calça porque vou resolver mil coisas."',
+            ],
+          },
+          { tipo: 'subtitulo', texto: 'Tom e abordagem' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Falar como amigo, não como vendedor formal',
+              'Evitar linguagem excessivamente comercial ou engessada',
+              'Usar frases simples, naturais, que mostrem empatia',
+            ],
+          },
+          {
+            tipo: 'citacao',
+            texto: 'Dica importante: garantir sempre autorização antes de mostrar o rosto do cliente em fotos ou vídeos.',
+          },
+          { tipo: 'paragrafo', texto: 'Frequência: pelo menos 2 a 3 vezes por semana, preferencialmente nos dias mais movimentados.' },
+        ],
+      },
+      {
+        titulo: '4. Acompanhamento do Gerente/Dono',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Definir meta clara: cada vendedor faz no mínimo 1 story de bom dia diário no Instagram pessoal',
+              'Acompanhar diariamente: verificar quem postou e quem não, orientando quando necessário',
+              'Alinhar em reunião semanal: discutir tom, ideias de conteúdo, o que funcionou ou não',
+              'Incentivar a criação pessoal: valorizar o jeito próprio de cada vendedor para os conteúdos soarem autênticos',
+            ],
+          },
+          {
+            tipo: 'citacao',
+            texto:
+              'Erro comum a evitar: copiar e colar o mesmo story do perfil da loja no perfil pessoal. O conteúdo pessoal precisa parecer único e verdadeiro — não um "repost institucional".',
+          },
+        ],
+      },
+      {
+        titulo: '5. Dia da Produção Semanal',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Separe um momento fixo da semana para produzir fotos e vídeos com calma e qualidade, criando um banco de conteúdo pronto para a semana toda. Responsável: dono/gerente para organização e vendedores para participar. Frequência: 1x por semana.',
+          },
+          { tipo: 'subtitulo', texto: 'Passo a passo' },
+          {
+            tipo: 'lista',
+            itens: [
+              'Escolha um dia fixo (ex: segunda-feira, 9h às 11h, antes de abrir)',
+              'Separe as peças e looks com antecedência, pensando em combinações prontas',
+              'Prepare o local: limpe o cenário e organize um canto bem iluminado',
+              'Defina quem fotografa e quem veste; revezem para mostrar estilos e corpos diferentes',
+              'Use boa iluminação (luz natural perto de janelas, ou softbox/ring light)',
+              'Faça fotos completas (corpo inteiro) e de detalhes (tecido, botão, estampa)',
+              'Grave vídeos curtos/reels mostrando como usar e combinar a peça',
+              'Organize o material em pasta no celular ou Drive, separado por data/tema',
+              'Planeje as legendas já pensando em resolver a dor do cliente',
+              'Combine o calendário de postagem (agendar ou decidir no grupo da equipe)',
+            ],
+          },
+          {
+            tipo: 'citacao',
+            texto: 'Exemplo: segunda-feira produz fotos e vídeos; de terça a sexta, publicação programada e interação com os clientes.',
+          },
+        ],
+      },
+    ],
+  },
+
+  {
+    slug: 'diagnostico',
+    titulo: 'Diagnóstico & Fast Plan',
+    descricao: 'Resumo estratégico e iniciativas de ganho rápido da loja.',
+    secoes: [
+      {
+        titulo: 'Resumo Atual',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto:
+              'As ações de curto prazo para os próximos 30 dias serão focadas em estrutura e performance. O primeiro passo é criar e aplicar uma rotina operacional clara, com acompanhamento diário e uso de checklists. Em paralelo, será realizado um treinamento intensivo de atendimento para humanizar e qualificar o presencial, estimulando vínculo e continuidade nas conversas.',
+          },
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Também será feita a revisão completa do funil de vendas online, mapeando o percurso do cliente desde o primeiro contato até o fechamento. Por fim, serão definidas metas de faturamento e indicadores de performance — presencial e digital — para direcionar a equipe e mensurar resultados.',
+          },
+        ],
+      },
+      {
+        titulo: 'Iniciativas de Ganho Rápido (IGRs)',
+        blocos: [
+          { tipo: 'subtitulo', texto: '1.0 Rotina de Vendas' },
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Criada a partir do funil de vendas, ajuda todos os colaboradores a fazer a loja rodar sem cobrança constante. Deve ser feita todos os dias, seguindo passos e horários, com anotações de prospecção e pós-venda (nomes dos clientes contatados).',
+          },
+          { tipo: 'subtitulo', texto: '2.0 Rotina de Conduta da Loja' },
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Aplicada para que os funcionários não sigam só as regras, mas saibam como segui-las, com explicação clara e detalhada — para maior entendimento e bem-estar de toda a equipe.',
+          },
+          { tipo: 'subtitulo', texto: '3.0 Meta de Prospecção' },
+          {
+            tipo: 'paragrafo',
+            texto:
+              '30 contatos por dia com áudio, através da lista de clientes da base e de novas captações em lugares movimentados da cidade, onde há maior número de pessoas com o perfil de estilo da loja.',
+          },
+        ],
+      },
+      {
+        titulo: 'Fast Plan — Treinamentos (links externos)',
+        blocos: [
+          { tipo: 'subtitulo', texto: 'Vendas' },
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Aulas de performance em vendas (tutorias comerciais) que auxiliam no atendimento presencial e online, ensinando como se comportar e como mandar áudios de prospecção e de pós-venda.',
+          },
+          { tipo: 'subtitulo', texto: 'Instagram / Produção de Conteúdo' },
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Aulas sobre criação de conteúdo para o Instagram da loja, para montar postagens que gerem retorno do público-alvo.',
+          },
+          { tipo: 'subtitulo', texto: 'Pós-Venda' },
+          {
+            tipo: 'paragrafo',
+            texto:
+              'O pós-venda é um dos maiores meios de retorno de clientes e de aumento do ticket médio, pois o cliente entende o valor da peça e do atendimento de qualidade.',
+          },
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Os links das aulas (plataforma Varejo Pro / Astron Members) estão no PDF original do Diagnóstico, com o gestor.',
+          },
+        ],
+      },
+    ],
+  },
+]
+
+export function getManual(slug: string): Manual | undefined {
+  return MANUAIS.find((m) => m.slug === slug)
+}
