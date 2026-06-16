@@ -87,6 +87,9 @@ export async function gerarDistribuicaoAutomatica(formData: FormData): Promise<v
 
   await supabase.from('distribuicao_diaria').insert(rows)
 
+  // Mantém as cotas dos vendedores em dia com a nova distribuição da loja.
+  await distribuirParaVendedores(supabase, ano, mes)
+
   revalidatePath('/gestor/metas')
 }
 
@@ -95,13 +98,68 @@ export async function ajustarDiaSituacao(
   situacao: 'normal' | 'feriado' | 'fechado'
 ): Promise<void> {
   const supabase = await createClient()
-  const update: Record<string, unknown> = { situacao }
-  if (situacao !== 'normal') {
-    update.cota_valor = 0
-    update.cota_atendimentos = 0
-    update.cota_pecas = 0
+
+  const { data: dia } = await supabase
+    .from('distribuicao_diaria')
+    .select('*')
+    .eq('id', distribuicaoId)
+    .single()
+  if (!dia) return
+
+  const [ano, mes] = dia.data.split('-').map(Number)
+
+  if (situacao === 'normal') {
+    // Reabrir o dia: só muda a situação (o gestor define a cota depois).
+    await supabase.from('distribuicao_diaria').update({ situacao: 'normal' }).eq('id', distribuicaoId)
+    await distribuirParaVendedores(supabase, ano, mes)
+    revalidatePath('/gestor/metas')
+    return
   }
-  await supabase.from('distribuicao_diaria').update(update).eq('id', distribuicaoId)
+
+  // Feriado/fechado: zera o dia e redistribui a cota dele entre os demais
+  // dias normais do mês, para a soma continuar batendo com a meta.
+  const removidoValor = Number(dia.cota_valor)
+  const removidoAtend = Number(dia.cota_atendimentos)
+  const removidoPecas = Number(dia.cota_pecas)
+
+  await supabase
+    .from('distribuicao_diaria')
+    .update({ situacao, cota_valor: 0, cota_atendimentos: 0, cota_pecas: 0 })
+    .eq('id', distribuicaoId)
+
+  const dias = diasDoMes(ano, mes)
+  const { data: todos } = await supabase
+    .from('distribuicao_diaria')
+    .select('*')
+    .is('vendedor_id', null)
+    .gte('data', dias[0].data)
+    .lte('data', dias[dias.length - 1].data)
+
+  const outros = (todos ?? []).filter((d) => d.id !== distribuicaoId && d.situacao === 'normal')
+
+  if (outros.length > 0) {
+    const redistribuir = (campo: 'cota_valor' | 'cota_atendimentos' | 'cota_pecas', removido: number) => {
+      const somaAtual = outros.reduce((acc, d) => acc + Number(d[campo]), 0)
+      const pesos = outros.map((d) => ({ data: d.data, peso: somaAtual > 0 ? Number(d[campo]) : 1 }))
+      return distribuirCotaInteira(pesos, somaAtual + removido)
+    }
+    const novosValor = redistribuir('cota_valor', removidoValor)
+    const novosAtend = redistribuir('cota_atendimentos', removidoAtend)
+    const novosPecas = redistribuir('cota_pecas', removidoPecas)
+
+    for (let k = 0; k < outros.length; k++) {
+      await supabase
+        .from('distribuicao_diaria')
+        .update({
+          cota_valor: novosValor[k].cota,
+          cota_atendimentos: novosAtend[k].cota,
+          cota_pecas: novosPecas[k].cota,
+        })
+        .eq('id', outros[k].id)
+    }
+  }
+
+  await distribuirParaVendedores(supabase, ano, mes)
   revalidatePath('/gestor/metas')
 }
 
@@ -189,6 +247,7 @@ export async function ajustarCotaDia(
     }
   }
 
+  await distribuirParaVendedores(supabase, ano, mes)
   revalidatePath('/gestor/metas')
 }
 
@@ -210,15 +269,15 @@ export async function salvarPercentuaisVendedores(ano: number, mes: number, form
   revalidatePath('/gestor/metas')
 }
 
-export async function gerarDistribuicaoVendedores(formData: FormData): Promise<void> {
-  const ano = Number(formData.get('ano'))
-  const mes = Number(formData.get('mes'))
+type SupabaseSrv = Awaited<ReturnType<typeof createClient>>
 
+// Regera a distribuição por vendedor a partir da distribuição da loja e dos
+// percentuais. Usado tanto pelo botão quanto automaticamente ao gerar/editar
+// a distribuição da loja, para manter as cotas dos vendedores sempre em dia.
+async function distribuirParaVendedores(supabase: SupabaseSrv, ano: number, mes: number): Promise<void> {
   const dias = diasDoMes(ano, mes)
   const inicioMes = dias[0].data
   const fimMes = dias[dias.length - 1].data
-
-  const supabase = await createClient()
 
   const { data: lojaDist } = await supabase
     .from('distribuicao_diaria')
@@ -247,7 +306,7 @@ export async function gerarDistribuicaoVendedores(formData: FormData): Promise<v
     return lojaDist.map((d) => ({
       vendedor_id: p.vendedor_id,
       data: d.data,
-      cota_valor: Number(d.cota_valor) * frac,
+      cota_valor: Math.round(Number(d.cota_valor) * frac),
       cota_atendimentos: Math.round(Number(d.cota_atendimentos) * frac),
       cota_pecas: Math.round(Number(d.cota_pecas) * frac),
       situacao: d.situacao,
@@ -257,6 +316,13 @@ export async function gerarDistribuicaoVendedores(formData: FormData): Promise<v
   if (rows.length > 0) {
     await supabase.from('distribuicao_diaria').insert(rows)
   }
+}
+
+export async function gerarDistribuicaoVendedores(formData: FormData): Promise<void> {
+  const ano = Number(formData.get('ano'))
+  const mes = Number(formData.get('mes'))
+  const supabase = await createClient()
+  await distribuirParaVendedores(supabase, ano, mes)
 
   revalidatePath('/gestor/metas')
 }

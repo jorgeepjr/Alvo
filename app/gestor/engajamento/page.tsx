@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { AnaliseSemanal } from './analise-semanal'
+import { InsightsPerguntas } from './insights-perguntas'
 
 export default async function EngajamentoPage() {
   const supabase = await createClient()
@@ -73,6 +74,15 @@ export default async function EngajamentoPage() {
         </CardHeader>
         <CardContent>
           <AnaliseSemanal />
+        </CardContent>
+      </Card>
+
+      <Card className="border-zinc-700 bg-slate-900">
+        <CardHeader>
+          <CardTitle className="text-base">Insights das Perguntas (IA)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <InsightsPerguntas />
         </CardContent>
       </Card>
 

@@ -3,6 +3,50 @@
 import { createClient } from '@/lib/supabase/server'
 import { chamarGemini } from '@/lib/gemini'
 
+// Analisa as perguntas que os vendedores fizeram ao Assistente IA e gera
+// para o gestor um resumo de temas recorrentes, dúvidas e oportunidades de
+// melhoria — transformando as conversas em insights acionáveis.
+export async function analisarPerguntasVendedores(): Promise<{ analise?: string; error?: string }> {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { error: 'Não autenticado.' }
+
+  const apiKey = process.env.GEMINI_API_KEY
+  if (!apiKey) {
+    return { error: 'Assistente de IA não configurado. Defina GEMINI_API_KEY.' }
+  }
+
+  const { data: mensagens } = await supabase
+    .from('assistente_mensagens')
+    .select('pergunta, criado_em')
+    .order('criado_em', { ascending: false })
+    .limit(120)
+
+  if (!mensagens || mensagens.length === 0) {
+    return { error: 'Ainda não há perguntas registradas dos vendedores para analisar.' }
+  }
+
+  const perguntas = mensagens.map((m) => `- ${m.pergunta}`).join('\n')
+
+  try {
+    const texto = await chamarGemini(
+      apiKey,
+      `Você é um analista que ajuda a gestora de uma loja de moda masculina (ZYNK). Receberá a lista de perguntas que os vendedores fizeram ao assistente de IA da loja.
+Gere um relatório curto em português do Brasil com:
+1. Principais TEMAS/assuntos que os vendedores mais perguntam (agrupados).
+2. DÚVIDAS ou dificuldades recorrentes que aparecem nas perguntas.
+3. OPORTUNIDADES DE MELHORIA concretas para a loja (treinamento, material, processo, campanhas) com base no que eles perguntam.
+4. Sugestões de novos conteúdos/manuais que ajudariam a equipe.
+Use listas curtas e seja direto. Não invente dados além das perguntas fornecidas.`,
+      [{ role: 'user', content: `Perguntas dos vendedores (mais recentes primeiro):\n${perguntas}` }]
+    )
+    return { analise: texto }
+  } catch (err) {
+    console.error('Erro ao analisar perguntas:', err)
+    return { error: 'Não foi possível gerar a análise agora. Tente novamente em instantes.' }
+  }
+}
+
 export async function gerarAnaliseSemanal(): Promise<{ analise?: string; error?: string }> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
