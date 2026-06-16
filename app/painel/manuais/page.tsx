@@ -1,9 +1,17 @@
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
 import { FileText, ChevronRight } from 'lucide-react'
-import { MANUAIS } from '@/lib/manuais-conteudo'
+import { manuaisVisiveis } from '@/lib/manuais-conteudo'
 
-export default function ManuaisPage() {
+export default async function ManuaisPage() {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase.from('profiles').select('perfil').eq('id', user!.id).maybeSingle()
+  const isGestor = profile?.perfil === 'gestor'
+
+  const manuais = manuaisVisiveis(isGestor)
+
   return (
     <div className="space-y-6">
       <div>
@@ -14,7 +22,7 @@ export default function ManuaisPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {MANUAIS.map((m) => (
+        {manuais.map((m) => (
           <Link key={m.slug} href={`/painel/manuais/${m.slug}`}>
             <Card className="border-white/10 bg-[#11161b] hover:border-white/25 transition-colors h-full">
               <CardContent className="flex items-center gap-4 py-5">

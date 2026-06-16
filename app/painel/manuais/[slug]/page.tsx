@@ -1,12 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent } from '@/components/ui/card'
-import { MANUAIS, getManual, type Bloco } from '@/lib/manuais-conteudo'
-
-export function generateStaticParams() {
-  return MANUAIS.map((m) => ({ slug: m.slug }))
-}
+import { getManualVisivel, type Bloco } from '@/lib/manuais-conteudo'
 
 function RenderBloco({ bloco }: { bloco: Bloco }) {
   switch (bloco.tipo) {
@@ -34,7 +31,13 @@ function RenderBloco({ bloco }: { bloco: Bloco }) {
 
 export default async function ManualPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const manual = getManual(slug)
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = await supabase.from('profiles').select('perfil').eq('id', user!.id).maybeSingle()
+  const isGestor = profile?.perfil === 'gestor'
+
+  const manual = getManualVisivel(slug, isGestor)
   if (!manual) notFound()
 
   return (

@@ -7,12 +7,16 @@ export type Bloco =
   | { tipo: 'lista'; itens: string[] }
   | { tipo: 'citacao'; texto: string }
 
-export type Secao = { titulo: string; blocos: Bloco[] }
+// publico: 'todos' = relevante para todos (inclui vendedor); 'gestor' = só a gestão vê.
+export type Publico = 'todos' | 'gestor'
+
+export type Secao = { titulo: string; blocos: Bloco[]; publico?: Publico }
 
 export type Manual = {
   slug: string
   titulo: string
   descricao: string
+  publico?: Publico
   secoes: Secao[]
 }
 
@@ -653,6 +657,7 @@ export const MANUAIS: Manual[] = [
       },
       {
         titulo: '4. Acompanhamento do Gerente/Dono',
+        publico: 'gestor',
         blocos: [
           {
             tipo: 'lista',
@@ -707,6 +712,7 @@ export const MANUAIS: Manual[] = [
     slug: 'diagnostico',
     titulo: 'Diagnóstico & Fast Plan',
     descricao: 'Resumo estratégico e iniciativas de ganho rápido da loja.',
+    publico: 'gestor',
     secoes: [
       {
         titulo: 'Resumo Atual',
@@ -780,4 +786,20 @@ export const MANUAIS: Manual[] = [
 
 export function getManual(slug: string): Manual | undefined {
   return MANUAIS.find((m) => m.slug === slug)
+}
+
+// Lista de manuais visíveis para o perfil. Gestor vê tudo; vendedor não vê
+// os manuais marcados como 'gestor'.
+export function manuaisVisiveis(isGestor: boolean): Manual[] {
+  return MANUAIS.filter((m) => isGestor || m.publico !== 'gestor')
+}
+
+// Retorna o manual com as seções filtradas conforme o perfil. Devolve
+// undefined se o manual inteiro não for visível para o perfil.
+export function getManualVisivel(slug: string, isGestor: boolean): Manual | undefined {
+  const manual = getManual(slug)
+  if (!manual) return undefined
+  if (!isGestor && manual.publico === 'gestor') return undefined
+  if (isGestor) return manual
+  return { ...manual, secoes: manual.secoes.filter((s) => s.publico !== 'gestor') }
 }
