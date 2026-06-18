@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { criarTarefa, excluirTarefa, alternarConclusaoTarefa } from './actions'
+import { criarTarefa, excluirTarefa, alternarConclusaoTarefa, atribuirBlocoRotina } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,6 +19,33 @@ export default async function TarefasPage({ searchParams }: { searchParams: Prom
     if (!id) return 'Todos os vendedores'
     return vendedores?.find((v) => v.id === id)?.nome ?? '—'
   }
+
+  // Nomes dos vendedores por posição (0 e 1), para a divisão da rotina.
+  const vend0 = vendedores?.[0]?.nome ?? 'Vendedor 1'
+  const vend1 = vendedores?.[1]?.nome ?? 'Vendedor 2'
+
+  // Rotina-modelo agrupada por dia da semana e bloco, para o gestor controlar
+  // quem faz cada bloco.
+  const { data: rotinaModelo } = await supabase
+    .from('rotina_modelo')
+    .select('*')
+    .order('dia_semana')
+    .order('ordem')
+
+  const DIAS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+  type BlocoRotina = { horario: string; bloco: string; atribuido_a: number | null; itens: string[] }
+  const rotinaPorDia = new Map<number, BlocoRotina[]>()
+  for (const item of rotinaModelo ?? []) {
+    if (!rotinaPorDia.has(item.dia_semana)) rotinaPorDia.set(item.dia_semana, [])
+    const blocos = rotinaPorDia.get(item.dia_semana)!
+    let bloco = blocos.find((b) => b.horario === item.horario && b.bloco === item.bloco)
+    if (!bloco) {
+      bloco = { horario: item.horario, bloco: item.bloco, atribuido_a: item.atribuido_a, itens: [] }
+      blocos.push(bloco)
+    }
+    bloco.itens.push(item.descricao)
+  }
+  const diasComRotina = [...rotinaPorDia.keys()].sort((a, b) => a - b)
 
   return (
     <div className="space-y-6">
@@ -100,6 +127,52 @@ export default async function TarefasPage({ searchParams }: { searchParams: Prom
               )}
             </TableBody>
           </Table>
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader>
+          <CardTitle className="text-base">Divisão da Rotina entre os Vendedores</CardTitle>
+          <p className="text-xs text-slate-400 mt-1">
+            Defina quem faz cada bloco da rotina. &quot;Ambos&quot; aparece para os dois vendedores.
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          {diasComRotina.map((dia) => (
+            <div key={dia} className="space-y-2">
+              <p className="text-sm font-semibold text-zinc-100">{DIAS[dia]}</p>
+              <div className="space-y-2">
+                {rotinaPorDia.get(dia)!.map((b) => (
+                  <div
+                    key={`${b.horario}-${b.bloco}`}
+                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950/40 px-3 py-2"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-sm">
+                        <span className="text-zinc-400">{b.horario}</span> — <span className="font-medium">{b.bloco}</span>
+                        <span className="text-xs text-slate-500"> ({b.itens.length} tarefas)</span>
+                      </p>
+                    </div>
+                    <form action={atribuirBlocoRotina.bind(null, dia, b.horario, b.bloco)} className="flex items-center gap-2">
+                      <select
+                        name="atribuidoRaw"
+                        defaultValue={b.atribuido_a === null ? '' : String(b.atribuido_a)}
+                        className="rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm"
+                      >
+                        <option value="">Ambos</option>
+                        <option value="0">{vend0}</option>
+                        <option value="1">{vend1}</option>
+                      </select>
+                      <Button type="submit" size="sm" variant="outline">Salvar</Button>
+                    </form>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+          {diasComRotina.length === 0 && (
+            <p className="text-sm text-slate-400">Nenhuma rotina cadastrada ainda.</p>
+          )}
         </CardContent>
       </Card>
     </div>

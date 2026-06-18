@@ -40,6 +40,29 @@ export async function alternarConclusaoTarefa(tarefaId: string, concluida: boole
   revalidatePath('/painel')
 }
 
+// Define quem faz um bloco da rotina (dia + horário + bloco):
+// '' = ambos (NULL), '0' = primeiro vendedor, '1' = segundo vendedor.
+export async function atribuirBlocoRotina(
+  diaSemana: number,
+  horario: string,
+  bloco: string,
+  formData: FormData
+): Promise<void> {
+  const supabase = await createClient()
+  const atribuidoRaw = (formData.get('atribuidoRaw') as string) ?? ''
+  const atribuido_a = atribuidoRaw === '' ? null : Number(atribuidoRaw)
+
+  await supabase
+    .from('rotina_modelo')
+    .update({ atribuido_a })
+    .eq('dia_semana', diaSemana)
+    .eq('horario', horario)
+    .eq('bloco', bloco)
+
+  revalidatePath('/gestor/tarefas')
+  revalidatePath('/painel')
+}
+
 export async function alternarItemRotina(itemId: string, data: string, concluido: boolean): Promise<void> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
