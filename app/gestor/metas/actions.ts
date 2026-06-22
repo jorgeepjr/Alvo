@@ -327,6 +327,58 @@ export async function gerarDistribuicaoVendedores(formData: FormData): Promise<v
   revalidatePath('/gestor/metas')
 }
 
+// Calcula e preenche automaticamente as metas dos próximos 12 meses com base
+// no histórico (tendência: mesmo mês do ano anterior × crescimento médio da
+// loja). Não sobrescreve metas já definidas manualmente.
+export async function gerarMetasFuturas(formData: FormData): Promise<{ criadas: number }> {
+  const anoBase = Number(formData.get('ano'))
+  const mesBase = Number(formData.get('mes'))
+  const supabase = await createClient()
+
+  const { data: historicoCompleto } = await supabase
+    .from('historico_loja')
+    .select('ano, mes, venda_total, atendimentos, pecas')
+
+  const hist = (historicoCompleto ?? []).map((h) => ({
+    ano: h.ano,
+    mes: h.mes,
+    venda_total: Number(h.venda_total),
+    atendimentos: Number(h.atendimentos),
+    pecas: Number(h.pecas),
+  }))
+
+  const { data: metasExistentes } = await supabase.from('metas_mensais').select('ano, mes')
+  const jaTem = new Set((metasExistentes ?? []).map((m) => `${m.ano}-${m.mes}`))
+
+  let criadas = 0
+  for (let k = 0; k < 12; k++) {
+    const total = (mesBase - 1) + k
+    const ano = anoBase + Math.floor(total / 12)
+    const mes = (total % 12) + 1
+    if (jaTem.has(`${ano}-${mes}`)) continue
+
+    const tendencia = calcularSugestaoTendencia(hist, ano, mes, 'venda_total')
+    if (tendencia === null) continue // sem base do ano anterior → não cria
+    const tAtend = calcularSugestaoTendencia(hist, ano, mes, 'atendimentos')
+    const tPecas = calcularSugestaoTendencia(hist, ano, mes, 'pecas')
+
+    await supabase.from('metas_mensais').upsert(
+      {
+        ano,
+        mes,
+        meta_valor: Math.round(tendencia),
+        meta_atendimentos: Math.round(tAtend ?? 0),
+        meta_pecas: Math.round(tPecas ?? 0),
+      },
+      { onConflict: 'ano,mes' }
+    )
+    criadas++
+  }
+
+  revalidatePath('/gestor/metas')
+  return { criadas }
+}
+
 export async function buscarSugestaoMeta(ano: number, mes: number) {
   const supabase = await createClient()
   const { data } = await supabase

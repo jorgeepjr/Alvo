@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { GerarMetasFuturas } from './gerar-metas-futuras'
 
 const MESES = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
@@ -121,6 +122,19 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
           )}
         </Card>
       )}
+
+      <Card className="border-zinc-700 bg-slate-900">
+        <CardHeader>
+          <CardTitle className="text-base">Cotas Futuras (automático)</CardTitle>
+          <p className="text-xs text-slate-400 mt-1">
+            Calcula as metas dos próximos 12 meses a partir do histórico (mesmo mês do ano anterior ×
+            crescimento médio da loja). Não altera metas já definidas.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <GerarMetasFuturas ano={ano} mes={mes} />
+        </CardContent>
+      </Card>
 
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader>
