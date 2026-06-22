@@ -7,6 +7,7 @@ interface PontoDia {
   atual: number | null
   anoPassado: number | null
   meta: number | null
+  projecao: number | null
 }
 
 export function MesAtualChart({
@@ -31,6 +32,7 @@ export function MesAtualChart({
         />
         <Legend />
         <Line type="monotone" dataKey="atual" name={`${anoAtual} (real)`} stroke="#efefef" strokeWidth={3} connectNulls dot={false} />
+        <Line type="monotone" dataKey="projecao" name="Projeção (no ritmo atual)" stroke="#38bdf8" strokeWidth={2} strokeDasharray="6 4" connectNulls dot={false} />
         <Line type="monotone" dataKey="anoPassado" name={`Ritmo ${anoPassado}`} stroke="#f59e0b" strokeWidth={2} strokeDasharray="6 4" dot={false} />
         <Line type="monotone" dataKey="meta" name="Ritmo da meta" stroke="#22c55e" strokeWidth={2} strokeDasharray="3 3" dot={false} />
       </LineChart>

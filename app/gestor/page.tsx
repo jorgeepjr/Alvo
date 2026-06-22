@@ -89,16 +89,34 @@ export default async function GestorDashboard() {
   }
 
   const diaHoje = hoje.getDate()
+
+  // Projeção: a partir de hoje, segue no ritmo médio diário das vendas (valor já
+  // vendido / dias trabalhados), somando esse ritmo a cada dia útil restante.
+  const diasUteisSet = new Set((distribuicaoMes ?? []).filter((d) => d.situacao === 'normal').map((d) => d.data))
+  const ritmoDiario = diasTrabalhados > 0 ? valorMes / diasTrabalhados : 0
+
   let acumulado = 0
+  let projAcum = 0
   const dadosGrafico = Array.from({ length: ultimoDia }, (_, i) => {
     const dia = i + 1
     const dataStr = `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
     acumulado += vendaPorDia.get(dataStr) ?? 0
+
+    let projecao: number | null = null
+    if (dia === diaHoje) {
+      projAcum = acumulado // ancora a projeção no valor real de hoje
+      projecao = Math.round(projAcum * 100) / 100
+    } else if (dia > diaHoje) {
+      if (diasUteisSet.has(dataStr)) projAcum += ritmoDiario
+      projecao = Math.round(projAcum * 100) / 100
+    }
+
     return {
       dia,
       atual: dia <= diaHoje ? Math.round(acumulado * 100) / 100 : null,
       anoPassado: totalAnoPassado > 0 ? Math.round((totalAnoPassado / ultimoDia) * dia * 100) / 100 : null,
       meta: cotaMes > 0 ? Math.round((cotaMes / ultimoDia) * dia * 100) / 100 : null,
+      projecao,
     }
   })
 
@@ -159,9 +177,11 @@ export default async function GestorDashboard() {
         </CardHeader>
         <CardContent>
           <MesAtualChart dados={dadosGrafico} anoAtual={ano} anoPassado={ano - 1} />
-          {vsAnoPassado !== null && vsAnoPassado < 0 && (
-            <p className="mt-2 text-sm text-yellow-400">
-              ⚠️ O mês está abaixo do ritmo de {ano - 1}. Considere uma ação de vendas (campanha, condicional, produto do dia) para recuperar.
+          {cotaMes > 0 && (
+            <p className={`mt-2 text-sm ${projecao >= cotaMes ? 'text-green-400' : 'text-yellow-400'}`}>
+              {projecao >= cotaMes
+                ? `✅ No ritmo atual, a projeção é fechar o mês em R$ ${projecao.toFixed(2)} — acima da meta (${((projecao / cotaMes) * 100).toFixed(0)}%).`
+                : `⚠️ No ritmo atual, a projeção é fechar o mês em R$ ${projecao.toFixed(2)} (${((projecao / cotaMes) * 100).toFixed(0)}% da meta). Faltam R$ ${(cotaMes - projecao).toFixed(2)} — vale uma ação de vendas para crescer.`}
             </p>
           )}
         </CardContent>
