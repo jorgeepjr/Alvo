@@ -39,11 +39,16 @@ export default async function EngajamentoPage() {
 
   const vendedoresAtivos = vendedores ?? []
 
+  const refSemana = new Date(2024, 0, 1).getTime()
   function totalItensParaDia(dataStr: string, indiceVendedor: number) {
-    const diaSemana = new Date(dataStr + 'T12:00:00').getDay()
+    const diaData = new Date(dataStr + 'T12:00:00')
+    const diaSemana = diaData.getDay()
     const minhaMetade = indiceVendedor % 2
+    const paridade = Math.floor((diaData.getTime() - refSemana) / (7 * 86400000)) % 2
     return (rotinaModelo ?? []).filter(
-      (r) => r.dia_semana === diaSemana && (r.atribuido_a === null || r.atribuido_a === minhaMetade)
+      (r) =>
+        r.dia_semana === diaSemana &&
+        (r.atribuido_a === null || (r.atribuido_a + paridade) % 2 === minhaMetade)
     ).length
   }
 

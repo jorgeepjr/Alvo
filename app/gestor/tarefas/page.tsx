@@ -24,6 +24,14 @@ export default async function TarefasPage({ searchParams }: { searchParams: Prom
   const vend0 = vendedores?.[0]?.nome ?? 'Vendedor 1'
   const vend1 = vendedores?.[1]?.nome ?? 'Vendedor 2'
 
+  // Rotação semanal: mostra quem é o "Grupo A" e o "Grupo B" nesta semana
+  // (eles trocam toda semana). O mesmo cálculo é usado no painel do vendedor.
+  const refSemana = new Date(2024, 0, 1).getTime()
+  const semanaParidade = Math.floor((Date.now() - refSemana) / (7 * 86400000)) % 2
+  // Grupo A = base 0; nesta semana o dono efetivo de base 0 é este vendedor:
+  const grupoAnome = semanaParidade === 0 ? vend0 : vend1
+  const grupoBnome = semanaParidade === 0 ? vend1 : vend0
+
   // Rotina-modelo agrupada por dia da semana e bloco, para o gestor controlar
   // quem faz cada bloco.
   const { data: rotinaModelo } = await supabase
@@ -141,9 +149,12 @@ export default async function TarefasPage({ searchParams }: { searchParams: Prom
             </form>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            &quot;Dividir automaticamente&quot; dá um dono único para cada bloco (equilibrando a carga e
-            alternando por dia) e mantém vitrine/looks e estratégia digital como &quot;Ambos&quot;.
-            Você pode ajustar manualmente abaixo.
+            &quot;Dividir automaticamente&quot; dá um dono único para cada bloco (equilibrando a carga) e
+            mantém vitrine/looks e estratégia digital como &quot;Ambos&quot;. Os papéis trocam toda semana.
+          </p>
+          <p className="text-xs text-zinc-300 mt-1">
+            Esta semana → <span className="font-semibold">Grupo A: {grupoAnome}</span> ·{' '}
+            <span className="font-semibold">Grupo B: {grupoBnome}</span> (trocam na próxima semana)
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
@@ -169,8 +180,8 @@ export default async function TarefasPage({ searchParams }: { searchParams: Prom
                         className="rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm"
                       >
                         <option value="">Ambos</option>
-                        <option value="0">{vend0}</option>
-                        <option value="1">{vend1}</option>
+                        <option value="0">Grupo A</option>
+                        <option value="1">Grupo B</option>
                       </select>
                       <Button type="submit" size="sm" variant="outline">Salvar</Button>
                     </form>

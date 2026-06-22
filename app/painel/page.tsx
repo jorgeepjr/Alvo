@@ -87,8 +87,15 @@ export default async function PainelVendedor() {
   const meuIndice = (vendedoresAtivos ?? []).findIndex((v) => v.id === user!.id)
   const minhaMetade = meuIndice >= 0 ? meuIndice % 2 : 0
 
+  // Rotação semanal: a cada semana os dois vendedores trocam de papel, para
+  // ninguém ficar preso na mesma função. A divisão (quem faz o quê em relação
+  // ao outro) é fixa; só inverte quem é "0" e quem é "1" a cada semana.
+  const refSemana = new Date(2024, 0, 1).getTime()
+  const semanaParidade = Math.floor((hoje.getTime() - refSemana) / (7 * 86400000)) % 2
+  const donoEfetivo = (a: number | null) => (a === null ? null : (a + semanaParidade) % 2)
+
   const rotinaHoje = (rotinaHojeTodos ?? []).filter(
-    (item) => item.atribuido_a === null || item.atribuido_a === minhaMetade
+    (item) => item.atribuido_a === null || donoEfetivo(item.atribuido_a) === minhaMetade
   )
 
   const { data: rotinaConcluidaHoje } = await supabase
