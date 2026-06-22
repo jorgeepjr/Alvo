@@ -83,6 +83,18 @@ export default async function GestorDashboard() {
     .maybeSingle()
 
   const totalAnoPassado = Number(histAnoPassado?.venda_total ?? 0)
+
+  // Vendas diárias REAIS do mesmo mês no ano passado (histórico importado das
+  // planilhas), para a linha de comparação ser dia a dia de verdade.
+  const mmStr = String(mes).padStart(2, '0')
+  const { data: diarioAnoPassado } = await supabase
+    .from('historico_diario')
+    .select('data, venda_total')
+    .gte('data', `${ano - 1}-${mmStr}-01`)
+    .lte('data', `${ano - 1}-${mmStr}-31`)
+  const vendaLYPorDia = new Map((diarioAnoPassado ?? []).map((d) => [d.data, Number(d.venda_total)]))
+  const temDiarioLY = (diarioAnoPassado?.length ?? 0) > 0
+
   const vendaPorDia = new Map<string, number>()
   for (const l of lancamentosMes ?? []) {
     vendaPorDia.set(l.data, (vendaPorDia.get(l.data) ?? 0) + Number(l.valor))
@@ -97,10 +109,13 @@ export default async function GestorDashboard() {
 
   let acumulado = 0
   let projAcum = 0
+  let acumLY = 0
   const dadosGrafico = Array.from({ length: ultimoDia }, (_, i) => {
     const dia = i + 1
-    const dataStr = `${ano}-${String(mes).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+    const dd = String(dia).padStart(2, '0')
+    const dataStr = `${ano}-${mmStr}-${dd}`
     acumulado += vendaPorDia.get(dataStr) ?? 0
+    acumLY += vendaLYPorDia.get(`${ano - 1}-${mmStr}-${dd}`) ?? 0
 
     let projecao: number | null = null
     if (dia === diaHoje) {
@@ -114,15 +129,27 @@ export default async function GestorDashboard() {
     return {
       dia,
       atual: dia <= diaHoje ? Math.round(acumulado * 100) / 100 : null,
-      anoPassado: totalAnoPassado > 0 ? Math.round((totalAnoPassado / ultimoDia) * dia * 100) / 100 : null,
+      // Linha do ano passado: usa o acumulado diário real (se houver histórico),
+      // senão cai no ritmo médio mensal.
+      anoPassado: temDiarioLY
+        ? Math.round(acumLY * 100) / 100
+        : totalAnoPassado > 0
+        ? Math.round((totalAnoPassado / ultimoDia) * dia * 100) / 100
+        : null,
       meta: cotaMes > 0 ? Math.round((cotaMes / ultimoDia) * dia * 100) / 100 : null,
       projecao,
     }
   })
 
   const acumuladoHoje = dadosGrafico[diaHoje - 1]?.atual ?? 0
-  const ritmoAnoPassadoHoje = totalAnoPassado > 0 ? (totalAnoPassado / ultimoDia) * diaHoje : 0
-  const vsAnoPassado = ritmoAnoPassadoHoje > 0 ? ((Number(acumuladoHoje) - ritmoAnoPassadoHoje) / ritmoAnoPassadoHoje) * 100 : null
+  // Comparação até hoje: usa o acumulado diário real do ano passado quando há
+  // histórico; senão, o ritmo médio mensal.
+  const anoPassadoAteHoje = temDiarioLY
+    ? (dadosGrafico[diaHoje - 1]?.anoPassado ?? 0)
+    : totalAnoPassado > 0
+    ? (totalAnoPassado / ultimoDia) * diaHoje
+    : 0
+  const vsAnoPassado = anoPassadoAteHoje > 0 ? ((Number(acumuladoHoje) - anoPassadoAteHoje) / anoPassadoAteHoje) * 100 : null
 
   return (
     <div className="space-y-6">
