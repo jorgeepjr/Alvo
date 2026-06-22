@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProgressBar } from '@/components/progress-bar'
 import { RankingList } from '@/components/ranking-list'
 import { MesAtualChart } from '@/components/mes-atual-chart'
+import { DiaOscilacaoChart } from '@/components/dia-oscilacao-chart'
 
 export default async function GestorDashboard() {
   const supabase = await createClient()
@@ -141,6 +142,20 @@ export default async function GestorDashboard() {
     }
   })
 
+  // Oscilação diária: quanto foi vendido em cada dia (barra) vs a cota do dia (linha).
+  const cotaDiaMap = new Map<string, number>()
+  for (const d of distribuicaoMes ?? []) cotaDiaMap.set(d.data, Number(d.cota_valor))
+  const dadosOscilacao = Array.from({ length: ultimoDia }, (_, i) => {
+    const dia = i + 1
+    const dataStr = `${ano}-${mmStr}-${String(dia).padStart(2, '0')}`
+    const cota = cotaDiaMap.get(dataStr) ?? 0
+    return {
+      dia,
+      vendido: dia <= diaHoje ? Math.round((vendaPorDia.get(dataStr) ?? 0) * 100) / 100 : null,
+      cota: cota > 0 ? cota : null,
+    }
+  })
+
   const acumuladoHoje = dadosGrafico[diaHoje - 1]?.atual ?? 0
   // Comparação até hoje: usa o acumulado diário real do ano passado quando há
   // histórico; senão, o ritmo médio mensal.
@@ -154,6 +169,24 @@ export default async function GestorDashboard() {
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard da Loja</h1>
+
+      {((cotaMes > 0 && projecao < cotaMes * 0.9) || alertasMeta.length > 0) && (
+        <Card className="border-red-700 bg-red-950/40">
+          <CardContent className="py-3 space-y-1">
+            {cotaMes > 0 && projecao < cotaMes * 0.9 && (
+              <p className="text-sm text-red-300 font-medium">
+                🚨 No ritmo atual o mês deve fechar em {((projecao / cotaMes) * 100).toFixed(0)}% da meta
+                (faltam R$ {(cotaMes - projecao).toFixed(2)}). Hora de uma ação de vendas para crescer.
+              </p>
+            )}
+            {alertasMeta.map((r) => (
+              <p key={`top-${r.id}`} className="text-sm text-red-300">
+                ⚠️ {r.nome} está em {r.percentual.toFixed(0)}% da meta, abaixo do ritmo esperado ({ritmoEsperado.toFixed(0)}%).
+              </p>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
         <Card className="border-slate-800 bg-slate-900">
@@ -211,6 +244,18 @@ export default async function GestorDashboard() {
                 : `⚠️ No ritmo atual, a projeção é fechar o mês em R$ ${projecao.toFixed(2)} (${((projecao / cotaMes) * 100).toFixed(0)}% da meta). Faltam R$ ${(cotaMes - projecao).toFixed(2)} — vale uma ação de vendas para crescer.`}
             </p>
           )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader>
+          <CardTitle className="text-base">Vendas por Dia — oscilação do mês</CardTitle>
+          <p className="text-xs text-slate-400 mt-1">
+            Cada barra é o vendido no dia (verde = bateu a cota, vermelho = abaixo). A linha azul é a cota do dia.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <DiaOscilacaoChart dados={dadosOscilacao} />
         </CardContent>
       </Card>
 

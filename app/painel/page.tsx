@@ -137,6 +137,9 @@ export default async function PainelVendedor() {
 
   const situacaoMap = new Map(situacoes30?.map((s) => [s.data, s.situacao]) ?? [])
 
+  // Placar saudável: % da meta de cada vendedor no mês (sem expor valores).
+  const { data: ranking } = await supabase.rpc('ranking_percentual')
+
   // Streak: dias consecutivos batendo a meta (últimos 60 dias)
   const data60diasAtras = new Date(hoje)
   data60diasAtras.setDate(hoje.getDate() - 60)
@@ -254,6 +257,30 @@ export default async function PainelVendedor() {
           <p className="text-sm text-zinc-200 italic">💡 {fraseDoDia(hoje)}</p>
         </CardContent>
       </Card>
+
+      {ranking && ranking.length > 1 && (
+        <Card className="border-slate-800 bg-slate-900">
+          <CardHeader><CardTitle className="text-base">🏅 Placar do Mês (% da meta)</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {ranking.map((r: { nome: string; percentual: number }, i: number) => (
+              <div key={r.nome} className="flex items-center gap-2 text-sm">
+                <span className="w-5 text-slate-400">{i + 1}º</span>
+                <span className="flex-1">
+                  {r.nome}
+                  {r.nome === profile?.nome && <span className="text-zinc-400"> (você)</span>}
+                </span>
+                <div className="h-2 rounded-full bg-slate-800 overflow-hidden w-[120px] sm:w-[160px]">
+                  <div
+                    className={`h-full rounded-full ${Number(r.percentual) >= 100 ? 'bg-green-500' : 'bg-zinc-100'}`}
+                    style={{ width: `${Math.min(Number(r.percentual), 100)}%` }}
+                  />
+                </div>
+                <span className="w-12 text-right font-semibold">{Number(r.percentual).toFixed(0)}%</span>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       {blocosRotina.length > 0 && (
         <Card className="border-slate-800 bg-slate-900">
