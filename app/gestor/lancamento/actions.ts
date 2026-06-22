@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { atualizarHistoricoMes } from '@/lib/historico'
+import { parseValorBR } from '@/lib/valor'
 
 export async function salvarLancamentoGestor(formData: FormData): Promise<void> {
   const supabase = await createClient()
@@ -14,7 +15,7 @@ export async function salvarLancamentoGestor(formData: FormData): Promise<void> 
   const vendedor_id = vendedorIdRaw === 'loja' ? null : vendedorIdRaw
   const atendimentos = Number(formData.get('atendimentos'))
   const pecas = Number(formData.get('pecas'))
-  const valor = Number(formData.get('valor'))
+  const valor = parseValorBR(formData.get('valor'))
   const observacao = (formData.get('observacao') as string) || null
   const situacao_vendedor = (formData.get('situacao_vendedor') as string) || 'normal'
 

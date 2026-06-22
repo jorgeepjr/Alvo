@@ -44,7 +44,7 @@ export function VendaRapidaForm({ data, totalDia }: { data: string; totalDia: To
         </div>
         <div className="space-y-1">
           <Label htmlFor="vr-valor">Valor (R$)</Label>
-          <Input id="vr-valor" name="valor" type="number" step="0.01" min="0" placeholder="0,00" className="bg-slate-800 border-slate-700" />
+          <Input id="vr-valor" name="valor" type="text" inputMode="decimal" placeholder="0,00" className="bg-slate-800 border-slate-700" />
         </div>
         <Button type="submit" className="bg-green-600 hover:bg-green-500">+ Adicionar venda</Button>
       </form>

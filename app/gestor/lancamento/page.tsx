@@ -70,7 +70,7 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
             </div>
             <div className="space-y-1">
               <Label htmlFor="valor">Valor (R$)</Label>
-              <Input id="valor" name="valor" type="number" step="0.01" defaultValue={0} className="bg-slate-800 border-slate-700" />
+              <Input id="valor" name="valor" type="text" inputMode="decimal" defaultValue="0" className="bg-slate-800 border-slate-700" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="situacao_vendedor">Situação</Label>

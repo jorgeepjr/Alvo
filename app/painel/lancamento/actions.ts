@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { atualizarHistoricoMes } from '@/lib/historico'
+import { parseValorBR } from '@/lib/valor'
 
 export async function salvarLancamentoVendedor(
   _prevState: { error?: string; success?: boolean } | null,
@@ -15,7 +16,7 @@ export async function salvarLancamentoVendedor(
   const data = formData.get('data') as string
   const atendimentos = Number(formData.get('atendimentos'))
   const pecas = Number(formData.get('pecas'))
-  const valor = Number(formData.get('valor'))
+  const valor = parseValorBR(formData.get('valor'))
   const observacao = (formData.get('observacao') as string) || null
   const situacao_vendedor = (formData.get('situacao_vendedor') as string) || 'normal'
 
@@ -79,7 +80,7 @@ export async function adicionarVendaRapida(
   const data = formData.get('data') as string
   const atendimentos = Number(formData.get('atendimentos')) || 0
   const pecas = Number(formData.get('pecas')) || 0
-  const valor = Number(formData.get('valor')) || 0
+  const valor = parseValorBR(formData.get('valor'))
 
   if (atendimentos === 0 && pecas === 0 && valor === 0) {
     return { error: 'Informe pelo menos um valor para adicionar.' }
