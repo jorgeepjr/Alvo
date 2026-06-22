@@ -5,6 +5,7 @@ import { ProgressBar } from '@/components/progress-bar'
 import { RankingList } from '@/components/ranking-list'
 import { MesAtualChart } from '@/components/mes-atual-chart'
 import { DiaOscilacaoChart } from '@/components/dia-oscilacao-chart'
+import { ProjecaoIA } from './projecao-ia'
 
 export default async function GestorDashboard() {
   const supabase = await createClient()
@@ -268,6 +269,11 @@ export default async function GestorDashboard() {
           </p>
           <p className="text-sm text-slate-400">Dias úteis restantes: {diasRestantes}</p>
         </CardContent>
+      </Card>
+
+      <Card className="border-zinc-700 bg-slate-900">
+        <CardHeader><CardTitle className="text-base">Projeção do Mês com IA</CardTitle></CardHeader>
+        <CardContent><ProjecaoIA /></CardContent>
       </Card>
 
       <Card className="border-slate-800 bg-slate-900">
