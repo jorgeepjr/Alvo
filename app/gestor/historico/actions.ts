@@ -2,6 +2,61 @@
 
 import { createClient } from '@/lib/supabase/server'
 
+const MESES_CURTO = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+
+// Dados para a tela de Histórico visual: faturamento por ano, por mês (do ano
+// selecionado) e por dia (do mês selecionado).
+export async function buscarHistoricoVisual(ano: number, mes: number) {
+  const supabase = await createClient()
+
+  const { data: hl } = await supabase.from('historico_loja').select('ano, mes, venda_total').order('ano').order('mes')
+
+  // Por ano
+  const mapaAno = new Map<number, number>()
+  for (const h of hl ?? []) mapaAno.set(h.ano, (mapaAno.get(h.ano) ?? 0) + Number(h.venda_total))
+  const porAno = [...mapaAno.entries()].sort((a, b) => a[0] - b[0]).map(([a, v]) => ({ label: String(a), valor: Math.round(v) }))
+
+  // Por mês do ano selecionado
+  const porMes = MESES_CURTO.map((nome, i) => {
+    const row = (hl ?? []).find((h) => h.ano === ano && h.mes === i + 1)
+    return { label: nome, valor: row ? Math.round(Number(row.venda_total)) : 0 }
+  })
+
+  // Por dia do mês selecionado
+  const mm = String(mes).padStart(2, '0')
+  const ultimoDia = new Date(ano, mes, 0).getDate()
+  const inicio = `${ano}-${mm}-01`
+  const fim = `${ano}-${mm}-${String(ultimoDia).padStart(2, '0')}`
+
+  const vendaDia = new Map<string, number>()
+  // Histórico importado (anos anteriores)
+  const { data: diario } = await supabase
+    .from('historico_diario')
+    .select('data, venda_total')
+    .gte('data', inicio)
+    .lte('data', fim)
+  for (const d of diario ?? []) vendaDia.set(d.data, Number(d.venda_total))
+  // Se não houver no histórico importado, usa os lançamentos do sistema
+  if (vendaDia.size === 0) {
+    const { data: lanc } = await supabase
+      .from('lancamentos')
+      .select('data, valor')
+      .gte('data', inicio)
+      .lte('data', fim)
+    for (const l of lanc ?? []) vendaDia.set(l.data, (vendaDia.get(l.data) ?? 0) + Number(l.valor))
+  }
+
+  const porDia = Array.from({ length: ultimoDia }, (_, i) => {
+    const dia = i + 1
+    const key = `${ano}-${mm}-${String(dia).padStart(2, '0')}`
+    return { label: String(dia), valor: Math.round(vendaDia.get(key) ?? 0) }
+  })
+
+  const anosDisponiveis = porAno.map((a) => Number(a.label))
+
+  return { porAno, porMes, porDia, anosDisponiveis }
+}
+
 export async function buscarHistorico(metrica: 'valor' | 'atendimentos' | 'pecas') {
   const supabase = await createClient()
   const { data } = await supabase.from('historico_loja').select('*').order('ano').order('mes')
