@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { criarTarefa, excluirTarefa, alternarConclusaoTarefa, atribuirBlocoRotina } from './actions'
+import { criarTarefa, excluirTarefa, alternarConclusaoTarefa, atribuirBlocoRotina, dividirRotinaAutomatico } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -132,9 +132,18 @@ export default async function TarefasPage({ searchParams }: { searchParams: Prom
 
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader>
-          <CardTitle className="text-base">Divisão da Rotina entre os Vendedores</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="text-base">Divisão da Rotina entre os Vendedores</CardTitle>
+            <form action={dividirRotinaAutomatico}>
+              <Button type="submit" size="sm" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">
+                ⚡ Dividir automaticamente
+              </Button>
+            </form>
+          </div>
           <p className="text-xs text-slate-400 mt-1">
-            Defina quem faz cada bloco da rotina. &quot;Ambos&quot; aparece para os dois vendedores.
+            &quot;Dividir automaticamente&quot; dá um dono único para cada bloco (equilibrando a carga e
+            alternando por dia) e mantém vitrine/looks e estratégia digital como &quot;Ambos&quot;.
+            Você pode ajustar manualmente abaixo.
           </p>
         </CardHeader>
         <CardContent className="space-y-6">
