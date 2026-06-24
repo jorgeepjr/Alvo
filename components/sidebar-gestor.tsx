@@ -20,6 +20,7 @@ import {
   Sparkles,
   TrendingUp,
   BookOpen,
+  HelpCircle,
 } from 'lucide-react'
 
 const links = [
@@ -33,6 +34,7 @@ const links = [
   { href: '/painel/manuais', label: 'Manuais', icon: BookOpen },
   { href: '/gestor/historico', label: 'Histórico', icon: BarChart3 },
   { href: '/gestor/importar', label: 'Importar', icon: Upload },
+  { href: '/gestor/ajuda', label: 'Manual do Sistema', icon: HelpCircle },
 ]
 
 export function SidebarGestor() {
