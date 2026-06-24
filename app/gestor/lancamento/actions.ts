@@ -49,6 +49,17 @@ export async function salvarLancamentoGestor(formData: FormData): Promise<void> 
   revalidatePath('/gestor/historico')
 }
 
+export async function salvarNotaDia(data: string, formData: FormData): Promise<void> {
+  const supabase = await createClient()
+  const motivo = ((formData.get('motivo') as string) || '').trim()
+  if (motivo) {
+    await supabase.from('dia_nota').upsert({ data, motivo, atualizado_em: new Date().toISOString() }, { onConflict: 'data' })
+  } else {
+    await supabase.from('dia_nota').delete().eq('data', data)
+  }
+  revalidatePath('/gestor/lancamento')
+}
+
 export async function fecharDia(data: string): Promise<void> {
   const supabase = await createClient()
   await supabase.from('lancamentos').update({ dia_fechado: true }).eq('data', data)

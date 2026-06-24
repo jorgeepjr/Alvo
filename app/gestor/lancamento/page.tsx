@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { salvarLancamentoGestor, fecharDia } from './actions'
+import { salvarLancamentoGestor, fecharDia, salvarNotaDia } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,6 +15,7 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
   const { data: lancamentos } = await supabase.from('lancamentos').select('*').eq('data', data)
 
   const lancamentoLoja = lancamentos?.find((l) => l.vendedor_id === null)
+  const { data: notaDia } = await supabase.from('dia_nota').select('motivo').eq('data', data).maybeSingle()
 
   // Soma de todos os vendedores (exclui a "Venda da Loja") — base da cota
   const lancamentosVendedores = lancamentos?.filter((l) => l.vendedor_id !== null) ?? []
@@ -85,6 +86,26 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
               <Input id="observacao" name="observacao" className="bg-slate-800 border-slate-700" />
             </div>
             <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Salvar</Button>
+          </form>
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader>
+          <CardTitle className="text-base">Motivo / Observação do Dia</CardTitle>
+          <p className="text-xs text-slate-400 mt-1">
+            Anote o que explica um dia fraco ou forte (chuva, feriado, evento na cidade, promoção...). Vira aprendizado.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <form action={salvarNotaDia.bind(null, data)} className="flex gap-2">
+            <Input
+              name="motivo"
+              defaultValue={notaDia?.motivo ?? ''}
+              placeholder="Ex: chuva forte o dia todo; pouca gente na rua"
+              className="bg-slate-800 border-slate-700"
+            />
+            <Button type="submit" variant="outline">Salvar</Button>
           </form>
         </CardContent>
       </Card>

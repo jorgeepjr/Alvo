@@ -3,6 +3,7 @@ import { HistoricoTable } from '@/components/historico-table'
 import { ComparativoTable } from '@/components/comparativo-table'
 import { CrescimentoChart } from '@/components/crescimento-chart'
 import { BarrasChart } from '@/components/barras-chart'
+import { DiaComparativoChart } from '@/components/dia-comparativo-chart'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
@@ -69,7 +70,11 @@ export default async function HistoricoPage({ searchParams }: { searchParams: Pr
           <p className="text-xs text-slate-400 mt-1">Total do mês: R$ {totalMesSel.toLocaleString('pt-BR')}</p>
         </CardHeader>
         <CardContent>
-          <BarrasChart dados={visual.porDia} />
+          {visual.temAnoAnterior ? (
+            <DiaComparativoChart dados={visual.porDia} anoAtual={anoSel} />
+          ) : (
+            <BarrasChart dados={visual.porDia} />
+          )}
         </CardContent>
       </Card>
 

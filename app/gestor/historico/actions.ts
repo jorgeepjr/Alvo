@@ -46,15 +46,29 @@ export async function buscarHistoricoVisual(ano: number, mes: number) {
     for (const l of lanc ?? []) vendaDia.set(l.data, (vendaDia.get(l.data) ?? 0) + Number(l.valor))
   }
 
+  // Mesmo mês no ano anterior (para comparar dia a dia)
+  const { data: diarioAnt } = await supabase
+    .from('historico_diario')
+    .select('data, venda_total')
+    .gte('data', `${ano - 1}-${mm}-01`)
+    .lte('data', `${ano - 1}-${mm}-31`)
+  const vendaDiaAnt = new Map<string, number>()
+  for (const d of diarioAnt ?? []) vendaDiaAnt.set(d.data.slice(8, 10), Number(d.venda_total))
+  const temAnoAnterior = vendaDiaAnt.size > 0
+
   const porDia = Array.from({ length: ultimoDia }, (_, i) => {
     const dia = i + 1
-    const key = `${ano}-${mm}-${String(dia).padStart(2, '0')}`
-    return { label: String(dia), valor: Math.round(vendaDia.get(key) ?? 0) }
+    const dd = String(dia).padStart(2, '0')
+    return {
+      label: String(dia),
+      valor: Math.round(vendaDia.get(`${ano}-${mm}-${dd}`) ?? 0),
+      anoAnterior: temAnoAnterior ? Math.round(vendaDiaAnt.get(dd) ?? 0) : null,
+    }
   })
 
   const anosDisponiveis = porAno.map((a) => Number(a.label))
 
-  return { porAno, porMes, porDia, anosDisponiveis }
+  return { porAno, porMes, porDia, anosDisponiveis, temAnoAnterior }
 }
 
 export async function buscarHistorico(metrica: 'valor' | 'atendimentos' | 'pecas') {

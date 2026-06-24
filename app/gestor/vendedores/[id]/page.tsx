@@ -7,6 +7,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { notFound } from 'next/navigation'
 import { editarVendedor } from '../actions'
+import { BarrasChart } from '@/components/barras-chart'
+
+const MESES_CURTO = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
 
 export default async function VendedorDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -46,6 +49,26 @@ export default async function VendedorDetalhePage({ params }: { params: Promise<
   const ticketCliente = calcularTicketMedio(valorVendido, atendimentos)
   const ticketPeca = calcularTicketMedio(valorVendido, pecas)
   const percentual = valorCota > 0 ? (valorVendido / valorCota) * 100 : 0
+
+  // Evolução dos últimos 12 meses (vendas do vendedor por mês)
+  const inicio12 = new Date(ano, mes - 12, 1)
+  const inicio12Str = `${inicio12.getFullYear()}-${String(inicio12.getMonth() + 1).padStart(2, '0')}-01`
+  const { data: lanc12 } = await supabase
+    .from('lancamentos')
+    .select('data, valor')
+    .eq('vendedor_id', id)
+    .gte('data', inicio12Str)
+    .lte('data', fimMes)
+  const mapaMes = new Map<string, number>()
+  for (const l of lanc12 ?? []) {
+    const chave = l.data.slice(0, 7) // YYYY-MM
+    mapaMes.set(chave, (mapaMes.get(chave) ?? 0) + Number(l.valor))
+  }
+  const evolucao = Array.from({ length: 12 }, (_, i) => {
+    const d = new Date(ano, mes - 12 + i, 1)
+    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    return { label: `${MESES_CURTO[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`, valor: Math.round(mapaMes.get(chave) ?? 0) }
+  })
 
   const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
   const admin = createSupabaseClient(
@@ -95,6 +118,13 @@ export default async function VendedorDetalhePage({ params }: { params: Promise<
           <p className="text-sm text-slate-400">
             Projeção: R$ {projecao.toFixed(2)} ({valorCota > 0 ? ((projecao / valorCota) * 100).toFixed(1) : '0'}% da meta)
           </p>
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader><CardTitle className="text-base">Evolução — últimos 12 meses</CardTitle></CardHeader>
+        <CardContent>
+          <BarrasChart dados={evolucao} destaque={`${MESES_CURTO[mes - 1]}/${String(ano).slice(2)}`} />
         </CardContent>
       </Card>
 
