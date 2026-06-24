@@ -711,6 +711,102 @@ export const MANUAIS: Manual[] = [
   },
 
   {
+    slug: 'abordagens-prospeccao',
+    titulo: 'Abordagens de Prospecção',
+    descricao: 'Modelos de áudio/mensagem para clientes que já conhecem a loja.',
+    secoes: [
+      {
+        titulo: 'Como usar',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Modelos prontos para abordar clientes que já conhecem a loja. Personalize com o nome do cliente e mande de preferência por áudio, com o estilo da marca.',
+          },
+        ],
+      },
+      {
+        titulo: '1. Reativação (cliente sumido)',
+        blocos: [
+          { tipo: 'subtitulo', texto: 'Áudio' },
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [nome]! Sumido hein… lembrei de você hoje aqui na loja porque chegou umas peças bem no teu estilo. Como você tá?',
+          },
+          { tipo: 'subtitulo', texto: 'Texto (se não responder)' },
+          { tipo: 'citacao', texto: 'Chegou novidade aqui que é muito tua cara, depois te mostro.' },
+        ],
+      },
+      {
+        titulo: '2. Oportunidade (novidade)',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Mano, chegou uma peça aqui que na hora eu lembrei de você… é bem o estilo que você já pegou aqui na loja. Quer que eu te mande?',
+          },
+        ],
+      },
+      {
+        titulo: '3. Condicional',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [nome]! Tô montando uns condicionais hoje e pensei em montar um pra você… quer que eu separe umas opções no teu estilo?',
+          },
+        ],
+      },
+      {
+        titulo: '4. Relacionamento (sem vender direto)',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'E aí, [nome]! Como tá? Esses dias lembrei de você aqui na loja… sumiu! Tá trabalhando com o que agora?',
+          },
+        ],
+      },
+      {
+        titulo: '5. Urgência (oferta leve)',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Mano, separei umas peças aqui e algumas já tão saindo… antes de acabar, quis te chamar pra ver primeiro. Quer que eu te mande?',
+          },
+        ],
+      },
+      {
+        titulo: '6. Pós-venda que gera nova venda',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [nome]! E aquela peça que você pegou, curtiu? Tô montando uns looks novos que combinam com ela… depois te mostro.',
+          },
+        ],
+      },
+      {
+        titulo: 'Pontos importantes',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Sempre iniciar com áudio',
+              'Personalizar com o nome',
+              'Evitar mensagens genéricas',
+              'Focar em gerar conversa, não só vender',
+              'Seguir o funil: Captação → Relacionamento → Persuasão → Fechamento',
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  {
     slug: 'diagnostico',
     titulo: 'Diagnóstico & Fast Plan',
     descricao: 'Resumo estratégico e iniciativas de ganho rápido da loja.',
