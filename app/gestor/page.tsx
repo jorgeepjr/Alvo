@@ -6,6 +6,7 @@ import { RankingList } from '@/components/ranking-list'
 import { MesAtualChart } from '@/components/mes-atual-chart'
 import { DiaOscilacaoChart } from '@/components/dia-oscilacao-chart'
 import { ProjecaoIA } from './projecao-ia'
+import { ResumoDia } from './resumo-dia'
 
 export default async function GestorDashboard() {
   const supabase = await createClient()
@@ -167,6 +168,24 @@ export default async function GestorDashboard() {
     : 0
   const vsAnoPassado = anoPassadoAteHoje > 0 ? ((Number(acumuladoHoje) - anoPassadoAteHoje) / anoPassadoAteHoje) * 100 : null
 
+  // Texto do "Resumo do Dia" para copiar e colar no WhatsApp (grátis, sem API).
+  const ddmm = `${String(diaHoje).padStart(2, '0')}/${String(mes).padStart(2, '0')}`
+  const cotaHojeLoja = Number(distribuicaoHoje?.cota_valor ?? 0)
+  const ticketHoje = atendimentosHoje > 0 ? valorHoje / atendimentosHoje : 0
+  const linhasVend = (vendedores ?? [])
+    .map((v) => {
+      const lv = lancamentosHoje?.find((l) => l.vendedor_id === v.id)
+      return `• ${v.nome}: R$ ${Number(lv?.valor ?? 0).toFixed(2)} (${lv?.pecas ?? 0} peças)`
+    })
+    .join('\n')
+  const resumoTexto =
+    `📊 Resumo do dia ${ddmm} — ZYNK\n` +
+    `💰 Vendido hoje: R$ ${valorHoje.toFixed(2)}${cotaHojeLoja > 0 ? ` (cota R$ ${cotaHojeLoja.toFixed(2)}) ${valorHoje >= cotaHojeLoja ? '✅' : '⚠️'}` : ''}\n` +
+    `👥 Atendimentos: ${atendimentosHoje} | 👕 Peças: ${pecasHoje} | 🎟️ Ticket: R$ ${ticketHoje.toFixed(2)}\n` +
+    (linhasVend ? `\nPor vendedor:\n${linhasVend}\n` : '') +
+    `\n📅 Mês: R$ ${valorMes.toFixed(2)}${cotaMes > 0 ? ` de R$ ${cotaMes.toFixed(2)} (${((valorMes / cotaMes) * 100).toFixed(0)}%)` : ''}` +
+    `${cotaMes > 0 ? ` | Projeção: R$ ${projecao.toFixed(2)} (${((projecao / cotaMes) * 100).toFixed(0)}%)` : ''}`
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold">Dashboard da Loja</h1>
@@ -269,6 +288,13 @@ export default async function GestorDashboard() {
           </p>
           <p className="text-sm text-slate-400">Dias úteis restantes: {diasRestantes}</p>
         </CardContent>
+      </Card>
+
+      <Card className="border-zinc-700 bg-slate-900">
+        <CardHeader>
+          <CardTitle className="text-base">Resumo do Dia (copiar para o WhatsApp)</CardTitle>
+        </CardHeader>
+        <CardContent><ResumoDia texto={resumoTexto} /></CardContent>
       </Card>
 
       <Card className="border-zinc-700 bg-slate-900">
