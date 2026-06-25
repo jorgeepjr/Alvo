@@ -29,12 +29,10 @@ export async function projetarMesIA(): Promise<{ analise?: string; error?: strin
   const vendidoAteHoje = (lancMes ?? []).reduce((a, l) => a + Number(l.valor), 0)
 
   // Mesmo mês nos anos anteriores (histórico diário) → total por ano
-  const { data: histDiario } = await supabase
-    .from('historico_diario')
-    .select('data, venda_total')
-    .like('data', `%-${mm}-%`)
+  const { data: histDiario } = await supabase.from('historico_diario').select('data, venda_total')
   const totalPorAno: Record<string, number> = {}
   for (const d of histDiario ?? []) {
+    if (d.data.slice(5, 7) !== mm) continue // só o mesmo mês
     const a = d.data.slice(0, 4)
     totalPorAno[a] = (totalPorAno[a] ?? 0) + Number(d.venda_total)
   }
@@ -67,6 +65,9 @@ Não invente números além dos fornecidos.`,
     return { analise: texto }
   } catch (err) {
     console.error('Erro projeção IA:', err)
-    return { error: 'Não foi possível gerar a projeção agora. Tente novamente.' }
+    const msg = err instanceof Error ? err.message : ''
+    if (msg === 'CHAVE_INVALIDA') return { error: 'A chave GEMINI_API_KEY não é válida. Verifique no servidor.' }
+    if (msg === 'LIMITE_EXCEDIDO') return { error: 'Limite gratuito da IA atingido por agora. Tente em alguns minutos.' }
+    return { error: `Não foi possível gerar a projeção (${msg || 'erro desconhecido'}).` }
   }
 }
