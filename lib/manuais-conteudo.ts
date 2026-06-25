@@ -925,6 +925,139 @@ export const MANUAIS: Manual[] = [
   },
 
   {
+    slug: 'mensagens-datas-fechamento',
+    titulo: 'Aniversário, Datas e Fechamento',
+    descricao: 'Modelos para aniversariantes, datas/coleções e como levar a conversa até a venda.',
+    secoes: [
+      {
+        titulo: 'Como usar',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Complementos das abordagens: aniversário, datas comemorativas, lançamento de coleção, uma versão mais neutra (para clientes mais formais) e o roteiro do que falar depois que o cliente responde. Personalize com [Nome] e [Seu Nome].',
+          },
+        ],
+      },
+      {
+        titulo: 'Aniversário — versão descontraída',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Hoje é dia de quê? É dia de VOCÊ! 🎉 Passei aqui só pra te desejar um feliz aniversário e dizer que separei uma condição especial pra você comemorar com a gente. Quer que eu te mostre?',
+          },
+        ],
+      },
+      {
+        titulo: 'Aniversário — versão neutra',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Oi, [Nome]! Tudo bem? Passando para te desejar um feliz aniversário! 🎉 Preparamos um mimo especial pra você comemorar com a gente — quando quiser, é só me chamar que te conto.',
+          },
+        ],
+      },
+      {
+        titulo: 'Data comemorativa — Dia dos Pais',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Tá chegando o Dia dos Pais e a gente preparou umas opções de presente que são a cara do seu pai (e que ele vai usar de verdade). Quer que eu separe algumas e te mande? Se preferir, monto um kit já embrulhado.',
+          },
+        ],
+      },
+      {
+        titulo: 'Data comemorativa — Black Friday',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Nossa Black Friday já começou e as melhores peças costumam sair rápido. Antes de lotar, quis te avisar primeiro. Quer que eu separe os tamanhos no teu estilo pra você garantir?',
+          },
+        ],
+      },
+      {
+        titulo: 'Lançamento de coleção',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Chegou a coleção nova e tem peça que é muito a tua cara. Tô liberando pros clientes mais próximos verem antes de todo mundo. Quer que eu te mande um preview?',
+          },
+        ],
+      },
+      {
+        titulo: 'Versão neutra (para clientes mais formais)',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto: 'Quando o cliente for mais reservado, troque o "mano/fala" por um tom mais elegante:',
+          },
+          {
+            tipo: 'citacao',
+            texto:
+              'Olá, [Nome]! Tudo bem? Aqui é o [Seu Nome], da ZYNK. Chegaram novidades que combinam bastante com o seu estilo e lembrei de você. Quando tiver um tempo, posso te mostrar algumas opções?',
+          },
+        ],
+      },
+      {
+        titulo: 'Depois que o cliente responde (continuação)',
+        blocos: [
+          { tipo: 'subtitulo', texto: 'Se demonstrou interesse' },
+          {
+            tipo: 'citacao',
+            texto:
+              'Show! Já vou separar 2 ou 3 opções no seu tamanho. Prefere receber por aqui (foto/vídeo) ou passar na loja pra experimentar com calma?',
+          },
+          { tipo: 'subtitulo', texto: 'Se respondeu morno' },
+          {
+            tipo: 'citacao',
+            texto: 'Tranquilo! Deixa eu te mandar só uma foto rapidinha — se não for a sua cara, sem problema. Posso?',
+          },
+          { tipo: 'subtitulo', texto: 'Se sumiu de novo' },
+          {
+            tipo: 'citacao',
+            texto: 'Sem pressa! Quando bater a vontade de renovar o guarda-roupa, é só me chamar. Tô por aqui. 👊',
+          },
+        ],
+      },
+      {
+        titulo: 'Chamadas para ação (use sempre uma)',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Passa aqui essa semana que te mostro pessoalmente.',
+              'Quer que eu separe e deixe reservado no teu nome?',
+              'Te mando por aqui ou prefere ver na loja?',
+              'Posso te enviar um condicional, sem compromisso?',
+            ],
+          },
+        ],
+      },
+      {
+        titulo: 'Boas práticas e cuidados',
+        blocos: [
+          {
+            tipo: 'lista',
+            itens: [
+              'Mande no máximo ~25 a 30 contatos por dia (não vire spam).',
+              'Sempre personalize com o nome — nada de mensagem genérica copiada.',
+              'Áudio primeiro; texto só se a pessoa não responder.',
+              'Termine quase sempre com uma chamada para ação (CTA).',
+              'Escolha o tom (descontraído ou neutro) conforme o perfil do cliente.',
+              'Anote quem você contatou (prospecção e pós-venda), para acompanhar o retorno.',
+            ],
+          },
+        ],
+      },
+    ],
+  },
+
+  {
     slug: 'diagnostico',
     titulo: 'Diagnóstico & Fast Plan',
     descricao: 'Resumo estratégico e iniciativas de ganho rápido da loja.',
