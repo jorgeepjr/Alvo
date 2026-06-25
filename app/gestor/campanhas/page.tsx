@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
+import { EstrategiaCampanha } from './estrategia-campanha'
 
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
@@ -70,25 +71,28 @@ export default async function CampanhasPage() {
               {lista.map((c) => {
                 const info = STATUS_INFO[c.status] ?? STATUS_INFO.ideia
                 return (
-                  <div key={c.id} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-slate-800 bg-slate-950/40 px-3 py-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium">{c.titulo} <Badge className={info.cls}>{info.label}</Badge></p>
-                      {c.descricao && <p className="text-xs text-slate-400 mt-0.5">{c.descricao}</p>}
+                  <div key={c.id} className="rounded-md border border-slate-800 bg-slate-950/40 px-3 py-2 space-y-2">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium">{c.titulo} <Badge className={info.cls}>{info.label}</Badge></p>
+                        {c.descricao && <p className="text-xs text-slate-400 mt-0.5">{c.descricao}</p>}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <form action={mudarStatusCampanha.bind(null, c.id, 'ideia')} className="inline">
+                          <Button type="submit" size="sm" variant="outline">Ideia</Button>
+                        </form>
+                        <form action={mudarStatusCampanha.bind(null, c.id, 'planejada')} className="inline">
+                          <Button type="submit" size="sm" variant="outline">Planejar</Button>
+                        </form>
+                        <form action={mudarStatusCampanha.bind(null, c.id, 'feita')} className="inline">
+                          <Button type="submit" size="sm" variant="outline">Feita</Button>
+                        </form>
+                        <form action={excluirCampanha.bind(null, c.id)} className="inline">
+                          <Button type="submit" size="sm" variant="destructive">Excluir</Button>
+                        </form>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <form action={mudarStatusCampanha.bind(null, c.id, 'ideia')} className="inline">
-                        <Button type="submit" size="sm" variant="outline">Ideia</Button>
-                      </form>
-                      <form action={mudarStatusCampanha.bind(null, c.id, 'planejada')} className="inline">
-                        <Button type="submit" size="sm" variant="outline">Planejar</Button>
-                      </form>
-                      <form action={mudarStatusCampanha.bind(null, c.id, 'feita')} className="inline">
-                        <Button type="submit" size="sm" variant="outline">Feita</Button>
-                      </form>
-                      <form action={excluirCampanha.bind(null, c.id)} className="inline">
-                        <Button type="submit" size="sm" variant="destructive">Excluir</Button>
-                      </form>
-                    </div>
+                    <EstrategiaCampanha id={c.id} estrategia={c.estrategia} />
                   </div>
                 )
               })}
