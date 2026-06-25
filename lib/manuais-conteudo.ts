@@ -807,6 +807,124 @@ export const MANUAIS: Manual[] = [
   },
 
   {
+    slug: 'prospeccao-novos-clientes',
+    titulo: 'Prospecção de Novos Clientes',
+    descricao: 'Modelos de mensagem para atrair quem ainda não comprou.',
+    secoes: [
+      {
+        titulo: 'Como usar',
+        blocos: [
+          {
+            tipo: 'paragrafo',
+            texto:
+              'Mensagens para o primeiro contato com quem ainda não é cliente (seguidores, indicações). Personalize com [Nome], [Seu Nome] e [Loja]. Prefira áudio e foque em criar conexão, sem empurrar venda no primeiro contato.',
+          },
+        ],
+      },
+      {
+        titulo: '1. Primeiro contato pelo Instagram (áudio)',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Tudo certo? Vi que você acompanha nosso perfil e resolvi me apresentar. Meu nome é [Seu Nome], faço parte da equipe da [Loja]. Trabalho ajudando nossos clientes a encontrarem peças para o dia a dia, trabalho, eventos e momentos especiais. Não estou te chamando para comprar nada agora, só queria me colocar à disposição. Qualquer coisa que precisar, pode contar comigo. 👊',
+          },
+        ],
+      },
+      {
+        titulo: '2. Primeiro contato por áudio',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Tudo certo? Vi que você acompanha nossa página e resolvi me apresentar. Sou [Seu Nome], da [Loja]. Sempre que precisar de ajuda para montar looks, encontrar alguma peça específica ou ficar por dentro das novidades, pode me chamar. Será um prazer te atender! 👊',
+          },
+        ],
+      },
+      {
+        titulo: '3. Para quem segue a loja',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Vi que você já acompanha a gente faz um tempo e fiquei curioso... Você já conhece nossa loja pessoalmente ou nos encontrou apenas pelo Instagram?',
+          },
+        ],
+      },
+      {
+        titulo: '4. Amigos de clientes',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Tudo certo? O [Nome do Cliente] comentou que você curte esse estilo de roupa e achei legal me apresentar. Sou [Seu Nome], da [Loja]. Trabalhamos com moda masculina e atendimento personalizado. Não estou te chamando para comprar nada agora, só queria abrir essa conexão. 👊',
+          },
+        ],
+      },
+      {
+        titulo: '5. Com curiosidade',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Posso te fazer uma pergunta rápida? Hoje, quando você precisa comprar roupa, qual costuma ser sua maior dificuldade? Encontrar modelagem? Encontrar qualidade? Encontrar atendimento? Gosto de entender isso porque ajuda muito a atender melhor cada cliente.',
+          },
+        ],
+      },
+      {
+        titulo: '6. Para empresário',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Vi que você trabalha com [área]. Atendemos muitos empresários aqui da cidade e uma coisa que escuto bastante é a dificuldade de encontrar roupas que sirvam tanto para o trabalho quanto para momentos mais descontraídos. Você costuma ter essa dificuldade também?',
+          },
+        ],
+      },
+      {
+        titulo: '7. Para quem treina (academia)',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Vi que você treina firme. Me surgiu uma curiosidade... Quando vai sair depois do treino ou no final de semana, qual estilo de roupa você costuma usar?',
+          },
+        ],
+      },
+      {
+        titulo: '8. Convite para conhecer a loja',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Quando tiver um tempo, passa aqui tomar um café com a gente. Sem compromisso nenhum. Quero te mostrar a loja, entender seu estilo e conhecer você melhor. Vai ser um prazer receber você. 👊',
+          },
+        ],
+      },
+      {
+        titulo: '9. Reativação de seguidor frio',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Passando para saber uma coisa... Você continua acompanhando nossas novidades por aqui ou o Instagram anda escondendo nossos conteúdos? 😂',
+          },
+        ],
+      },
+      {
+        titulo: '10. Mensagem forte para gerar visita',
+        blocos: [
+          {
+            tipo: 'citacao',
+            texto:
+              'Fala, [Nome]! Essa semana chegaram várias novidades que têm muito o perfil dos clientes que costumam comprar aqui. Antes de te mostrar qualquer peça, queria entender: qual tipo de roupa você mais usa hoje? Trabalho? Casual? Final de semana? Eventos?',
+          },
+        ],
+      },
+    ],
+  },
+
+  {
     slug: 'diagnostico',
     titulo: 'Diagnóstico & Fast Plan',
     descricao: 'Resumo estratégico e iniciativas de ganho rápido da loja.',
