@@ -18,7 +18,9 @@ export async function chamarGemini(
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }],
     })),
-    generationConfig: { maxOutputTokens: 1200 },
+    // thinkingBudget 0 desliga o "raciocínio interno" do 2.5 (que consumia o
+    // espaço da resposta e cortava o texto). maxOutputTokens maior dá folga.
+    generationConfig: { maxOutputTokens: 2048, thinkingConfig: { thinkingBudget: 0 } },
   }
 
   let ultimoStatus = 0
