@@ -52,6 +52,21 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
 
   const pctMap = new Map((percentuais ?? []).map((p) => [p.vendedor_id, Number(p.percentual)]))
 
+  // Vendido por dia (todos os lançamentos do mês) para comparar com a cota e
+  // ver os dias que ficaram sem lançamento.
+  const { data: lancMes } = await supabase
+    .from('lancamentos')
+    .select('data, valor')
+    .gte('data', inicioMes)
+    .lte('data', fimMes)
+  const vendidoPorDia = new Map<string, number>()
+  for (const l of lancMes ?? []) vendidoPorDia.set(l.data, (vendidoPorDia.get(l.data) ?? 0) + Number(l.valor))
+  const hojeStr = new Date().toISOString().slice(0, 10)
+  const diasSemLancar = (distribuicao ?? []).filter(
+    (d) => d.situacao === 'normal' && d.data <= hojeStr && !vendidoPorDia.has(d.data)
+  ).length
+  const somaVendido = Array.from(vendidoPorDia.values()).reduce((a, v) => a + v, 0)
+
   // Somatórios para conferência da distribuição vs. meta
   const somaCotaValor = (distribuicao ?? []).reduce((acc, d) => acc + Number(d.cota_valor), 0)
   const somaCotaAtend = (distribuicao ?? []).reduce((acc, d) => acc + Number(d.cota_atendimentos), 0)
@@ -174,12 +189,19 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
             </Button>
           </form>
 
+          {diasSemLancar > 0 && (
+            <p className="text-sm text-red-400">
+              ⚠️ {diasSemLancar} dia(s) útil(eis) passado(s) sem lançamento de venda (destacados em vermelho abaixo).
+            </p>
+          )}
+
           {distribuicao && distribuicao.length > 0 && (
             <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Data</TableHead>
                   <TableHead>Cota Valor</TableHead>
+                  <TableHead>Vendido</TableHead>
                   <TableHead>Atend.</TableHead>
                   <TableHead>Peças</TableHead>
                   <TableHead>Situação</TableHead>
@@ -187,8 +209,11 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {distribuicao.map((d) => (
-                  <TableRow key={d.id}>
+                {distribuicao.map((d) => {
+                  const vendido = vendidoPorDia.get(d.data)
+                  const semLancar = d.situacao === 'normal' && d.data <= hojeStr && vendido === undefined
+                  return (
+                  <TableRow key={d.id} className={semLancar ? 'bg-red-950/30' : ''}>
                     <TableCell>{d.data.split('-').reverse().join('/')}</TableCell>
                     <TableCell>
                       <form action={ajustarCotaDia.bind(null, d.id, ano, mes)} className="flex gap-1">
@@ -197,6 +222,15 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                         <Input name="cota_pecas" type="number" defaultValue={d.cota_pecas} className="hidden" />
                         <Button type="submit" size="sm" variant="outline">Salvar</Button>
                       </form>
+                    </TableCell>
+                    <TableCell>
+                      {vendido !== undefined ? (
+                        `R$ ${vendido.toFixed(2)}`
+                      ) : semLancar ? (
+                        <span className="text-red-400 font-medium">Sem lançamento</span>
+                      ) : (
+                        '—'
+                      )}
                     </TableCell>
                     <TableCell>{d.cota_atendimentos}</TableCell>
                     <TableCell>{d.cota_pecas}</TableCell>
@@ -213,12 +247,14 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                       </form>
                     </TableCell>
                   </TableRow>
-                ))}
+                  )
+                })}
                 <TableRow className="border-t-2 border-slate-700 font-semibold">
                   <TableCell className="text-zinc-300">Total distribuído</TableCell>
                   <TableCell className={meta && Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? 'text-green-400' : 'text-yellow-400'}>
                     R$ {formatBRL(somaCotaValor)} {meta && (Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? '✓' : '⚠')}
                   </TableCell>
+                  <TableCell className="text-zinc-300">R$ {formatBRL(somaVendido)}</TableCell>
                   <TableCell className={meta && somaCotaAtend === Number(meta.meta_atendimentos) ? 'text-green-400' : 'text-yellow-400'}>
                     {somaCotaAtend} {meta && (somaCotaAtend === Number(meta.meta_atendimentos) ? '✓' : '⚠')}
                   </TableCell>
