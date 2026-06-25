@@ -234,7 +234,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                               : ''
                           }
                         >
-                          R$ {vendido.toFixed(2)}
+                          R$ {formatBRL(vendido)}
                           {Number(d.cota_valor) > 0 && (vendido >= Number(d.cota_valor) ? ' ▲' : ' ▼')}
                         </span>
                       ) : semLancar ? (

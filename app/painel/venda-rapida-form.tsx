@@ -5,6 +5,7 @@ import { adicionarVendaRapida } from './lancamento/actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { formatBRL } from '@/lib/calculos'
 
 type TotalDia = { atendimentos: number; pecas: number; valor: number } | null
 
@@ -22,7 +23,7 @@ export function VendaRapidaForm({ data, totalDia }: { data: string; totalDia: To
       {totalDia && (totalDia.valor > 0 || totalDia.atendimentos > 0) && (
         <div className="rounded-md bg-slate-950/50 border border-slate-800 px-3 py-2 text-sm flex flex-wrap gap-x-4 gap-y-1">
           <span className="text-slate-400">Acumulado hoje:</span>
-          <span className="text-slate-200 font-semibold">R$ {totalDia.valor.toFixed(2)}</span>
+          <span className="text-slate-200 font-semibold">R$ {formatBRL(totalDia.valor)}</span>
           <span className="text-slate-400">{totalDia.atendimentos} atend.</span>
           <span className="text-slate-400">{totalDia.pecas} peças</span>
         </div>

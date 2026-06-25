@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { calcularProjecao, calcularTicketMedio } from '@/lib/calculos'
+import { calcularProjecao, calcularTicketMedio, formatBRL } from '@/lib/calculos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProgressBar } from '@/components/progress-bar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -230,7 +230,7 @@ export default async function PainelVendedor() {
               ? 'Sem cota definida hoje'
               : metaHojeBatida
               ? '🎯 Meta do dia batida!'
-              : `Falta R$ ${faltaHoje.toFixed(2)} hoje`}
+              : `Falta R$ ${formatBRL(faltaHoje)} hoje`}
           </span>
         </div>
       </div>
@@ -349,11 +349,11 @@ export default async function PainelVendedor() {
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader><CardTitle className="text-base">Progresso de Hoje</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <ProgressBar label="Valor" atual={valorHoje} meta={cotaValorHoje} formatar={(v) => `R$ ${v.toFixed(2)}`} />
+          <ProgressBar label="Valor" atual={valorHoje} meta={cotaValorHoje} formatar={(v) => `R$ ${formatBRL(v)}`} />
           <ProgressBar label="Atendimentos" atual={atendimentosHoje} meta={cotaHoje?.cota_atendimentos ?? 0} />
           <ProgressBar label="Peças" atual={pecasHoje} meta={cotaHoje?.cota_pecas ?? 0} />
           {faltaHoje > 0 ? (
-            <p className="text-sm text-yellow-400">Falta R$ {faltaHoje.toFixed(2)} para bater a meta de hoje.</p>
+            <p className="text-sm text-yellow-400">Falta R$ {formatBRL(faltaHoje)} para bater a meta de hoje.</p>
           ) : (
             <p className="text-sm text-green-400">Você bateu a meta de hoje! 🎯</p>
           )}
@@ -363,11 +363,11 @@ export default async function PainelVendedor() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="border-slate-800 bg-slate-900">
           <CardHeader><CardTitle className="text-sm text-slate-400">Ticket Médio / Cliente</CardTitle></CardHeader>
-          <CardContent className="text-xl font-bold">R$ {ticketCliente.toFixed(2)}</CardContent>
+          <CardContent className="text-xl font-bold">R$ {formatBRL(ticketCliente)}</CardContent>
         </Card>
         <Card className="border-slate-800 bg-slate-900">
           <CardHeader><CardTitle className="text-sm text-slate-400">Ticket Médio / Peça</CardTitle></CardHeader>
-          <CardContent className="text-xl font-bold">R$ {ticketPeca.toFixed(2)}</CardContent>
+          <CardContent className="text-xl font-bold">R$ {formatBRL(ticketPeca)}</CardContent>
         </Card>
         <Card className="border-slate-800 bg-slate-900">
           <CardHeader><CardTitle className="text-sm text-slate-400">Esforço Diário (peças/atend.)</CardTitle></CardHeader>
@@ -378,7 +378,7 @@ export default async function PainelVendedor() {
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader><CardTitle className="text-base">Progresso da Semana</CardTitle></CardHeader>
         <CardContent>
-          <ProgressBar label="Valor" atual={valorSemana} meta={cotaValorSemana} formatar={(v) => `R$ ${v.toFixed(2)}`} />
+          <ProgressBar label="Valor" atual={valorSemana} meta={cotaValorSemana} formatar={(v) => `R$ ${formatBRL(v)}`} />
         </CardContent>
       </Card>
 
@@ -414,9 +414,9 @@ export default async function PainelVendedor() {
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader><CardTitle className="text-base">Progresso do Mês</CardTitle></CardHeader>
         <CardContent className="space-y-2">
-          <ProgressBar label="Valor" atual={valorMes} meta={cotaValorMes} formatar={(v) => `R$ ${v.toFixed(2)}`} />
+          <ProgressBar label="Valor" atual={valorMes} meta={cotaValorMes} formatar={(v) => `R$ ${formatBRL(v)}`} />
           <p className="text-sm text-slate-400">
-            Projeção: R$ {projecaoMes.toFixed(2)} ({cotaValorMes > 0 ? ((projecaoMes / cotaValorMes) * 100).toFixed(1) : '0'}% da meta)
+            Projeção: R$ {formatBRL(projecaoMes)} ({cotaValorMes > 0 ? ((projecaoMes / cotaValorMes) * 100).toFixed(1) : '0'}% da meta)
           </p>
         </CardContent>
       </Card>
@@ -442,7 +442,7 @@ export default async function PainelVendedor() {
                     <TableCell>{l.data.split('-').reverse().join('/')}</TableCell>
                     <TableCell>{l.atendimentos}</TableCell>
                     <TableCell>{l.pecas}</TableCell>
-                    <TableCell>R$ {Number(l.valor).toFixed(2)}</TableCell>
+                    <TableCell>R$ {formatBRL(Number(l.valor))}</TableCell>
                     <TableCell>
                       {situacaoDia === 'feriado' ? (
                         <span className="rounded bg-blue-600/20 text-blue-300 px-2 py-0.5 text-xs">Feriado</span>

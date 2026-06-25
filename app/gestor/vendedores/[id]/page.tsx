@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { calcularProjecao, calcularTicketMedio } from '@/lib/calculos'
+import { calcularProjecao, calcularTicketMedio, formatBRL } from '@/lib/calculos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
 import { Button } from '@/components/ui/button'
@@ -111,12 +111,12 @@ export default async function VendedorDetalhePage({ params }: { params: Promise<
         </CardHeader>
         <CardContent className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>R$ {valorVendido.toFixed(2)} / R$ {valorCota.toFixed(2)}</span>
+            <span>R$ {formatBRL(valorVendido)} / R$ {formatBRL(valorCota)}</span>
             <span>{percentual.toFixed(1)}%</span>
           </div>
           <Progress value={Math.min(percentual, 100)} />
           <p className="text-sm text-slate-400">
-            Projeção: R$ {projecao.toFixed(2)} ({valorCota > 0 ? ((projecao / valorCota) * 100).toFixed(1) : '0'}% da meta)
+            Projeção: R$ {formatBRL(projecao)} ({valorCota > 0 ? ((projecao / valorCota) * 100).toFixed(1) : '0'}% da meta)
           </p>
         </CardContent>
       </Card>
@@ -140,7 +140,7 @@ export default async function VendedorDetalhePage({ params }: { params: Promise<
         <Card className="border-slate-800 bg-slate-900">
           <CardHeader><CardTitle className="text-sm text-slate-400">Ticket Médio</CardTitle></CardHeader>
           <CardContent className="text-xl font-bold">
-            R$ {ticketCliente.toFixed(2)} / cliente · R$ {ticketPeca.toFixed(2)} / peça
+            R$ {formatBRL(ticketCliente)} / cliente · R$ {formatBRL(ticketPeca)} / peça
           </CardContent>
         </Card>
       </div>

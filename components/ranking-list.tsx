@@ -1,3 +1,5 @@
+import { formatBRL } from '@/lib/calculos'
+
 interface RankingItem {
   id: string
   nome: string
@@ -18,7 +20,7 @@ export function RankingList({ items }: { items: RankingItem[] }) {
           <div className="flex-1">
             <p className="font-medium">{item.nome}</p>
             <p className="text-xs text-slate-400">
-              R$ {item.valor.toFixed(2)} · {item.atendimentos} atend. · {item.pecas} peças
+              R$ {formatBRL(item.valor)} · {item.atendimentos} atend. · {item.pecas} peças
             </p>
           </div>
           <span className={`font-bold ${item.percentual >= 100 ? 'text-green-400' : item.percentual < 50 ? 'text-red-400' : 'text-slate-200'}`}>

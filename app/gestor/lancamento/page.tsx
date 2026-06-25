@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { formatBRL } from '@/lib/calculos'
 import { salvarLancamentoGestor, fecharDia, salvarNotaDia } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -131,7 +132,7 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
                   <TableCell>Venda da Loja</TableCell>
                   <TableCell>{lancamentoLoja.atendimentos}</TableCell>
                   <TableCell>{lancamentoLoja.pecas}</TableCell>
-                  <TableCell>R$ {Number(lancamentoLoja.valor).toFixed(2)}</TableCell>
+                  <TableCell>R$ {formatBRL(Number(lancamentoLoja.valor))}</TableCell>
                   <TableCell>{lancamentoLoja.situacao_vendedor}</TableCell>
                 </TableRow>
               )}
@@ -142,7 +143,7 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
                     <TableCell>{v.nome}</TableCell>
                     <TableCell>{l?.atendimentos ?? '-'}</TableCell>
                     <TableCell>{l?.pecas ?? '-'}</TableCell>
-                    <TableCell>{l ? `R$ ${Number(l.valor).toFixed(2)}` : '-'}</TableCell>
+                    <TableCell>{l ? `R$ ${formatBRL(Number(l.valor))}` : '-'}</TableCell>
                     <TableCell>{l?.situacao_vendedor ?? '-'}</TableCell>
                   </TableRow>
                 )
@@ -151,14 +152,14 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
                 <TableCell className="text-slate-300">Total dos Vendedores (cota)</TableCell>
                 <TableCell className="text-slate-300">{totalAtendimentos}</TableCell>
                 <TableCell className="text-slate-300">{totalPecas}</TableCell>
-                <TableCell className="text-slate-300">R$ {totalValor.toFixed(2)}</TableCell>
+                <TableCell className="text-slate-300">R$ {formatBRL(totalValor)}</TableCell>
                 <TableCell>-</TableCell>
               </TableRow>
               <TableRow className="font-bold">
                 <TableCell className="text-green-400">Total Geral (vendedores + loja)</TableCell>
                 <TableCell className="text-green-400">{totalGeralAtendimentos}</TableCell>
                 <TableCell className="text-green-400">{totalGeralPecas}</TableCell>
-                <TableCell className="text-green-400">R$ {totalGeralValor.toFixed(2)}</TableCell>
+                <TableCell className="text-green-400">R$ {formatBRL(totalGeralValor)}</TableCell>
                 <TableCell>-</TableCell>
               </TableRow>
             </TableBody>

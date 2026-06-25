@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { calcularProjecao, calcularTicketMedio } from '@/lib/calculos'
+import { calcularProjecao, calcularTicketMedio, formatBRL } from '@/lib/calculos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProgressBar } from '@/components/progress-bar'
 import { RankingList } from '@/components/ranking-list'
@@ -176,16 +176,16 @@ export default async function GestorDashboard() {
   const linhasVend = (vendedores ?? [])
     .map((v) => {
       const lv = lancamentosHoje?.find((l) => l.vendedor_id === v.id)
-      return `• ${v.nome}: R$ ${Number(lv?.valor ?? 0).toFixed(2)} (${lv?.pecas ?? 0} peças)`
+      return `• ${v.nome}: R$ ${formatBRL(Number(lv?.valor ?? 0))} (${lv?.pecas ?? 0} peças)`
     })
     .join('\n')
   const resumoTexto =
     `📊 Resumo do dia ${ddmm} — ZYNK\n` +
-    `💰 Vendido hoje: R$ ${valorHoje.toFixed(2)}${cotaHojeLoja > 0 ? ` (cota R$ ${cotaHojeLoja.toFixed(2)}) ${valorHoje >= cotaHojeLoja ? '✅' : '⚠️'}` : ''}\n` +
-    `👥 Atendimentos: ${atendimentosHoje} | 👕 Peças: ${pecasHoje} | 🎟️ Ticket: R$ ${ticketHoje.toFixed(2)}\n` +
+    `💰 Vendido hoje: R$ ${formatBRL(valorHoje)}${cotaHojeLoja > 0 ? ` (cota R$ ${formatBRL(cotaHojeLoja)}) ${valorHoje >= cotaHojeLoja ? '✅' : '⚠️'}` : ''}\n` +
+    `👥 Atendimentos: ${atendimentosHoje} | 👕 Peças: ${pecasHoje} | 🎟️ Ticket: R$ ${formatBRL(ticketHoje)}\n` +
     (linhasVend ? `\nPor vendedor:\n${linhasVend}\n` : '') +
-    `\n📅 Mês: R$ ${valorMes.toFixed(2)}${cotaMes > 0 ? ` de R$ ${cotaMes.toFixed(2)} (${((valorMes / cotaMes) * 100).toFixed(0)}%)` : ''}` +
-    `${cotaMes > 0 ? ` | Projeção: R$ ${projecao.toFixed(2)} (${((projecao / cotaMes) * 100).toFixed(0)}%)` : ''}`
+    `\n📅 Mês: R$ ${formatBRL(valorMes)}${cotaMes > 0 ? ` de R$ ${formatBRL(cotaMes)} (${((valorMes / cotaMes) * 100).toFixed(0)}%)` : ''}` +
+    `${cotaMes > 0 ? ` | Projeção: R$ ${formatBRL(projecao)} (${((projecao / cotaMes) * 100).toFixed(0)}%)` : ''}`
 
   return (
     <div className="space-y-6">
@@ -197,7 +197,7 @@ export default async function GestorDashboard() {
             {cotaMes > 0 && projecao < cotaMes * 0.9 && (
               <p className="text-sm text-red-300 font-medium">
                 🚨 No ritmo atual o mês deve fechar em {((projecao / cotaMes) * 100).toFixed(0)}% da meta
-                (faltam R$ {(cotaMes - projecao).toFixed(2)}). Hora de uma ação de vendas para crescer.
+                (faltam R$ {formatBRL((cotaMes - projecao))}). Hora de uma ação de vendas para crescer.
               </p>
             )}
             {alertasMeta.map((r) => (
@@ -213,8 +213,8 @@ export default async function GestorDashboard() {
         <Card className="border-slate-800 bg-slate-900">
           <CardHeader><CardTitle className="text-sm text-slate-400">Vendido Hoje</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-xl font-bold">R$ {valorHoje.toFixed(2)}</p>
-            {distribuicaoHoje && <p className="text-xs text-slate-400">Cota: R$ {Number(distribuicaoHoje.cota_valor).toFixed(2)}</p>}
+            <p className="text-xl font-bold">R$ {formatBRL(valorHoje)}</p>
+            {distribuicaoHoje && <p className="text-xs text-slate-400">Cota: R$ {formatBRL(Number(distribuicaoHoje.cota_valor))}</p>}
           </CardContent>
         </Card>
         <Card className="border-slate-800 bg-slate-900">
@@ -234,7 +234,7 @@ export default async function GestorDashboard() {
         <Card className="border-slate-800 bg-slate-900">
           <CardHeader><CardTitle className="text-sm text-slate-400">Venda da Loja Hoje</CardTitle></CardHeader>
           <CardContent>
-            <p className="text-xl font-bold">R$ {Number(vendaLojaHoje?.valor ?? 0).toFixed(2)}</p>
+            <p className="text-xl font-bold">R$ {formatBRL(Number(vendaLojaHoje?.valor ?? 0))}</p>
           </CardContent>
         </Card>
       </div>
@@ -261,8 +261,8 @@ export default async function GestorDashboard() {
           {cotaMes > 0 && (
             <p className={`mt-2 text-sm ${projecao >= cotaMes ? 'text-green-400' : 'text-yellow-400'}`}>
               {projecao >= cotaMes
-                ? `✅ No ritmo atual, a projeção é fechar o mês em R$ ${projecao.toFixed(2)} — acima da meta (${((projecao / cotaMes) * 100).toFixed(0)}%).`
-                : `⚠️ No ritmo atual, a projeção é fechar o mês em R$ ${projecao.toFixed(2)} (${((projecao / cotaMes) * 100).toFixed(0)}% da meta). Faltam R$ ${(cotaMes - projecao).toFixed(2)} — vale uma ação de vendas para crescer.`}
+                ? `✅ No ritmo atual, a projeção é fechar o mês em R$ ${formatBRL(projecao)} — acima da meta (${((projecao / cotaMes) * 100).toFixed(0)}%).`
+                : `⚠️ No ritmo atual, a projeção é fechar o mês em R$ ${formatBRL(projecao)} (${((projecao / cotaMes) * 100).toFixed(0)}% da meta). Faltam R$ ${formatBRL((cotaMes - projecao))} — vale uma ação de vendas para crescer.`}
             </p>
           )}
         </CardContent>
@@ -283,9 +283,9 @@ export default async function GestorDashboard() {
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader><CardTitle className="text-base">Progresso do Mês</CardTitle></CardHeader>
         <CardContent className="space-y-3">
-          <ProgressBar label="Valor Mensal" atual={valorMes} meta={cotaMes} formatar={(v) => `R$ ${v.toFixed(2)}`} />
+          <ProgressBar label="Valor Mensal" atual={valorMes} meta={cotaMes} formatar={(v) => `R$ ${formatBRL(v)}`} />
           <p className="text-sm text-slate-400">
-            Projeção: R$ {projecao.toFixed(2)} ({cotaMes > 0 ? ((projecao / cotaMes) * 100).toFixed(1) : '0'}% da meta)
+            Projeção: R$ {formatBRL(projecao)} ({cotaMes > 0 ? ((projecao / cotaMes) * 100).toFixed(1) : '0'}% da meta)
           </p>
           <p className="text-sm text-slate-400">Dias úteis restantes: {diasRestantes}</p>
         </CardContent>
