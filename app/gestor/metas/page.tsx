@@ -225,7 +225,18 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                     </TableCell>
                     <TableCell>
                       {vendido !== undefined ? (
-                        `R$ ${vendido.toFixed(2)}`
+                        <span
+                          className={
+                            Number(d.cota_valor) > 0
+                              ? vendido >= Number(d.cota_valor)
+                                ? 'text-green-400 font-medium'
+                                : 'text-red-400 font-medium'
+                              : ''
+                          }
+                        >
+                          R$ {vendido.toFixed(2)}
+                          {Number(d.cota_valor) > 0 && (vendido >= Number(d.cota_valor) ? ' ▲' : ' ▼')}
+                        </span>
                       ) : semLancar ? (
                         <span className="text-red-400 font-medium">Sem lançamento</span>
                       ) : (
