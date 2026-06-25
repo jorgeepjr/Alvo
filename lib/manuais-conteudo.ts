@@ -711,9 +711,9 @@ export const MANUAIS: Manual[] = [
   },
 
   {
-    slug: 'abordagens-prospeccao',
-    titulo: 'Abordagens de Prospecção',
-    descricao: 'Modelos de áudio/mensagem para clientes que já conhecem a loja.',
+    slug: 'kit-prospeccao',
+    titulo: 'Kit de Prospecção',
+    descricao: 'Modelos de mensagem/áudio: clientes atuais, novos, aniversário e datas.',
     secoes: [
       {
         titulo: 'Como usar',
@@ -721,8 +721,14 @@ export const MANUAIS: Manual[] = [
           {
             tipo: 'paragrafo',
             texto:
-              'Modelos prontos para abordar clientes que já conhecem a loja. Personalize com o nome do cliente e mande de preferência por áudio, com o estilo da marca.',
+              'Modelos prontos de prospecção, em 3 partes: (1) clientes que já conhecem a loja, (2) clientes novos e (3) aniversário/datas/fechamento. Personalize com o nome e mande de preferência por áudio, no estilo da marca.',
           },
+        ],
+      },
+      {
+        titulo: 'Parte 1 — Clientes que já conhecem a loja',
+        blocos: [
+          { tipo: 'paragrafo', texto: 'Para quem já comprou ou já veio à loja. Foque em reativar e gerar nova conversa.' },
         ],
       },
       {
@@ -803,21 +809,13 @@ export const MANUAIS: Manual[] = [
           },
         ],
       },
-    ],
-  },
-
-  {
-    slug: 'prospeccao-novos-clientes',
-    titulo: 'Prospecção de Novos Clientes',
-    descricao: 'Modelos de mensagem para atrair quem ainda não comprou.',
-    secoes: [
       {
-        titulo: 'Como usar',
+        titulo: 'Parte 2 — Clientes novos',
         blocos: [
           {
             tipo: 'paragrafo',
             texto:
-              'Mensagens para o primeiro contato com quem ainda não é cliente (seguidores, indicações). Personalize com [Nome], [Seu Nome] e [Loja]. Prefira áudio e foque em criar conexão, sem empurrar venda no primeiro contato.',
+              'Primeiro contato com quem ainda não é cliente (seguidores, indicações). Foque em criar conexão, sem empurrar venda logo de cara. Personalize com [Nome], [Seu Nome] e [Loja].',
           },
         ],
       },
@@ -921,21 +919,13 @@ export const MANUAIS: Manual[] = [
           },
         ],
       },
-    ],
-  },
-
-  {
-    slug: 'mensagens-datas-fechamento',
-    titulo: 'Aniversário, Datas e Fechamento',
-    descricao: 'Modelos para aniversariantes, datas/coleções e como levar a conversa até a venda.',
-    secoes: [
       {
-        titulo: 'Como usar',
+        titulo: 'Parte 3 — Aniversário, datas e fechamento',
         blocos: [
           {
             tipo: 'paragrafo',
             texto:
-              'Complementos das abordagens: aniversário, datas comemorativas, lançamento de coleção, uma versão mais neutra (para clientes mais formais) e o roteiro do que falar depois que o cliente responde. Personalize com [Nome] e [Seu Nome].',
+              'Aniversário, datas comemorativas, lançamento de coleção, versão mais neutra (clientes formais) e o roteiro do que falar depois que o cliente responde.',
           },
         ],
       },
