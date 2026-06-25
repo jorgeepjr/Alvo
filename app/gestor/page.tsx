@@ -24,6 +24,7 @@ export default async function GestorDashboard() {
   const { data: lancamentosMes } = await supabase.from('lancamentos').select('*').gte('data', inicioMes).lte('data', fimMes)
   const { data: distribuicaoMes } = await supabase.from('distribuicao_diaria').select('*').is('vendedor_id', null).gte('data', inicioMes).lte('data', fimMes)
   const { data: meta } = await supabase.from('metas_mensais').select('*').eq('ano', ano).eq('mes', mes).maybeSingle()
+  const { data: campanhasMes } = await supabase.from('campanhas').select('titulo, status').eq('mes', mes).order('ordem')
 
   const valorHoje = lancamentosHoje?.reduce((acc, l) => acc + Number(l.valor), 0) ?? 0
   const atendimentosHoje = lancamentosHoje?.reduce((acc, l) => acc + l.atendimentos, 0) ?? 0
@@ -289,6 +290,28 @@ export default async function GestorDashboard() {
           <p className="text-sm text-slate-400">Dias úteis restantes: {diasRestantes}</p>
         </CardContent>
       </Card>
+
+      {campanhasMes && campanhasMes.length > 0 && (
+        <Card className="border-slate-800 bg-slate-900">
+          <CardHeader><CardTitle className="text-base">📣 Campanhas deste mês</CardTitle></CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            {campanhasMes.map((c, i) => (
+              <span
+                key={i}
+                className={`rounded-full px-3 py-1 text-xs ${
+                  c.status === 'feita'
+                    ? 'bg-green-600/20 text-green-300'
+                    : c.status === 'planejada'
+                    ? 'bg-yellow-600/20 text-yellow-300'
+                    : 'bg-slate-700 text-slate-200'
+                }`}
+              >
+                {c.titulo}
+              </span>
+            ))}
+          </CardContent>
+        </Card>
+      )}
 
       <Card className="border-zinc-700 bg-slate-900">
         <CardHeader>
