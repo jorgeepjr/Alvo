@@ -68,6 +68,7 @@ Não invente números além dos fornecidos.`,
     const msg = err instanceof Error ? err.message : ''
     if (msg === 'CHAVE_INVALIDA') return { error: 'A chave GEMINI_API_KEY não é válida. Verifique no servidor.' }
     if (msg === 'LIMITE_EXCEDIDO') return { error: 'Limite gratuito da IA atingido por agora. Tente em alguns minutos.' }
+    if (msg === 'SOBRECARREGADO') return { error: 'A IA do Google está sobrecarregada agora. Aguarde 1 minuto e tente de novo.' }
     return { error: `Não foi possível gerar a projeção (${msg || 'erro desconhecido'}).` }
   }
 }
