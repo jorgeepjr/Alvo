@@ -22,6 +22,7 @@ import {
   BookOpen,
   HelpCircle,
   Megaphone,
+  Gauge,
 } from 'lucide-react'
 
 const links = [
@@ -34,6 +35,7 @@ const links = [
   { href: '/gestor/campanhas', label: 'Campanhas', icon: Megaphone },
   { href: '/painel/assistente', label: 'Assistente IA', icon: Sparkles },
   { href: '/painel/manuais', label: 'Manuais', icon: BookOpen },
+  { href: '/gestor/indicadores', label: 'Indicadores', icon: Gauge },
   { href: '/gestor/historico', label: 'Histórico', icon: BarChart3 },
   { href: '/gestor/importar', label: 'Importar', icon: Upload },
   { href: '/gestor/ajuda', label: 'Manual do Sistema', icon: HelpCircle },

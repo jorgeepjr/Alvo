@@ -67,6 +67,10 @@ export default async function LancamentoGestorPage({ searchParams }: { searchPar
               <Input id="atendimentos" name="atendimentos" type="number" defaultValue={0} className="bg-slate-800 border-slate-700" />
             </div>
             <div className="space-y-1">
+              <Label htmlFor="vendas">Vendas (nº)</Label>
+              <Input id="vendas" name="vendas" type="number" defaultValue={0} className="bg-slate-800 border-slate-700" />
+            </div>
+            <div className="space-y-1">
               <Label htmlFor="pecas">Peças</Label>
               <Input id="pecas" name="pecas" type="number" defaultValue={0} className="bg-slate-800 border-slate-700" />
             </div>

@@ -15,6 +15,7 @@ export async function salvarLancamentoVendedor(
 
   const data = formData.get('data') as string
   const atendimentos = Number(formData.get('atendimentos'))
+  const vendas = Number(formData.get('vendas')) || 0
   const pecas = Number(formData.get('pecas'))
   const valor = parseValorBR(formData.get('valor'))
   const observacao = (formData.get('observacao') as string) || null
@@ -45,13 +46,14 @@ export async function salvarLancamentoVendedor(
   if (existente) {
     await supabase
       .from('lancamentos')
-      .update({ atendimentos, pecas, valor, observacao, situacao_vendedor })
+      .update({ atendimentos, vendas, pecas, valor, observacao, situacao_vendedor })
       .eq('id', existente.id)
   } else {
     await supabase.from('lancamentos').insert({
       vendedor_id: user.id,
       data,
       atendimentos,
+      vendas,
       pecas,
       valor,
       observacao,
@@ -79,16 +81,17 @@ export async function adicionarVendaRapida(
 
   const data = formData.get('data') as string
   const atendimentos = Number(formData.get('atendimentos')) || 0
+  const vendas = Number(formData.get('vendas')) || 0
   const pecas = Number(formData.get('pecas')) || 0
   const valor = parseValorBR(formData.get('valor'))
 
-  if (atendimentos === 0 && pecas === 0 && valor === 0) {
+  if (atendimentos === 0 && pecas === 0 && valor === 0 && vendas === 0) {
     return { error: 'Informe pelo menos um valor para adicionar.' }
   }
 
   const { data: existente } = await supabase
     .from('lancamentos')
-    .select('id, dia_fechado, atendimentos, pecas, valor')
+    .select('id, dia_fechado, atendimentos, vendas, pecas, valor')
     .eq('data', data)
     .eq('vendedor_id', user.id)
     .maybeSingle()
@@ -113,6 +116,7 @@ export async function adicionarVendaRapida(
       .from('lancamentos')
       .update({
         atendimentos: (existente.atendimentos ?? 0) + atendimentos,
+        vendas: (existente.vendas ?? 0) + vendas,
         pecas: (existente.pecas ?? 0) + pecas,
         valor: Number(existente.valor ?? 0) + valor,
       })
@@ -122,6 +126,7 @@ export async function adicionarVendaRapida(
       vendedor_id: user.id,
       data,
       atendimentos,
+      vendas,
       pecas,
       valor,
       situacao_vendedor: 'normal',

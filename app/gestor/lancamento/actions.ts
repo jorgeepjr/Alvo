@@ -14,6 +14,7 @@ export async function salvarLancamentoGestor(formData: FormData): Promise<void> 
   const vendedorIdRaw = formData.get('vendedor_id') as string
   const vendedor_id = vendedorIdRaw === 'loja' ? null : vendedorIdRaw
   const atendimentos = Number(formData.get('atendimentos'))
+  const vendas = Number(formData.get('vendas')) || 0
   const pecas = Number(formData.get('pecas'))
   const valor = parseValorBR(formData.get('valor'))
   const observacao = (formData.get('observacao') as string) || null
@@ -26,13 +27,14 @@ export async function salvarLancamentoGestor(formData: FormData): Promise<void> 
   if (existente) {
     await supabase
       .from('lancamentos')
-      .update({ atendimentos, pecas, valor, observacao, situacao_vendedor })
+      .update({ atendimentos, vendas, pecas, valor, observacao, situacao_vendedor })
       .eq('id', existente.id)
   } else {
     await supabase.from('lancamentos').insert({
       vendedor_id,
       data,
       atendimentos,
+      vendas,
       pecas,
       valor,
       observacao,

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { formatBRL } from '@/lib/calculos'
 
-type TotalDia = { atendimentos: number; pecas: number; valor: number } | null
+type TotalDia = { atendimentos: number; pecas: number; valor: number; vendas: number } | null
 
 export function VendaRapidaForm({ data, totalDia }: { data: string; totalDia: TotalDia }) {
   const [state, formAction] = useActionState(adicionarVendaRapida, null)
@@ -25,19 +25,24 @@ export function VendaRapidaForm({ data, totalDia }: { data: string; totalDia: To
           <span className="text-slate-400">Acumulado hoje:</span>
           <span className="text-slate-200 font-semibold">R$ {formatBRL(totalDia.valor)}</span>
           <span className="text-slate-400">{totalDia.atendimentos} atend.</span>
+          <span className="text-slate-400">{totalDia.vendas} vendas</span>
           <span className="text-slate-400">{totalDia.pecas} peças</span>
         </div>
       )}
 
-      <form ref={formRef} action={formAction} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+      <form ref={formRef} action={formAction} className="grid grid-cols-2 sm:grid-cols-5 gap-3 items-end">
         <input type="hidden" name="data" value={data} />
 
-        {state?.error && <p className="sm:col-span-4 text-sm text-red-400">{state.error}</p>}
-        {state?.success && <p className="sm:col-span-4 text-sm text-green-400">Venda adicionada ao total do dia!</p>}
+        {state?.error && <p className="col-span-2 sm:col-span-5 text-sm text-red-400">{state.error}</p>}
+        {state?.success && <p className="col-span-2 sm:col-span-5 text-sm text-green-400">Venda adicionada ao total do dia!</p>}
 
         <div className="space-y-1">
           <Label htmlFor="vr-atendimentos">Atendimentos</Label>
           <Input id="vr-atendimentos" name="atendimentos" type="number" min="0" placeholder="0" className="bg-slate-800 border-slate-700" />
+        </div>
+        <div className="space-y-1">
+          <Label htmlFor="vr-vendas">Vendas</Label>
+          <Input id="vr-vendas" name="vendas" type="number" min="0" placeholder="0" className="bg-slate-800 border-slate-700" />
         </div>
         <div className="space-y-1">
           <Label htmlFor="vr-pecas">Peças</Label>
@@ -47,8 +52,12 @@ export function VendaRapidaForm({ data, totalDia }: { data: string; totalDia: To
           <Label htmlFor="vr-valor">Valor (R$)</Label>
           <Input id="vr-valor" name="valor" type="text" inputMode="decimal" placeholder="0,00" className="bg-slate-800 border-slate-700" />
         </div>
-        <Button type="submit" className="bg-green-600 hover:bg-green-500">+ Adicionar venda</Button>
+        <Button type="submit" className="bg-green-600 hover:bg-green-500">+ Adicionar</Button>
       </form>
+
+      <p className="text-xs text-slate-500">
+        &quot;Atendimentos&quot; = pessoas atendidas · &quot;Vendas&quot; = quantas compraram (para a taxa de conversão).
+      </p>
 
       <p className="text-xs text-slate-500">
         Cada venda lançada aqui soma ao total do dia. Para corrigir o total, use a página &quot;Lançar Vendas&quot;.

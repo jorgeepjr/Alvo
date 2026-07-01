@@ -340,7 +340,7 @@ export default async function PainelVendedor() {
           ) : (
             <VendaRapidaForm
               data={hojeStr}
-              totalDia={{ atendimentos: atendimentosHoje, pecas: pecasHoje, valor: valorHoje }}
+              totalDia={{ atendimentos: atendimentosHoje, pecas: pecasHoje, valor: valorHoje, vendas: lancHoje?.vendas ?? 0 }}
             />
           )}
         </CardContent>

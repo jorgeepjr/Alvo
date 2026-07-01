@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 
 type Lancamento = {
   atendimentos: number
+  vendas?: number
   pecas: number
   valor: number
   observacao: string | null
@@ -33,6 +34,10 @@ export function LancamentoForm({ data, existente, bloqueado }: { data: string; e
       <div className="space-y-1">
         <Label htmlFor="atendimentos">Atendimentos</Label>
         <Input id="atendimentos" name="atendimentos" type="number" defaultValue={existente?.atendimentos ?? 0} disabled={fechado} className="bg-slate-800 border-slate-700" />
+      </div>
+      <div className="space-y-1">
+        <Label htmlFor="vendas">Vendas (nº)</Label>
+        <Input id="vendas" name="vendas" type="number" defaultValue={existente?.vendas ?? 0} disabled={fechado} className="bg-slate-800 border-slate-700" />
       </div>
       <div className="space-y-1">
         <Label htmlFor="pecas">Peças</Label>
