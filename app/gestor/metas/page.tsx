@@ -200,13 +200,27 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
             </Button>
           </form>
 
-          {datasLancadas.length > 0 && (
-            <div className={`rounded-md border px-3 py-2 text-sm ${somaDiferencaAteHoje >= 0 ? 'border-green-800 bg-green-950/20 text-green-300' : 'border-red-800 bg-red-950/20 text-red-300'}`}>
-              {somaDiferencaAteHoje >= 0 ? '✅ Acima da cota' : '⚠️ Abaixo da cota'} até {refData.split('-').reverse().join('/')} em{' '}
-              <b>{somaDiferencaAteHoje >= 0 ? '+' : '−'}R$ {formatBRL(Math.abs(somaDiferencaAteHoje))}</b>
-              {' '}(cota do período: R$ {formatBRL(cotaAteHoje)} · vendido: R$ {formatBRL(cotaAteHoje + somaDiferencaAteHoje)})
-            </div>
-          )}
+          {datasLancadas.length > 0 && (() => {
+            const vendidoAcum = cotaAteHoje + somaDiferencaAteHoje
+            // Tolerância de 1% da cota do período para considerar "batendo a meta".
+            const tol = Math.max(cotaAteHoje * 0.01, 1)
+            const status =
+              somaDiferencaAteHoje > tol ? 'acima' : somaDiferencaAteHoje < -tol ? 'abaixo' : 'batendo'
+            const cor =
+              status === 'acima'
+                ? 'border-green-800 bg-green-950/20 text-green-300'
+                : status === 'abaixo'
+                ? 'border-red-800 bg-red-950/20 text-red-300'
+                : 'border-yellow-800 bg-yellow-950/20 text-yellow-300'
+            const rotulo = status === 'acima' ? '✅ Acima da meta' : status === 'abaixo' ? '⚠️ Abaixo da meta' : '🎯 Batendo a meta'
+            return (
+              <div className={`rounded-md border px-3 py-2 text-sm ${cor}`}>
+                {rotulo} até {refData.split('-').reverse().join('/')}:{' '}
+                vendido <b>R$ {formatBRL(vendidoAcum)}</b> vs meta do período <b>R$ {formatBRL(cotaAteHoje)}</b>
+                {' '}({somaDiferencaAteHoje >= 0 ? '+' : '−'}R$ {formatBRL(Math.abs(somaDiferencaAteHoje))})
+              </div>
+            )
+          })()}
 
           {diasSemLancar > 0 && (
             <p className="text-sm text-red-400">
