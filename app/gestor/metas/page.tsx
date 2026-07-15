@@ -62,17 +62,21 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
   const vendidoPorDia = new Map<string, number>()
   for (const l of lancMes ?? []) vendidoPorDia.set(l.data, (vendidoPorDia.get(l.data) ?? 0) + Number(l.valor))
   const hojeStr = new Date().toISOString().slice(0, 10)
-  const diasSemLancar = (distribuicao ?? []).filter(
-    (d) => d.situacao === 'normal' && d.data <= hojeStr && !vendidoPorDia.has(d.data)
-  ).length
+
+  // Referência = último dia com lançamento (ex: se lançou até o dia 14, compara
+  // cota × vendido só até o dia 14, sem penalizar o dia de hoje ainda sem venda).
+  const datasLancadas = Array.from(vendidoPorDia.keys())
+  const refData = datasLancadas.length > 0 ? datasLancadas.reduce((a, b) => (a > b ? a : b)) : hojeStr
+
+  const diasRef = (distribuicao ?? []).filter((d) => d.situacao === 'normal' && d.data <= refData)
+  const diasSemLancar = diasRef.filter((d) => !vendidoPorDia.has(d.data)).length
   const somaVendido = Array.from(vendidoPorDia.values()).reduce((a, v) => a + v, 0)
-  // Diferença acumulada dos dias úteis já passados (vendido − cota).
-  const somaDiferencaAteHoje = (distribuicao ?? [])
-    .filter((d) => d.situacao === 'normal' && d.data <= hojeStr)
-    .reduce((a, d) => a + ((vendidoPorDia.get(d.data) ?? 0) - Number(d.cota_valor)), 0)
-  const cotaAteHoje = (distribuicao ?? [])
-    .filter((d) => d.situacao === 'normal' && d.data <= hojeStr)
-    .reduce((a, d) => a + Number(d.cota_valor), 0)
+  // Diferença acumulada até o último dia lançado (vendido − cota).
+  const somaDiferencaAteHoje = diasRef.reduce(
+    (a, d) => a + ((vendidoPorDia.get(d.data) ?? 0) - Number(d.cota_valor)),
+    0
+  )
+  const cotaAteHoje = diasRef.reduce((a, d) => a + Number(d.cota_valor), 0)
 
   // Somatórios para conferência da distribuição vs. meta
   const somaCotaValor = (distribuicao ?? []).reduce((acc, d) => acc + Number(d.cota_valor), 0)
@@ -196,11 +200,13 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
             </Button>
           </form>
 
-          <div className={`rounded-md border px-3 py-2 text-sm ${somaDiferencaAteHoje >= 0 ? 'border-green-800 bg-green-950/20 text-green-300' : 'border-red-800 bg-red-950/20 text-red-300'}`}>
-            {somaDiferencaAteHoje >= 0 ? '✅ Acima da meta' : '⚠️ Abaixo da meta'} até hoje em{' '}
-            <b>{somaDiferencaAteHoje >= 0 ? '+' : '−'}R$ {formatBRL(Math.abs(somaDiferencaAteHoje))}</b>
-            {' '}(meta até hoje: R$ {formatBRL(cotaAteHoje)} · vendido: R$ {formatBRL(cotaAteHoje + somaDiferencaAteHoje)})
-          </div>
+          {datasLancadas.length > 0 && (
+            <div className={`rounded-md border px-3 py-2 text-sm ${somaDiferencaAteHoje >= 0 ? 'border-green-800 bg-green-950/20 text-green-300' : 'border-red-800 bg-red-950/20 text-red-300'}`}>
+              {somaDiferencaAteHoje >= 0 ? '✅ Acima da cota' : '⚠️ Abaixo da cota'} até {refData.split('-').reverse().join('/')} em{' '}
+              <b>{somaDiferencaAteHoje >= 0 ? '+' : '−'}R$ {formatBRL(Math.abs(somaDiferencaAteHoje))}</b>
+              {' '}(cota do período: R$ {formatBRL(cotaAteHoje)} · vendido: R$ {formatBRL(cotaAteHoje + somaDiferencaAteHoje)})
+            </div>
+          )}
 
           {diasSemLancar > 0 && (
             <p className="text-sm text-red-400">
@@ -225,7 +231,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
               <TableBody>
                 {distribuicao.map((d) => {
                   const vendido = vendidoPorDia.get(d.data)
-                  const semLancar = d.situacao === 'normal' && d.data <= hojeStr && vendido === undefined
+                  const semLancar = d.situacao === 'normal' && d.data <= refData && vendido === undefined
                   return (
                   <TableRow key={d.id} className={semLancar ? 'bg-red-950/30' : ''}>
                     <TableCell>{d.data.split('-').reverse().join('/')}</TableCell>
@@ -261,7 +267,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                       {(() => {
                         const cota = Number(d.cota_valor)
                         // Só faz sentido em dias úteis passados (ou com venda lançada).
-                        if (d.situacao !== 'normal' || (d.data > hojeStr && vendido === undefined)) return '—'
+                        if (d.situacao !== 'normal' || d.data > refData) return '—'
                         const dif = (vendido ?? 0) - cota
                         return (
                           <span className={dif >= 0 ? 'text-green-400 font-medium' : 'text-red-400 font-medium'}>
