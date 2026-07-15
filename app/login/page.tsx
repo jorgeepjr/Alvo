@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
-import Image from 'next/image'
 
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
@@ -26,7 +25,7 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-[#0c1014]">
       <Card className="w-full max-w-sm border-white/10 bg-[#11161b]">
         <CardHeader className="space-y-3 text-center">
-          <Image src="/brand/zynk-logo-branco.png" alt="ZYNK" width={160} height={48} className="h-10 w-auto mx-auto" priority />
+          <img src="/brand/zynk-logo-branco.png" alt="ZYNK" className="h-10 w-auto mx-auto" />
           <p className="text-sm text-zinc-400">Faça login para continuar</p>
         </CardHeader>
         <CardContent>

@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/app/login/actions'
 import { LayoutDashboard, FilePlus, LogOut, Menu, ChevronLeft, ChevronRight, Sparkles, BookOpen } from 'lucide-react'
@@ -38,7 +37,7 @@ export function SidebarVendedor() {
         <button onClick={() => setMobileOpen(true)} className="text-zinc-300" aria-label="Abrir menu">
           <Menu className="h-6 w-6" />
         </button>
-        <Image src="/brand/zynk-logo-branco.png" alt="ZYNK" width={90} height={28} className="h-6 w-auto" priority />
+        <img src="/brand/zynk-logo-branco.png" alt="ZYNK" className="h-6 w-auto" />
       </div>
 
       {/* Overlay — somente celular, quando o menu está aberto */}
@@ -56,9 +55,9 @@ export function SidebarVendedor() {
       >
         <div className="flex items-center justify-between p-4 h-16">
           {!collapsed ? (
-            <Image src="/brand/zynk-logo-branco.png" alt="ZYNK" width={110} height={32} className="h-7 w-auto" priority />
+            <img src="/brand/zynk-logo-branco.png" alt="ZYNK" className="h-7 w-auto" />
           ) : (
-            <Image src="/brand/zynk-icone-branco.png" alt="ZYNK" width={28} height={28} className="h-6 w-auto mx-auto" priority />
+            <img src="/brand/zynk-icone-branco.png" alt="ZYNK" className="h-6 w-auto mx-auto" />
           )}
           <button
             onClick={toggleCollapsed}
