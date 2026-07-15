@@ -62,10 +62,12 @@ export async function salvarNotaDia(data: string, formData: FormData): Promise<v
   revalidatePath('/gestor/lancamento')
 }
 
+// "Fechar Dia" apenas TRAVA a edição dos lançamentos do dia (dia_fechado).
+// NÃO marca o dia como loja fechada — isso tirava o dia da conta de dias úteis
+// e quebrava a projeção. Loja fechada/feriado é feito pela aba Metas.
 export async function fecharDia(data: string): Promise<void> {
   const supabase = await createClient()
   await supabase.from('lancamentos').update({ dia_fechado: true }).eq('data', data)
-  await supabase.from('distribuicao_diaria').update({ situacao: 'fechado' }).eq('data', data).is('vendedor_id', null)
   revalidatePath('/gestor/lancamento')
   revalidatePath('/painel/lancamento')
 }
