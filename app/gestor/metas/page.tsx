@@ -63,12 +63,12 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
   for (const l of lancMes ?? []) vendidoPorDia.set(l.data, (vendidoPorDia.get(l.data) ?? 0) + Number(l.valor))
   const hojeStr = new Date().toISOString().slice(0, 10)
 
-  // Referência = último dia com lançamento (ex: se lançou até o dia 14, compara
-  // cota × vendido só até o dia 14, sem penalizar o dia de hoje ainda sem venda).
-  const datasLancadas = Array.from(vendidoPorDia.keys())
-  const refData = datasLancadas.length > 0 ? datasLancadas.reduce((a, b) => (a > b ? a : b)) : hojeStr
-
-  const diasRef = (distribuicao ?? []).filter((d) => d.situacao === 'normal' && d.data <= refData)
+  // Referência = dias úteis JÁ FINALIZADOS (antes de hoje). O dia atual não é
+  // cobrado, pois o lançamento é feito no dia seguinte. Dias finalizados sem
+  // lançamento contam como "sem lançamento" (cobrança).
+  const diasRef = (distribuicao ?? []).filter((d) => d.situacao === 'normal' && d.data < hojeStr)
+  const refData =
+    diasRef.length > 0 ? diasRef.map((d) => d.data).reduce((a, b) => (a > b ? a : b)) : hojeStr
   const diasSemLancar = diasRef.filter((d) => !vendidoPorDia.has(d.data)).length
   const somaVendido = Array.from(vendidoPorDia.values()).reduce((a, v) => a + v, 0)
   // Diferença acumulada até o último dia lançado (vendido − cota).
@@ -200,7 +200,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
             </Button>
           </form>
 
-          {datasLancadas.length > 0 && (() => {
+          {diasRef.length > 0 && (() => {
             const vendidoAcum = cotaAteHoje + somaDiferencaAteHoje
             // Tolerância de 1% da cota do período para considerar "batendo a meta".
             const tol = Math.max(cotaAteHoje * 0.01, 1)
@@ -245,7 +245,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
               <TableBody>
                 {distribuicao.map((d) => {
                   const vendido = vendidoPorDia.get(d.data)
-                  const semLancar = d.situacao === 'normal' && d.data <= refData && vendido === undefined
+                  const semLancar = d.situacao === 'normal' && d.data < hojeStr && vendido === undefined
                   return (
                   <TableRow key={d.id} className={semLancar ? 'bg-red-950/30' : ''}>
                     <TableCell>{d.data.split('-').reverse().join('/')}</TableCell>
@@ -281,7 +281,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                       {(() => {
                         const cota = Number(d.cota_valor)
                         // Só faz sentido em dias úteis passados (ou com venda lançada).
-                        if (d.situacao !== 'normal' || d.data > refData) return '—'
+                        if (d.situacao !== 'normal' || d.data >= hojeStr) return '—'
                         const dif = (vendido ?? 0) - cota
                         return (
                           <span className={dif >= 0 ? 'text-green-400 font-medium' : 'text-red-400 font-medium'}>
