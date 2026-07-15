@@ -66,6 +66,13 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
     (d) => d.situacao === 'normal' && d.data <= hojeStr && !vendidoPorDia.has(d.data)
   ).length
   const somaVendido = Array.from(vendidoPorDia.values()).reduce((a, v) => a + v, 0)
+  // Diferença acumulada dos dias úteis já passados (vendido − cota).
+  const somaDiferencaAteHoje = (distribuicao ?? [])
+    .filter((d) => d.situacao === 'normal' && d.data <= hojeStr)
+    .reduce((a, d) => a + ((vendidoPorDia.get(d.data) ?? 0) - Number(d.cota_valor)), 0)
+  const cotaAteHoje = (distribuicao ?? [])
+    .filter((d) => d.situacao === 'normal' && d.data <= hojeStr)
+    .reduce((a, d) => a + Number(d.cota_valor), 0)
 
   // Somatórios para conferência da distribuição vs. meta
   const somaCotaValor = (distribuicao ?? []).reduce((acc, d) => acc + Number(d.cota_valor), 0)
@@ -189,6 +196,12 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
             </Button>
           </form>
 
+          <div className={`rounded-md border px-3 py-2 text-sm ${somaDiferencaAteHoje >= 0 ? 'border-green-800 bg-green-950/20 text-green-300' : 'border-red-800 bg-red-950/20 text-red-300'}`}>
+            {somaDiferencaAteHoje >= 0 ? '✅ Acima da meta' : '⚠️ Abaixo da meta'} até hoje em{' '}
+            <b>{somaDiferencaAteHoje >= 0 ? '+' : '−'}R$ {formatBRL(Math.abs(somaDiferencaAteHoje))}</b>
+            {' '}(meta até hoje: R$ {formatBRL(cotaAteHoje)} · vendido: R$ {formatBRL(cotaAteHoje + somaDiferencaAteHoje)})
+          </div>
+
           {diasSemLancar > 0 && (
             <p className="text-sm text-red-400">
               ⚠️ {diasSemLancar} dia(s) útil(eis) passado(s) sem lançamento de venda (destacados em vermelho abaixo).
@@ -202,6 +215,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                   <TableHead>Data</TableHead>
                   <TableHead>Cota Valor</TableHead>
                   <TableHead>Vendido</TableHead>
+                  <TableHead>Diferença</TableHead>
                   <TableHead>Atend.</TableHead>
                   <TableHead>Peças</TableHead>
                   <TableHead>Situação</TableHead>
@@ -243,6 +257,19 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                         '—'
                       )}
                     </TableCell>
+                    <TableCell>
+                      {(() => {
+                        const cota = Number(d.cota_valor)
+                        // Só faz sentido em dias úteis passados (ou com venda lançada).
+                        if (d.situacao !== 'normal' || (d.data > hojeStr && vendido === undefined)) return '—'
+                        const dif = (vendido ?? 0) - cota
+                        return (
+                          <span className={dif >= 0 ? 'text-green-400 font-medium' : 'text-red-400 font-medium'}>
+                            {dif >= 0 ? '+' : '−'}R$ {formatBRL(Math.abs(dif))}
+                          </span>
+                        )
+                      })()}
+                    </TableCell>
                     <TableCell>{d.cota_atendimentos}</TableCell>
                     <TableCell>{d.cota_pecas}</TableCell>
                     <TableCell>{d.situacao}</TableCell>
@@ -266,6 +293,9 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                     R$ {formatBRL(somaCotaValor)} {meta && (Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? '✓' : '⚠')}
                   </TableCell>
                   <TableCell className="text-zinc-300">R$ {formatBRL(somaVendido)}</TableCell>
+                  <TableCell className={somaDiferencaAteHoje >= 0 ? 'text-green-400' : 'text-red-400'}>
+                    {somaDiferencaAteHoje >= 0 ? '+' : '−'}R$ {formatBRL(Math.abs(somaDiferencaAteHoje))}
+                  </TableCell>
                   <TableCell className={meta && somaCotaAtend === Number(meta.meta_atendimentos) ? 'text-green-400' : 'text-yellow-400'}>
                     {somaCotaAtend} {meta && (somaCotaAtend === Number(meta.meta_atendimentos) ? '✓' : '⚠')}
                   </TableCell>
