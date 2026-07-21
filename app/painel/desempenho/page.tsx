@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { calcularGamificacao } from '@/lib/gamificacao'
+import { calcularGamificacao, TIPOS_DESAFIO } from '@/lib/gamificacao'
 import { formatBRL } from '@/lib/calculos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
@@ -72,13 +72,14 @@ export default async function MeuDesempenhoPage() {
       {/* De onde vêm os pontos */}
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader><CardTitle className="text-base">De onde vêm seus pontos</CardTitle></CardHeader>
-        <CardContent className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-center">
+        <CardContent className="grid grid-cols-2 sm:grid-cols-6 gap-3 text-center">
           {[
             { l: 'Meta', v: eu.detalhe.meta },
             { l: 'Dias batendo', v: eu.detalhe.dias },
             { l: 'Conversão', v: eu.detalhe.conversao },
             { l: 'Rotina', v: eu.detalhe.rotina },
             { l: 'Sequência', v: eu.detalhe.streak },
+            { l: 'Desafios', v: eu.detalhe.desafios },
           ].map((x) => (
             <div key={x.l} className="rounded-md border border-slate-800 bg-slate-950/40 py-3">
               <p className="text-xl font-bold">{x.v}</p>
@@ -87,6 +88,35 @@ export default async function MeuDesempenhoPage() {
           ))}
         </CardContent>
       </Card>
+
+      {/* Desafios ativos */}
+      {eu.desafios.length > 0 && (
+        <Card className="border-slate-800 bg-slate-900">
+          <CardHeader><CardTitle className="text-base">🎮 Desafios</CardTitle></CardHeader>
+          <CardContent className="space-y-2">
+            {eu.desafios.map((dp) => {
+              const unidade = TIPOS_DESAFIO.find((t) => t.valor === dp.desafio.tipo)?.unidade ?? ''
+              const pct = Number(dp.desafio.alvo) > 0 ? Math.min((dp.atual / Number(dp.desafio.alvo)) * 100, 100) : 0
+              const fmt = (n: number) => (dp.desafio.tipo === 'valor' ? `R$ ${formatBRL(n)}` : `${Math.round(n)} ${unidade}`)
+              return (
+                <div key={dp.desafio.id} className="rounded-md border border-slate-800 bg-slate-950/40 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">
+                      {dp.concluido ? '✅ ' : ''}{dp.desafio.titulo}{' '}
+                      <span className="text-xs text-slate-400">(+{dp.desafio.pontos} pts)</span>
+                    </p>
+                    <span className="text-xs text-slate-400">{fmt(dp.atual)} / {fmt(Number(dp.desafio.alvo))}</span>
+                  </div>
+                  {dp.desafio.descricao && <p className="text-xs text-slate-500 mt-0.5">{dp.desafio.descricao}</p>}
+                  <div className="h-2 rounded-full bg-slate-800 overflow-hidden mt-2">
+                    <div className={`h-full rounded-full ${dp.concluido ? 'bg-green-500' : 'bg-zinc-100'}`} style={{ width: `${pct}%` }} />
+                  </div>
+                </div>
+              )
+            })}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Medalhas */}
       <Card className="border-slate-800 bg-slate-900">
