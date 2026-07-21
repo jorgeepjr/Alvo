@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/app/login/actions'
-import { LayoutDashboard, FilePlus, LogOut, Menu, ChevronLeft, ChevronRight, Sparkles, BookOpen } from 'lucide-react'
+import { LayoutDashboard, FilePlus, LogOut, Menu, ChevronLeft, ChevronRight, Sparkles, BookOpen, Trophy } from 'lucide-react'
 
 const links = [
   { href: '/painel', label: 'Meu Painel', icon: LayoutDashboard },
   { href: '/painel/lancamento', label: 'Lançar Vendas', icon: FilePlus },
+  { href: '/painel/desempenho', label: 'Meu Desempenho', icon: Trophy },
   { href: '/painel/assistente', label: 'Assistente IA', icon: Sparkles },
   { href: '/painel/manuais', label: 'Manuais', icon: BookOpen },
 ]
