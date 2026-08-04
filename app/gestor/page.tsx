@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { calcularProjecao, calcularTicketMedio, formatBRL } from '@/lib/calculos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { ProgressBar } from '@/components/progress-bar'
 import { RankingList } from '@/components/ranking-list'
 import { MesAtualChart } from '@/components/mes-atual-chart'
@@ -8,7 +9,10 @@ import { DiaOscilacaoChart } from '@/components/dia-oscilacao-chart'
 import { ProjecaoIA } from './projecao-ia'
 import { ResumoDia } from './resumo-dia'
 
-export default async function GestorDashboard() {
+const MESES_NOME = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
+
+export default async function GestorDashboard({ searchParams }: { searchParams: Promise<{ rmes?: string; rano?: string }> }) {
+  const sp = await searchParams
   const supabase = await createClient()
   const hoje = new Date()
   const hojeStr = hoje.toISOString().slice(0, 10)
@@ -17,6 +21,15 @@ export default async function GestorDashboard() {
   const inicioMes = `${ano}-${String(mes).padStart(2, '0')}-01`
   const ultimoDia = new Date(ano, mes, 0).getDate()
   const fimMes = `${ano}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`
+
+  // Mês selecionado só para o "Ranking de Vendedores" (o resto do dashboard
+  // continua sempre no mês atual). Default = mês atual.
+  const rankAno = Number(sp.rano ?? ano)
+  const rankMes = Number(sp.rmes ?? mes)
+  const rInicioMes = `${rankAno}-${String(rankMes).padStart(2, '0')}-01`
+  const rUltimoDia = new Date(rankAno, rankMes, 0).getDate()
+  const rFimMes = `${rankAno}-${String(rankMes).padStart(2, '0')}-${String(rUltimoDia).padStart(2, '0')}`
+  const anosRank = Array.from(new Set([ano, ano - 1, rankAno])).sort((a, b) => b - a)
 
   const { data: vendedores } = await supabase.from('profiles').select('*').eq('perfil', 'vendedor').eq('ativo', true)
   const { data: lancamentosHoje } = await supabase.from('lancamentos').select('*').eq('data', hojeStr)
@@ -70,6 +83,35 @@ export default async function GestorDashboard() {
       return { id: v.id, nome: v.nome, valor, percentual, atendimentos, pecas, alertaTicket }
     })
   )
+
+  // Ranking do mês selecionado no seletor (usa lançamentos e cotas do período
+  // escolhido — por padrão o mês atual, mas permite ver meses passados).
+  const { data: lancRankMes } = await supabase
+    .from('lancamentos')
+    .select('*')
+    .gte('data', rInicioMes)
+    .lte('data', rFimMes)
+
+  const rankingSelecionado = await Promise.all(
+    (vendedores ?? []).map(async (v) => {
+      const lancV = lancRankMes?.filter((l) => l.vendedor_id === v.id) ?? []
+      const { data: distV } = await supabase
+        .from('distribuicao_diaria')
+        .select('cota_valor')
+        .eq('vendedor_id', v.id)
+        .gte('data', rInicioMes)
+        .lte('data', rFimMes)
+
+      const valor = lancV.reduce((acc, l) => acc + Number(l.valor), 0)
+      const cota = distV?.reduce((acc, d) => acc + Number(d.cota_valor), 0) ?? 0
+      const atendimentos = lancV.reduce((acc, l) => acc + l.atendimentos, 0)
+      const pecas = lancV.reduce((acc, l) => acc + l.pecas, 0)
+      const percentual = cota > 0 ? (valor / cota) * 100 : 0
+
+      return { id: v.id, nome: v.nome, valor, percentual, atendimentos, pecas }
+    })
+  )
+  const totalRankMes = rankingSelecionado.reduce((acc, r) => acc + r.valor, 0)
 
   // Ritmo esperado até hoje = % de dias úteis já decorridos no mês.
   const diasUteisTotais = distribuicaoMes?.filter((d) => d.situacao === 'normal').length ?? 0
@@ -326,9 +368,29 @@ export default async function GestorDashboard() {
       </Card>
 
       <Card className="border-slate-800 bg-slate-900">
-        <CardHeader><CardTitle className="text-base">Ranking de Vendedores (% da meta)</CardTitle></CardHeader>
+        <CardHeader>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <CardTitle className="text-base">Ranking de Vendedores (% da meta)</CardTitle>
+            <form method="get" className="flex items-center gap-1">
+              <select name="rmes" defaultValue={rankMes} className="rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm">
+                {MESES_NOME.map((nome, i) => (
+                  <option key={i} value={i + 1}>{nome}</option>
+                ))}
+              </select>
+              <select name="rano" defaultValue={rankAno} className="rounded-md bg-slate-800 border border-slate-700 px-2 py-1 text-sm">
+                {anosRank.map((a) => (
+                  <option key={a} value={a}>{a}</option>
+                ))}
+              </select>
+              <Button type="submit" size="sm" variant="outline">Ver</Button>
+            </form>
+          </div>
+          <p className="text-xs text-slate-400 mt-1">
+            {MESES_NOME[rankMes - 1]}/{rankAno} · Total vendido: R$ {formatBRL(totalRankMes)}
+          </p>
+        </CardHeader>
         <CardContent>
-          <RankingList items={ranking} />
+          <RankingList items={rankingSelecionado} />
         </CardContent>
       </Card>
 
