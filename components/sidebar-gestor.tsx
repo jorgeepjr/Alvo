@@ -23,6 +23,7 @@ import {
   Megaphone,
   Gauge,
   Trophy,
+  Banknote,
 } from 'lucide-react'
 
 const links = [
@@ -33,6 +34,7 @@ const links = [
   { href: '/gestor/tarefas', label: 'Rotina Diária', icon: ListChecks },
   { href: '/gestor/engajamento', label: 'Engajamento', icon: TrendingUp },
   { href: '/gestor/gamificacao', label: 'Gamificação', icon: Trophy },
+  { href: '/gestor/comissoes', label: 'Comissão', icon: Banknote },
   { href: '/gestor/campanhas', label: 'Campanhas', icon: Megaphone },
   { href: '/painel/assistente', label: 'Assistente IA', icon: Sparkles },
   { href: '/painel/manuais', label: 'Manuais', icon: BookOpen },
