@@ -135,8 +135,12 @@ distribuicao_diaria.cota_valor ► metaMes ┴─► calcularComissao() ─► {
 - Mês sem lançamentos → tabela vazia com aviso "Sem vendas no período".
 - % inválida no formulário (negativa / vazia) → validar na server action e manter
   o valor anterior.
-- Somente perfil `gestor` acessa `/gestor/comissoes` (o guard do layout do gestor
-  já cobre isso).
+- Acesso a `/gestor/comissoes`: segue **o mesmo modelo das outras páginas
+  `/gestor`** — o app só redireciona por perfil no login (`app/page.tsx`:
+  gestor→/gestor, vendedor→/painel) e conta com o RLS do banco; **não há guard
+  de perfil por página** hoje. Não vamos introduzir um guard só nesta página (seria
+  inconsistente); a proteção real dos dados é o RLS. Fica registrado como dívida
+  conhecida do app (endurecer o acesso a `/gestor/*` é assunto de outra fase).
 
 ## Testes
 
