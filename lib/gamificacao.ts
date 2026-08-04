@@ -22,6 +22,8 @@ export type Config = {
   pts_conv_media: number
   conv_baixa_min: number
   pts_conv_baixa: number
+  com_pct_meta: number
+  com_pct_sem: number
 }
 
 export type Desafio = {
@@ -69,6 +71,8 @@ const CONFIG_PADRAO: Config = {
   pts_conv_media: 40,
   conv_baixa_min: 30,
   pts_conv_baixa: 20,
+  com_pct_meta: 2,
+  com_pct_sem: 1,
 }
 
 export const TIPOS_DESAFIO: { valor: string; label: string; unidade: string }[] = [
