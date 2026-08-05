@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { calcularGamificacao, TIPOS_DESAFIO } from '@/lib/gamificacao'
 import { formatBRL } from '@/lib/calculos'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { calcularComissao } from '@/lib/comissao'
 
 const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
@@ -12,7 +13,7 @@ export default async function MeuDesempenhoPage() {
   const ano = hoje.getFullYear()
   const mes = hoje.getMonth() + 1
 
-  const { vendedores } = await calcularGamificacao(supabase, ano, mes)
+  const { vendedores, config } = await calcularGamificacao(supabase, ano, mes)
   const eu = vendedores.find((v) => v.id === user!.id)
 
   if (!eu) {
@@ -23,6 +24,11 @@ export default async function MeuDesempenhoPage() {
       </div>
     )
   }
+
+  const comissao = calcularComissao(eu.valorMes, eu.cotaMes, {
+    pctComMeta: Number(config.com_pct_meta),
+    pctSemMeta: Number(config.com_pct_sem),
+  })
 
   const progressoNivel = eu.proximoNivel
     ? Math.min(
@@ -66,6 +72,19 @@ export default async function MeuDesempenhoPage() {
               </div>
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Comissão do mês */}
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader><CardTitle className="text-base">💵 Sua comissão do mês</CardTitle></CardHeader>
+        <CardContent>
+          <p className="text-3xl font-bold text-green-400">R$ {formatBRL(comissao.comissao)}</p>
+          <p className="text-sm text-slate-400 mt-1">
+            {comissao.bateu
+              ? `✅ Você bateu a meta → ${comissao.percentual}% sobre R$ ${formatBRL(eu.valorMes)}`
+              : `${comissao.percentual}% sobre R$ ${formatBRL(eu.valorMes)} · faltam R$ ${formatBRL(comissao.faltaParaMeta)} para virar ${Number(config.com_pct_meta)}%`}
+          </p>
         </CardContent>
       </Card>
 
