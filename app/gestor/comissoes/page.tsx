@@ -4,7 +4,7 @@ import { calcularComissao } from '@/lib/comissao'
 import { formatBRL } from '@/lib/calculos'
 import { salvarConfigComissao } from './actions'
 import { BotaoCsvComissao, type LinhaCSV } from '@/components/botao-csv-comissao'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -24,7 +24,7 @@ export default async function ComissoesPage({
   const mes = Number(sp.mes ?? hoje.getMonth() + 1)
   const anos = Array.from(new Set([hoje.getFullYear(), hoje.getFullYear() - 1, ano])).sort((a, b) => b - a)
 
-  const { vendedores, config } = await calcularGamificacao(supabase, ano, mes)
+  const { vendedores, config } = await calcularGamificacao(supabase, ano, mes, true)
   const cfg = { pctComMeta: Number(config.com_pct_meta), pctSemMeta: Number(config.com_pct_sem) }
 
   const linhas = vendedores
@@ -32,6 +32,7 @@ export default async function ComissoesPage({
       const r = calcularComissao(v.valorMes, v.cotaMes, cfg)
       return { id: v.id, nome: v.nome, vendido: v.valorMes, meta: v.cotaMes, ...r }
     })
+    .filter((l) => l.vendido > 0 || l.meta > 0)
     .sort((a, b) => b.comissao - a.comissao)
 
   const totalComissao = linhas.reduce((s, l) => s + l.comissao, 0)

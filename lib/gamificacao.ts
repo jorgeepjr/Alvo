@@ -98,7 +98,8 @@ export function regrasTexto(c: Config): string[] {
 export async function calcularGamificacao(
   supabase: SupabaseClient,
   ano: number,
-  mes: number
+  mes: number,
+  incluirInativos: boolean = false
 ): Promise<{ vendedores: VendedorGam[]; niveis: Nivel[]; config: Config; desafios: Desafio[] }> {
   const inicioMes = `${ano}-${String(mes).padStart(2, '0')}-01`
   const ultimoDia = new Date(ano, mes, 0).getDate()
@@ -120,12 +121,9 @@ export async function calcularGamificacao(
     .order('data_fim')
   const desafios = (desafiosRaw ?? []) as Desafio[]
 
-  const { data: vendedores } = await supabase
-    .from('profiles')
-    .select('id, nome')
-    .eq('perfil', 'vendedor')
-    .eq('ativo', true)
-    .order('nome')
+  let vendedoresQuery = supabase.from('profiles').select('id, nome').eq('perfil', 'vendedor')
+  if (!incluirInativos) vendedoresQuery = vendedoresQuery.eq('ativo', true)
+  const { data: vendedores } = await vendedoresQuery.order('nome')
 
   const { data: lanc } = await supabase
     .from('lancamentos')
