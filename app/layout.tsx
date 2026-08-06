@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter, Cormorant_Garamond } from "next/font/google";
+import { Inter, Sora } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -7,9 +7,9 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
-const cormorant = Cormorant_Garamond({
-  variable: "--font-heading",
-  weight: ["500", "600", "700"],
+const sora = Sora({
+  variable: "--font-display",
+  weight: ["500", "600", "700", "800"],
   subsets: ["latin"],
 });
 
@@ -26,9 +26,9 @@ export default function RootLayout({
   return (
     <html
       lang="pt-BR"
-      className={`dark ${inter.variable} ${cormorant.variable}`}
+      className={`dark ${inter.variable} ${sora.variable}`}
     >
-      <body className="bg-[#0c1014] text-[#efefef] antialiased">
+      <body className="text-[#e8edf4] antialiased">
         {children}
       </body>
     </html>

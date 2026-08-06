@@ -22,8 +22,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0c1014]">
-      <Card className="w-full max-w-sm border-white/10 bg-[#11161b]">
+    <div className="min-h-screen flex items-center justify-center p-4">
+      <Card className="w-full max-w-sm border-white/10 bg-[#0e141b]/80 backdrop-blur-xl shadow-[0_0_50px_oklch(0.75_0.13_233_/_0.16)]">
         <CardHeader className="space-y-3 text-center">
           <img src="/brand/zynk-logo-branco.png" alt="ZYNK" className="h-10 w-auto mx-auto" />
           <p className="text-sm text-zinc-400">Faça login para continuar</p>
