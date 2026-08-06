@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ProgressBar } from '@/components/progress-bar'
 import { RankingList } from '@/components/ranking-list'
+import { SuperMetaCard } from '@/components/super-meta-card'
 import { MesAtualChart } from '@/components/mes-atual-chart'
 import { DiaOscilacaoChart } from '@/components/dia-oscilacao-chart'
 import { ProjecaoIA } from './projecao-ia'
@@ -280,6 +281,8 @@ export default async function GestorDashboard({ searchParams }: { searchParams: 
           </CardContent>
         </Card>
       </div>
+
+      <SuperMetaCard vendido={valorMes} meta={Number(meta?.super_meta_valor ?? 0)} premio={meta?.super_meta_premio ?? ''} />
 
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader>

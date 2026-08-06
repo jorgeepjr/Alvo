@@ -20,13 +20,17 @@ export async function salvarMetaMensal(formData: FormData): Promise<void> {
   const meta_valor = Math.round(Number(formData.get('meta_valor')))
   const meta_atendimentos = Math.round(Number(formData.get('meta_atendimentos')))
   const meta_pecas = Math.round(Number(formData.get('meta_pecas')))
+  const super_meta_valor = Math.max(Math.round(Number(formData.get('super_meta_valor')) || 0), 0)
+  const super_meta_premio = ((formData.get('super_meta_premio') as string) || '').trim()
 
   const supabase = await createClient()
   await supabase
     .from('metas_mensais')
-    .upsert({ ano, mes, meta_valor, meta_atendimentos, meta_pecas }, { onConflict: 'ano,mes' })
+    .upsert({ ano, mes, meta_valor, meta_atendimentos, meta_pecas, super_meta_valor, super_meta_premio }, { onConflict: 'ano,mes' })
 
   revalidatePath('/gestor/metas')
+  revalidatePath('/gestor')
+  revalidatePath('/painel')
 }
 
 function diasDoMes(ano: number, mes: number): { data: string; pesoPadrao: number; diaSemana: number }[] {

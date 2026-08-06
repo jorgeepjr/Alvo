@@ -182,8 +182,19 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
               <Label htmlFor="meta_pecas">Meta Peças</Label>
               <Input id="meta_pecas" name="meta_pecas" type="number" step="1" min="0" defaultValue={meta?.meta_pecas ?? 0} className="bg-slate-800 border-slate-700" />
             </div>
+            <div className="space-y-1">
+              <Label htmlFor="super_meta_valor">🏆 Super Meta (R$)</Label>
+              <Input id="super_meta_valor" name="super_meta_valor" type="number" step="1" min="0" placeholder="ex: 90000" defaultValue={meta?.super_meta_valor ? Math.round(Number(meta.super_meta_valor)) : ''} className="bg-slate-800 border-slate-700" />
+            </div>
+            <div className="space-y-1 sm:col-span-2">
+              <Label htmlFor="super_meta_premio">Prêmio da Super Meta</Label>
+              <Input id="super_meta_premio" name="super_meta_premio" type="text" placeholder="ex: Uma peça de roupa para cada vendedor" defaultValue={meta?.super_meta_premio ?? ''} className="bg-slate-800 border-slate-700" />
+            </div>
             <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Salvar Meta</Button>
           </form>
+          <p className="text-xs text-slate-400 mt-3">
+            🏆 <b>Super Meta</b> (opcional): se a loja passar desse valor no mês, o prêmio é liberado. Aparece com barra de progresso no Dashboard e no painel dos vendedores. Deixe em branco (ou 0) para não usar.
+          </p>
         </CardContent>
       </Card>
 

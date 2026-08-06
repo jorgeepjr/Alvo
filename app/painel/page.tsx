@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { calcularProjecao, calcularTicketMedio, formatBRL } from '@/lib/calculos'
 import { calcularComissao } from '@/lib/comissao'
+import { SuperMetaCard } from '@/components/super-meta-card'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProgressBar } from '@/components/progress-bar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -63,6 +64,11 @@ export default async function PainelVendedor() {
   const cfgComissao = { pctComMeta: Number(gamConfig?.com_pct_meta ?? 2), pctSemMeta: Number(gamConfig?.com_pct_sem ?? 1) }
   const comissaoMes = calcularComissao(valorMes, cotaValorMes, cfgComissao)
   const comissaoSeBater = Math.round(valorMes * cfgComissao.pctComMeta) / 100
+
+  // Super Meta da loja (mês): total vendido pela loja vs alvo + prêmio.
+  const { data: lancMesLoja } = await supabase.from('lancamentos').select('valor').gte('data', inicioMes).lte('data', fimMes)
+  const vendidoLojaMes = lancMesLoja?.reduce((a, l) => a + Number(l.valor), 0) ?? 0
+  const { data: metaMensal } = await supabase.from('metas_mensais').select('super_meta_valor, super_meta_premio').eq('ano', ano).eq('mes', mes).maybeSingle()
 
   const atendimentosHoje = lancHoje?.atendimentos ?? 0
   const pecasHoje = lancHoje?.pecas ?? 0
@@ -393,6 +399,8 @@ export default async function PainelVendedor() {
           )}
         </CardContent>
       </Card>
+
+      <SuperMetaCard vendido={vendidoLojaMes} meta={Number(metaMensal?.super_meta_valor ?? 0)} premio={metaMensal?.super_meta_premio ?? ''} />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="border-slate-800 bg-slate-900">
