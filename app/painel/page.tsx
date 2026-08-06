@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { calcularProjecao, calcularTicketMedio, formatBRL } from '@/lib/calculos'
+import { calcularComissao } from '@/lib/comissao'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProgressBar } from '@/components/progress-bar'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
@@ -54,6 +55,14 @@ export default async function PainelVendedor() {
   const diasTrabalhados = lancMes?.filter((l) => l.situacao_vendedor === 'normal').length ?? 0
   const totalDiasUteis = cotaMes?.filter((d) => d.situacao === 'normal').length ?? 0
   const projecaoMes = calcularProjecao(valorMes, diasTrabalhados, totalDiasUteis)
+
+  // Comissão do mês (parcial) — reusa a regra da Fase 1. As % vêm de gam_config
+  // (default 2%/1%). A comissão é sempre do MÊS: a % só vira 2% ao bater a meta
+  // do mês, então não mostramos nenhum número "do dia" (seria enganoso).
+  const { data: gamConfig } = await supabase.from('gam_config').select('com_pct_meta, com_pct_sem').eq('id', 1).maybeSingle()
+  const cfgComissao = { pctComMeta: Number(gamConfig?.com_pct_meta ?? 2), pctSemMeta: Number(gamConfig?.com_pct_sem ?? 1) }
+  const comissaoMes = calcularComissao(valorMes, cotaValorMes, cfgComissao)
+  const comissaoSeBater = Math.round(valorMes * cfgComissao.pctComMeta) / 100
 
   const atendimentosHoje = lancHoje?.atendimentos ?? 0
   const pecasHoje = lancHoje?.pecas ?? 0
@@ -356,6 +365,31 @@ export default async function PainelVendedor() {
             <p className="text-sm text-yellow-400">Falta R$ {formatBRL(faltaHoje)} para bater a meta de hoje.</p>
           ) : (
             <p className="text-sm text-green-400">Você bateu a meta de hoje! 🎯</p>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-slate-800 bg-slate-900">
+        <CardHeader><CardTitle className="text-base">💵 Comissão do mês</CardTitle></CardHeader>
+        <CardContent className="space-y-1">
+          <p className="text-3xl font-bold text-green-400">R$ {formatBRL(comissaoMes.comissao)}</p>
+          <p className="text-xs text-slate-500">
+            Parcial — {comissaoMes.percentual}% sobre R$ {formatBRL(valorMes)} vendidos no mês até agora.
+          </p>
+          {cotaValorMes <= 0 ? (
+            <p className="text-sm text-slate-400 mt-1">
+              Meta do mês ainda não definida — comissão calculada a {cfgComissao.pctSemMeta}%.
+            </p>
+          ) : comissaoMes.bateu ? (
+            <p className="text-sm text-green-400 mt-1">
+              ✅ Meta do mês batida — sua comissão está em {cfgComissao.pctComMeta}%.
+            </p>
+          ) : (
+            <p className="text-sm text-yellow-400 mt-1">
+              🎯 Faltam R$ {formatBRL(comissaoMes.faltaParaMeta)} pra bater a meta do mês. Ao bater, sua %
+              dobra ({cfgComissao.pctSemMeta}%→{cfgComissao.pctComMeta}%): a comissão sobre o que você já
+              vendeu passaria de R$ {formatBRL(comissaoMes.comissao)} para R$ {formatBRL(comissaoSeBater)}.
+            </p>
           )}
         </CardContent>
       </Card>
