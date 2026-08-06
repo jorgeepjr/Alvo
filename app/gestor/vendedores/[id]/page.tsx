@@ -67,7 +67,7 @@ export default async function VendedorDetalhePage({ params }: { params: Promise<
   const evolucao = Array.from({ length: 12 }, (_, i) => {
     const d = new Date(ano, mes - 12 + i, 1)
     const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    return { label: `${MESES_CURTO[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`, valor: Math.round(mapaMes.get(chave) ?? 0) }
+    return { label: `${MESES_CURTO[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`, valor: Math.round((mapaMes.get(chave) ?? 0) * 100) / 100 }
   })
 
   const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
