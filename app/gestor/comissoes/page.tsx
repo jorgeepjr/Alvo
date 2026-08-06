@@ -4,6 +4,7 @@ import { calcularComissao } from '@/lib/comissao'
 import { formatBRL } from '@/lib/calculos'
 import { salvarConfigComissao } from './actions'
 import { BotaoCsvComissao, type LinhaCSV } from '@/components/botao-csv-comissao'
+import { SeletorMesComissao } from './seletor-mes'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -53,21 +54,7 @@ export default async function ComissoesPage({
       {/* Seletor de mês/ano + regra + CSV */}
       <Card className="border-slate-800 bg-slate-900">
         <CardContent className="pt-6 flex flex-wrap items-end justify-between gap-4">
-          <form method="get" className="flex items-end gap-2">
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-400">Mês</Label>
-              <select name="mes" defaultValue={mes} className="rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm">
-                {MESES.map((nome, i) => <option key={i} value={i + 1}>{nome}</option>)}
-              </select>
-            </div>
-            <div className="space-y-1">
-              <Label className="text-xs text-slate-400">Ano</Label>
-              <select name="ano" defaultValue={ano} className="rounded-md bg-slate-800 border border-slate-700 px-2 py-1.5 text-sm">
-                {anos.map((a) => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </div>
-            <Button type="submit" size="sm" variant="outline">Ver</Button>
-          </form>
+          <SeletorMesComissao mes={mes} ano={ano} anos={anos} />
 
           <form action={salvarConfigComissao} className="flex items-end gap-2">
             <div className="space-y-1">
