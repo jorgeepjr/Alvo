@@ -58,7 +58,34 @@ Cada indicador tem: **Ativo**, **Ativo para cálculo de comissão** (checkbox),
 > (venda por produto/categoria, base de clientes, estoque). Replicá-los exigiria
 > ampliar a coleta de dados — mesma limitação já anotada para a Fase 4 (por categoria).
 
-## Pendente de captura (próxima janela do portal online)
-"Meu Desempenho Diário" (Fase 2), "Desempenho da Loja", "Metas/Comissão por
-Categoria" e "Meu Desempenho". Quando o portal estiver acessível e o gestor
-abrir essas telas, dá para capturar o layout/campos exatos.
+## URLs reais do módulo (descobertas 2026-08-06)
+- Configurações → `/gamificacao/config`
+- Desafios → `/gamificacao/desafios`
+- Desempenho da Loja → `/gamificacao/dashboard-loja`
+- Ranking da Equipe → `/gamificacao/ranking`
+- (ainda não confirmadas: Metas, Metas/Comissão p/ Categ., Meu Desempenho, Meu Desempenho Diário)
+
+## Desempenho da Loja (`/gamificacao/dashboard-loja`) — capturado 2026-08-06
+
+Filtro por Ano/Mês (botões) ou período personalizado (Data Início/Fim + Consultar).
+
+**Resultado do Período — Valor:** Meta do Período · Vendido no Período (com % ) · Falta p/ Meta.
+Mesma estrutura para **Peças**. (No exemplo: meta R$14.700, vendido R$13.237,68 = 90,1%.)
+
+**Indicadores (com meta ao lado):** Ticket Médio (R$232,24 / meta R$200), Peças por
+Atendimento "PA" (2,86 / meta 2,50), Atendimentos (57), Preço Médio (R$81,21).
+
+**Vendas no Período (decomposição que o alvo NÃO tem):** Venda Bruta − Créd. Troca −
+Cupom = **Venda Líquida**, + total de Peças. → O portal mede pela **venda líquida**
+(desconta troca/cupom); o alvo hoje guarda só um `valor` agregado, sem essa quebra.
+
+**Ranking por Vendedor (Detalhe de vendas):** colunas # · Vendedor · Meta Vlr · V. Bruta ·
+V. Líquida · % Meta Vlr · Meta Pç · Pç Vend. · % Meta Pç · Tickets · PA · TM (ticket médio) ·
+PM (preço médio) · Atend. · Conv.%. Mais colunas que o ranking do alvo, mesma base de dados
+(exceto bruta/líquida/troca/cupom e conversão, que exigiriam coletar mais dados).
+
+## Pendente de captura (quando o gestor abrir a tela no portal)
+"Meu Desempenho Diário", "Meu Desempenho", "Metas" e "Metas/Comissão por Categoria"
+(esta última é a comissão por categoria — bloqueada no alvo por falta de venda por categoria).
+O menu do portal abre por JS e não achei as URLs dessas; captura mais fácil se o gestor
+navegar até a tela e deixá-la aberta.
