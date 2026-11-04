@@ -86,6 +86,34 @@ export function distribuirCotaInteira(dias: DiaPeso[], total: number): DiaCota[]
   return base.map((b) => ({ data: b.data, cota: b.cota }))
 }
 
+/**
+ * Distribui um total entre os dias proporcionalmente ao peso, com cada dia
+ * arredondado para múltiplos de `passo` (ex.: R$ 100). O ÚLTIMO dia da lista
+ * (com peso > 0) absorve a diferença do arredondamento, para a soma bater
+ * exatamente com o total. Se o arredondamento deixar o último dia negativo,
+ * cai para a distribuição inteira (sem valores redondos) para não gerar cota
+ * negativa.
+ */
+export function distribuirCotaRedonda(dias: DiaPeso[], total: number, passo = 100): DiaCota[] {
+  const totalInt = Math.round(total)
+  const somaPesos = dias.reduce((acc, d) => acc + d.peso, 0)
+  if (somaPesos === 0 || totalInt <= 0) {
+    return dias.map((d) => ({ data: d.data, cota: 0 }))
+  }
+  let ultimo = -1
+  dias.forEach((d, i) => {
+    if (d.peso > 0) ultimo = i
+  })
+  const cotas = dias.map((d, i) => {
+    if (d.peso <= 0 || i === ultimo) return 0
+    return Math.round(((d.peso / somaPesos) * totalInt) / passo) * passo
+  })
+  const resto = totalInt - cotas.reduce((a, b) => a + b, 0)
+  if (resto < 0) return distribuirCotaInteira(dias, totalInt)
+  cotas[ultimo] = resto
+  return dias.map((d, i) => ({ data: d.data, cota: cotas[i] }))
+}
+
 interface SugestaoMeta {
   conservadora: number
   moderada: number
@@ -134,8 +162,36 @@ export function calcularCrescimentoMedioAnual(
 }
 
 /**
+ * Crescimento RECENTE da loja (ex.: 1.20 = +20%): soma dos últimos `meses`
+ * meses do histórico que têm o mesmo mês do ano anterior, dividida pela soma
+ * desses mesmos meses um ano antes. Usa só o histórico ANTES de (ano, mes)
+ * quando informado. Diferente da média simples de todas as taxas, não é
+ * distorcido por picos antigos (ex.: um mês com +160%).
+ */
+export function calcularCrescimentoRecente(
+  historico: HistoricoMes[],
+  campo: 'venda_total' | 'atendimentos' | 'pecas' = 'venda_total',
+  meses = 6,
+  antesDe?: { ano: number; mes: number }
+): number {
+  const chave = (ano: number, mes: number) => ano * 12 + (mes - 1)
+  const mapa = new Map<number, number>()
+  for (const h of historico) mapa.set(chave(h.ano, h.mes), Number(h[campo] ?? 0))
+  const limite = antesDe ? chave(antesDe.ano, antesDe.mes) : Infinity
+  const candidatos = [...mapa.keys()]
+    .filter((k) => k < limite && (mapa.get(k) ?? 0) > 0 && (mapa.get(k - 12) ?? 0) > 0)
+    .sort((a, b) => b - a)
+    .slice(0, meses)
+  if (candidatos.length === 0) return 1
+  const atual = candidatos.reduce((acc, k) => acc + (mapa.get(k) ?? 0), 0)
+  const anterior = candidatos.reduce((acc, k) => acc + (mapa.get(k - 12) ?? 0), 0)
+  return anterior > 0 ? atual / anterior : 1
+}
+
+/**
  * Sugestão por tendência: pega o valor do mesmo mês no ano anterior e
- * aplica a taxa de crescimento média histórica da loja para essa métrica.
+ * aplica o crescimento recente da loja (últimos 6 meses vs. os mesmos meses
+ * do ano anterior) para essa métrica.
  * Retorna null se não houver dado do mesmo mês no ano anterior.
  */
 export function calcularSugestaoTendencia(
@@ -148,7 +204,7 @@ export function calcularSugestaoTendencia(
   if (!anoAnterior) return null
   const valorBase = Number(anoAnterior[campo] ?? 0)
   if (valorBase <= 0) return null
-  const crescimento = calcularCrescimentoMedioAnual(historico, campo)
+  const crescimento = calcularCrescimentoRecente(historico, campo, 6)
   return valorBase * crescimento
 }
 

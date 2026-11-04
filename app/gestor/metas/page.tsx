@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { salvarMetaMensal, gerarDistribuicaoAutomatica, ajustarDiaSituacao, ajustarCotaDia, buscarSugestaoMeta, salvarPercentuaisVendedores, gerarDistribuicaoVendedores, aplicarSugestaoTendencia } from './actions'
+import { salvarMetaMensal, gerarDistribuicaoAutomatica, ajustarDiaSituacao, ajustarCotaDia, liberarDia, buscarSugestaoMeta, salvarPercentuaisVendedores, gerarDistribuicaoVendedores, aplicarSugestaoTendencia } from './actions'
 import { formatBRL } from '@/lib/calculos'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -119,7 +119,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
             </div>
             {sugestao.sugestao.tendencia !== null && (
               <div>
-                <p className="text-slate-400">Tendência (evolução vs. ano anterior)</p>
+                <p className="text-slate-400">Tendência (mesmo mês do ano passado × crescimento dos últimos 6 meses)</p>
                 <p className="text-lg font-bold">R$ {formatBRL(sugestao.sugestao.tendencia)}</p>
                 {sugestao.sugestao.tendenciaAtendimentos !== null && (
                   <p className="text-xs text-slate-400 mt-1">
@@ -154,7 +154,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
           <CardTitle className="text-base">Cotas Futuras (automático)</CardTitle>
           <p className="text-xs text-slate-400 mt-1">
             Calcula as metas dos próximos 12 meses a partir do histórico (mesmo mês do ano anterior ×
-            crescimento médio da loja). Não altera metas já definidas.
+            crescimento dos últimos 6 meses vs. os mesmos meses do ano anterior). Não altera metas já definidas.
           </p>
         </CardHeader>
         <CardContent>
@@ -210,6 +210,11 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
               Gerar Distribuição Automática (pesos por dia da semana)
             </Button>
           </form>
+
+          <p className="text-xs text-slate-400">
+            Ao <b>Salvar</b> a cota de um dia, ele fica <b>📌 fixado</b>. O que falta para a meta é dividido só entre os dias
+            ainda não salvos (valores redondos de R$ 100; só o último dia livre leva a diferença). Assim a soma sempre bate com a Meta Valor.
+          </p>
 
           {diasRef.length > 0 && (() => {
             const vendidoAcum = cotaAteHoje + somaDiferencaAteHoje
@@ -267,6 +272,12 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                         <Input name="cota_pecas" type="number" defaultValue={d.cota_pecas} className="hidden" />
                         <Button type="submit" size="sm" variant="outline">Salvar</Button>
                       </form>
+                      {d.cota_fixada && d.situacao === 'normal' && (
+                        <form action={liberarDia.bind(null, d.id, ano, mes)} className="mt-1 flex items-center gap-1 text-xs text-zinc-400">
+                          <span title="Dia salvo: o recálculo automático não mexe nele">📌 fixado</span>
+                          <button type="submit" className="underline hover:text-zinc-200">soltar</button>
+                        </form>
+                      )}
                     </TableCell>
                     <TableCell>
                       {vendido !== undefined ? (
@@ -322,6 +333,11 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
                   <TableCell className="text-zinc-300">Total distribuído</TableCell>
                   <TableCell className={meta && Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? 'text-green-400' : 'text-yellow-400'}>
                     R$ {formatBRL(somaCotaValor)} {meta && (Math.abs(somaCotaValor - Number(meta.meta_valor)) < 1 ? '✓' : '⚠')}
+                    {meta && Math.abs(somaCotaValor - Number(meta.meta_valor)) >= 1 && (
+                      <div className="text-xs font-normal">
+                        {somaCotaValor < Number(meta.meta_valor) ? 'Falta' : 'Passou'} R$ {formatBRL(Math.abs(Number(meta.meta_valor) - somaCotaValor))} da meta. Solte um dia (📌) para o sistema ajustar.
+                      </div>
+                    )}
                   </TableCell>
                   <TableCell className="text-zinc-300">R$ {formatBRL(somaVendido)}</TableCell>
                   <TableCell className={somaDiferencaAteHoje >= 0 ? 'text-green-400' : 'text-red-400'}>

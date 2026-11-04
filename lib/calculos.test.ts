@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcularProjecao, calcularTicketMedio, distribuirCotaPorPeso, distribuirCotaInteira, calcularSugestaoMeta } from './calculos'
+import { calcularProjecao, calcularTicketMedio, distribuirCotaPorPeso, distribuirCotaInteira, calcularSugestaoMeta, distribuirCotaRedonda, calcularCrescimentoRecente } from './calculos'
 
 describe('distribuirCotaInteira', () => {
   it('soma exatamente igual ao total (sem perder por arredondamento)', () => {
@@ -66,5 +66,50 @@ describe('calcularSugestaoMeta', () => {
     expect(sugestao.conservadora).toBeCloseTo(110, 2)
     expect(sugestao.moderada).toBeCloseTo(132, 2)
     expect(sugestao.agressiva).toBeCloseTo(138, 2)
+  })
+})
+
+describe('distribuirCotaRedonda', () => {
+  const dias = [
+    { data: '2026-11-01', peso: 1 },
+    { data: '2026-11-02', peso: 1 },
+    { data: '2026-11-03', peso: 0 },
+    { data: '2026-11-04', peso: 1 },
+  ]
+  it('soma exatamente o total, com valores redondos e só o último dia "quebrado"', () => {
+    const r = distribuirCotaRedonda(dias, 1000)
+    expect(r.reduce((a, b) => a + b.cota, 0)).toBe(1000)
+    expect(r[0].cota % 100).toBe(0)
+    expect(r[1].cota % 100).toBe(0)
+    expect(r[2].cota).toBe(0)
+    expect(r[3].cota).toBe(1000 - r[0].cota - r[1].cota)
+  })
+  it('total zero ou negativo zera tudo', () => {
+    expect(distribuirCotaRedonda(dias, -50).every((d) => d.cota === 0)).toBe(true)
+  })
+  it('nunca deixa o último dia negativo', () => {
+    const r = distribuirCotaRedonda([{ data: 'a', peso: 1 }, { data: 'b', peso: 1 }, { data: 'c', peso: 1 }], 160)
+    expect(r.reduce((a, b) => a + b.cota, 0)).toBe(160)
+    expect(r.every((d) => d.cota >= 0)).toBe(true)
+  })
+})
+
+describe('calcularCrescimentoRecente', () => {
+  const hist = [
+    { ano: 2025, mes: 1, venda_total: 100 },
+    { ano: 2025, mes: 2, venda_total: 100 },
+    { ano: 2025, mes: 3, venda_total: 100 },
+    { ano: 2026, mes: 1, venda_total: 300 }, // pico antigo (+200%)
+    { ano: 2026, mes: 2, venda_total: 110 },
+    { ano: 2026, mes: 3, venda_total: 110 },
+  ]
+  it('usa só os últimos N meses (soma vs. soma do ano anterior)', () => {
+    expect(calcularCrescimentoRecente(hist, 'venda_total', 2)).toBeCloseTo(1.1)
+  })
+  it('respeita o limite "antes de"', () => {
+    expect(calcularCrescimentoRecente(hist, 'venda_total', 2, { ano: 2026, mes: 3 })).toBeCloseTo((300 + 110) / 200)
+  })
+  it('sem base do ano anterior retorna 1', () => {
+    expect(calcularCrescimentoRecente([{ ano: 2026, mes: 1, venda_total: 10 }])).toBe(1)
   })
 })

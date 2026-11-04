@@ -29,6 +29,8 @@ export interface DistribuicaoDiaria {
   cota_atendimentos: number
   cota_pecas: number
   situacao: SituacaoDia
+  /** true = dia salvo pelo gestor; o recálculo automático não mexe nele */
+  cota_fixada: boolean
 }
 
 export interface Lancamento {
