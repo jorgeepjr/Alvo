@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { calcularProjecao, calcularTicketMedio, distribuirCotaPorPeso, distribuirCotaInteira, calcularSugestaoMeta, distribuirCotaRedonda, calcularCrescimentoRecente } from './calculos'
+import { calcularProjecao, calcularTicketMedio, distribuirCotaPorPeso, distribuirCotaInteira, calcularSugestaoMeta, distribuirCotaRedonda, calcularCrescimentoRecente, dividirEntreVendedores } from './calculos'
 
 describe('distribuirCotaInteira', () => {
   it('soma exatamente igual ao total (sem perder por arredondamento)', () => {
@@ -111,5 +111,26 @@ describe('calcularCrescimentoRecente', () => {
   })
   it('sem base do ano anterior retorna 1', () => {
     expect(calcularCrescimentoRecente([{ ano: 2026, mes: 1, venda_total: 10 }])).toBe(1)
+  })
+})
+
+
+describe('dividirEntreVendedores', () => {
+  it('meio a meio em número ímpar soma exatamente o total e alterna o extra', () => {
+    expect(dividirEntreVendedores(9, [50, 50], 0)).toEqual([5, 4])
+    expect(dividirEntreVendedores(9, [50, 50], 1)).toEqual([4, 5])
+  })
+  it('número par divide igual', () => {
+    expect(dividirEntreVendedores(1800, [50, 50], 3)).toEqual([900, 900])
+  })
+  it('três vendedores somam o total', () => {
+    const r = dividirEntreVendedores(10, [40, 30, 30], 0)
+    expect(r.reduce((a, b) => a + b, 0)).toBe(10)
+  })
+  it('percentuais abaixo de 100 levam só a parte deles', () => {
+    expect(dividirEntreVendedores(100, [50], 0)).toEqual([50])
+  })
+  it('total zero dá zero', () => {
+    expect(dividirEntreVendedores(0, [50, 50], 0)).toEqual([0, 0])
   })
 })

@@ -114,6 +114,31 @@ export function distribuirCotaRedonda(dias: DiaPeso[], total: number, passo = 10
   return dias.map((d, i) => ({ data: d.data, cota: cotas[i] }))
 }
 
+/**
+ * Divide um total inteiro entre vendedores pelos percentuais, garantindo que a
+ * soma das partes seja exatamente o total (método do maior resto). Em empate
+ * de resto (ex.: 9 meio a meio), a unidade extra vai para o vendedor da vez,
+ * girando pela posição `rodada` (use o índice do dia), para alternar entre eles.
+ */
+export function dividirEntreVendedores(total: number, percentuais: number[], rodada = 0): number[] {
+  const totalInt = Math.round(total)
+  const soma = percentuais.reduce((a, b) => a + b, 0)
+  const n = percentuais.length
+  if (n === 0) return []
+  if (soma <= 0 || totalInt <= 0) return percentuais.map(() => 0)
+  // Se os percentuais somam menos de 100, cada um leva só a sua parte (sem forçar o total).
+  const alvo = soma >= 100 ? totalInt : (totalInt * soma) / 100
+  const alvoInt = Math.round(alvo)
+  const exatos = percentuais.map((p) => (p / soma) * alvoInt)
+  const partes = exatos.map((e) => Math.floor(e))
+  let sobra = alvoInt - partes.reduce((a, b) => a + b, 0)
+  const ordem = exatos
+    .map((e, i) => ({ i, resto: Math.round((e - Math.floor(e)) * 1e6) / 1e6, giro: (i - (rodada % n) + n) % n }))
+    .sort((a, b) => b.resto - a.resto || a.giro - b.giro)
+  for (let k = 0; sobra > 0; k++, sobra--) partes[ordem[k % n].i] += 1
+  return partes
+}
+
 interface SugestaoMeta {
   conservadora: number
   moderada: number

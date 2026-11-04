@@ -1,7 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
-import { distribuirCotaInteira, distribuirCotaRedonda, calcularSugestaoMeta, calcularSugestaoTendencia } from '@/lib/calculos'
+import { distribuirCotaInteira, distribuirCotaRedonda, dividirEntreVendedores, calcularSugestaoMeta, calcularSugestaoTendencia } from '@/lib/calculos'
 import { revalidatePath } from 'next/cache'
 
 const PESOS_DEFAULT: Record<number, number> = {
@@ -257,14 +257,20 @@ async function distribuirParaVendedores(supabase: SupabaseSrv, ano: number, mes:
     .gte('data', inicioMes)
     .lte('data', fimMes)
 
-  const rows = percentuais.flatMap((p) => {
-    const frac = Number(p.percentual) / 100
-    return lojaDist.map((d) => ({
+  // Divide cada dia entre os vendedores sem sobrar nem passar do total da loja.
+  // Em dia ímpar meio a meio, a unidade extra alterna entre eles a cada dia.
+  const pcts = percentuais.map((p) => Number(p.percentual))
+  const lojaOrdenada = [...lojaDist].sort((a, b) => String(a.data).localeCompare(String(b.data)))
+  const rows = lojaOrdenada.flatMap((d, idx) => {
+    const valor = dividirEntreVendedores(Number(d.cota_valor), pcts, idx)
+    const atend = dividirEntreVendedores(Number(d.cota_atendimentos), pcts, idx)
+    const pecas = dividirEntreVendedores(Number(d.cota_pecas), pcts, idx)
+    return percentuais.map((p, i) => ({
       vendedor_id: p.vendedor_id,
       data: d.data,
-      cota_valor: Math.round(Number(d.cota_valor) * frac),
-      cota_atendimentos: Math.round(Number(d.cota_atendimentos) * frac),
-      cota_pecas: Math.round(Number(d.cota_pecas) * frac),
+      cota_valor: valor[i],
+      cota_atendimentos: atend[i],
+      cota_pecas: pecas[i],
       situacao: d.situacao,
     }))
   })
