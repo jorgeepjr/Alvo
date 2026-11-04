@@ -119,7 +119,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
             </div>
             {sugestao.sugestao.tendencia !== null && (
               <div>
-                <p className="text-slate-400">Tendência (mesmo mês do ano passado × crescimento dos últimos 6 meses)</p>
+                <p className="text-slate-400">Tendência (mesmo mês do ano passado × crescimento dos últimos 3 meses)</p>
                 <p className="text-lg font-bold">R$ {formatBRL(sugestao.sugestao.tendencia)}</p>
                 {sugestao.sugestao.tendenciaAtendimentos !== null && (
                   <p className="text-xs text-slate-400 mt-1">
@@ -154,7 +154,7 @@ export default async function MetasPage({ searchParams }: { searchParams: Promis
           <CardTitle className="text-base">Cotas Futuras (automático)</CardTitle>
           <p className="text-xs text-slate-400 mt-1">
             Calcula as metas dos próximos 12 meses a partir do histórico (mesmo mês do ano anterior ×
-            crescimento dos últimos 6 meses vs. os mesmos meses do ano anterior). Não altera metas já definidas.
+            crescimento dos últimos 3 meses vs. os mesmos meses do ano anterior). Não altera metas já definidas.
           </p>
         </CardHeader>
         <CardContent>

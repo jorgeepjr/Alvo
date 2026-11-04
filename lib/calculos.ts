@@ -190,7 +190,7 @@ export function calcularCrescimentoRecente(
 
 /**
  * Sugestão por tendência: pega o valor do mesmo mês no ano anterior e
- * aplica o crescimento recente da loja (últimos 6 meses vs. os mesmos meses
+ * aplica o crescimento recente da loja (últimos 3 meses vs. os mesmos meses
  * do ano anterior) para essa métrica.
  * Retorna null se não houver dado do mesmo mês no ano anterior.
  */
@@ -204,7 +204,7 @@ export function calcularSugestaoTendencia(
   if (!anoAnterior) return null
   const valorBase = Number(anoAnterior[campo] ?? 0)
   if (valorBase <= 0) return null
-  const crescimento = calcularCrescimentoRecente(historico, campo, 6)
+  const crescimento = calcularCrescimentoRecente(historico, campo, 3)
   return valorBase * crescimento
 }
 
