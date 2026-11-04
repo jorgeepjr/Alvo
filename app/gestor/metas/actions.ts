@@ -258,13 +258,24 @@ async function distribuirParaVendedores(supabase: SupabaseSrv, ano: number, mes:
     .lte('data', fimMes)
 
   // Divide cada dia entre os vendedores sem sobrar nem passar do total da loja.
-  // Em dia ímpar meio a meio, a unidade extra alterna entre eles a cada dia.
+  // Quando o dia não divide certo (ex.: 9 meio a meio), a unidade extra vai
+  // para um vendedor de cada vez — o giro só anda nos dias que tiveram sobra,
+  // para ninguém ficar com mais extras que o outro no mês.
   const pcts = percentuais.map((p) => Number(p.percentual))
+  const somaPcts = pcts.reduce((a, b) => a + b, 0)
   const lojaOrdenada = [...lojaDist].sort((a, b) => String(a.data).localeCompare(String(b.data)))
-  const rows = lojaOrdenada.flatMap((d, idx) => {
-    const valor = dividirEntreVendedores(Number(d.cota_valor), pcts, idx)
-    const atend = dividirEntreVendedores(Number(d.cota_atendimentos), pcts, idx)
-    const pecas = dividirEntreVendedores(Number(d.cota_pecas), pcts, idx)
+  const giro = { valor: 0, atend: 0, pecas: 0 }
+  const dividir = (total: number, campo: keyof typeof giro) => {
+    const t = Math.round(total)
+    const partes = dividirEntreVendedores(t, pcts, giro[campo])
+    const temSobra = somaPcts > 0 && pcts.some((p) => !Number.isInteger(Math.round(((p / somaPcts) * t) * 1e6) / 1e6))
+    if (temSobra) giro[campo]++
+    return partes
+  }
+  const rows = lojaOrdenada.flatMap((d) => {
+    const valor = dividir(Number(d.cota_valor), 'valor')
+    const atend = dividir(Number(d.cota_atendimentos), 'atend')
+    const pecas = dividir(Number(d.cota_pecas), 'pecas')
     return percentuais.map((p, i) => ({
       vendedor_id: p.vendedor_id,
       data: d.data,
