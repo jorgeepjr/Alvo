@@ -25,18 +25,18 @@ export default async function VendedoresPage() {
           <CardTitle className="text-base">Novo Vendedor</CardTitle>
         </CardHeader>
         <CardContent>
-          <form action={criarVendedor} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
+          <form action={criarVendedor} autoComplete="off" className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
             <div className="space-y-1">
               <Label htmlFor="nome">Nome</Label>
-              <Input id="nome" name="nome" required className="bg-slate-800 border-slate-700" />
+              <Input id="nome" name="nome" required autoComplete="off" className="bg-slate-800 border-slate-700" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="email">E-mail</Label>
-              <Input id="email" name="email" type="email" required className="bg-slate-800 border-slate-700" />
+              <Input id="email" name="email" type="email" required autoComplete="off" className="bg-slate-800 border-slate-700" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="senha">Senha</Label>
-              <Input id="senha" name="senha" type="password" required className="bg-slate-800 border-slate-700" />
+              <Input id="senha" name="senha" type="password" required autoComplete="new-password" className="bg-slate-800 border-slate-700" />
             </div>
             <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Cadastrar</Button>
           </form>

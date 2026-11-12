@@ -94,11 +94,11 @@ export default async function VendedorDetalhePage({ params }: { params: Promise<
             </div>
             <div className="space-y-1">
               <Label htmlFor="email">E-mail</Label>
-              <Input id="email" name="email" type="email" defaultValue={email} className="bg-slate-800 border-slate-700" />
+              <Input id="email" name="email" type="email" defaultValue={email} autoComplete="off" className="bg-slate-800 border-slate-700" />
             </div>
             <div className="space-y-1">
               <Label htmlFor="senha">Nova senha (opcional)</Label>
-              <Input id="senha" name="senha" type="password" placeholder="deixe em branco para manter" className="bg-slate-800 border-slate-700" />
+              <Input id="senha" name="senha" type="password" placeholder="deixe em branco para manter" autoComplete="new-password" className="bg-slate-800 border-slate-700" />
             </div>
             <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Salvar</Button>
           </form>
