@@ -31,8 +31,8 @@ export default function LoginPage() {
         <CardContent>
           <form action={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" name="email" type="email" placeholder="seu@email.com" required className="bg-slate-800 border-slate-700" />
+              <Label htmlFor="usuario">Nome</Label>
+              <Input id="usuario" name="usuario" type="text" autoComplete="username" autoCapitalize="none" placeholder="Seu nome" required className="bg-slate-800 border-slate-700" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Senha</Label>
