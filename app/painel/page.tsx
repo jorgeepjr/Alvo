@@ -7,7 +7,7 @@ import { addMes, anoDe, DIAS_SEMANA, diaSemana, hojeBR, ymDe } from '@/lib/datas
 import { calcularComissao } from '@/lib/comissao'
 import { TopoPagina } from '@/components/topo-pagina'
 import { AvisosMes } from '@/components/avisos-mes'
-import { BlocoMes, Cartao, dadosGraficoMes, R, R0 } from '@/components/bloco-mes'
+import { BlocoMes, Cartao, dadosGraficoMes, OrigemVenda, R, R0 } from '@/components/bloco-mes'
 import { MesAtualChart } from '@/components/mes-atual-chart'
 import { alternarHabito } from '@/app/gestor/rotina/actions'
 
@@ -88,6 +88,11 @@ export default async function MeuDia({ searchParams }: { searchParams: Promise<{
               <p className="text-xs text-slate-400">{HB.filter((h) => feito.has(h.id)).length}/{HB.length} feitos {HB.every((h) => feito.has(h.id)) ? '🎉' : ''}</p>
             </Cartao>
           )}
+
+          <Cartao titulo="🏪 Loja × 💬 WhatsApp no mês">
+            <OrigemVenda vendido={I.vendido} whatsapp={I.valorWhatsapp} />
+            <p className="mt-2 text-xs text-slate-400">Marque &quot;WhatsApp&quot; quando o cliente comprou depois de mensagem ou áudio. É assim que a loja sabe onde pôr mais esforço.</p>
+          </Cartao>
 
           {com && (
             <Cartao titulo={`💰 Sua comissão${I.fechado ? '' : ' (parcial)'}`}>

@@ -179,7 +179,7 @@ export async function registrarVenda(
   const { data: dist } = await supabase.from('distribuicao_diaria').select('situacao').eq('data', data).is('vendedor_id', null).maybeSingle()
   if (dist?.situacao === 'feriado' || dist?.situacao === 'fechado') return { error: 'Hoje está marcado como feriado/fechado. Fale com o gestor.' }
 
-  const { error } = await supabase.from('vendas').insert({ vendedor_id: user.id, data, hora: horaBR(), pecas, valor, whatsapp: formData.get('whatsapp') === 'on' })
+  const { error } = await supabase.from('vendas').insert({ vendedor_id: user.id, data, hora: horaBR(), pecas, valor, whatsapp: formData.get('origem') === 'whatsapp' })
   if (error) return { error: 'Não consegui registrar. Tente de novo.' }
   await somarDia(supabase, user.id, data)
   revalidatePath('/painel')

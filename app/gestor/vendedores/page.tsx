@@ -6,7 +6,7 @@ import { mesSelecionado } from '@/lib/mes-selecionado'
 import { hojeBR, nomeMes, ymDe } from '@/lib/datas'
 import { statusMes } from '@/lib/projecao'
 import { TopoPagina } from '@/components/topo-pagina'
-import { Cartao, N1, P, R0, Seta, Tag } from '@/components/bloco-mes'
+import { Cartao, N1, OrigemVenda, P, R0, Seta, Tag } from '@/components/bloco-mes'
 
 const CORES = ['#f472b6', '#60a5fa', '#34d399', '#fbbf24']
 const inp = 'w-full rounded-lg border border-white/10 bg-[#0b1324] px-3 py-2.5'
@@ -32,7 +32,7 @@ export default async function VendedoresPage({ searchParams }: { searchParams: P
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/10 text-left text-xs text-slate-400">
-                <th className="py-2">Vendedor</th><th className="text-right">Vendido</th><th className="text-right">Meta</th><th className="text-right">%</th><th className="text-right">Atend.</th><th className="text-right">Peças</th><th className="text-right">Ticket</th><th className="text-right">PA</th><th className="text-right">Ritmo</th><th className="pl-3">Situação</th>
+                <th className="py-2">Vendedor</th><th className="text-right">Vendido</th><th className="text-right">Meta</th><th className="text-right">%</th><th className="text-right">Atend.</th><th className="text-right">Peças</th><th className="text-right">Ticket</th><th className="text-right">PA</th><th className="text-right">Loja · WhatsApp</th><th className="text-right">Ritmo</th><th className="pl-3">Situação</th>
               </tr>
             </thead>
             <tbody>
@@ -49,6 +49,7 @@ export default async function VendedoresPage({ searchParams }: { searchParams: P
                     <td className="text-right">{x.pecas}</td>
                     <td className="text-right">{R0(x.ticket)}</td>
                     <td className="text-right">{N1(x.pa)}</td>
+                    <td className="text-right"><OrigemVenda vendido={x.vendido} whatsapp={x.valorWhatsapp} compacto /></td>
                     <td className="text-right">{x.fechado ? <Seta v={x.vendido - x.meta} /> : x.diasLancados ? <Seta v={x.vendido - x.cotaAte} /> : '—'}</td>
                     <td className="pl-3"><Tag tom={st.tom}>{x.fechado ? (x.vendido >= x.meta ? 'bateu' : 'não bateu') : x.meta && x.diasLancados ? `provável ${P(x.provavel / x.meta)}` : st.texto}</Tag></td>
                   </tr>

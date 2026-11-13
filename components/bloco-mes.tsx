@@ -158,3 +158,22 @@ export function dadosGraficoMes(
     }
   })
 }
+
+/** De onde veio a venda: loja × WhatsApp, em % (pra saber onde pôr mais esforço). */
+export function OrigemVenda({ vendido, whatsapp, compacto }: { vendido: number; whatsapp: number; compacto?: boolean }) {
+  const pw = vendido > 0 ? Math.min(1, whatsapp / vendido) : 0
+  const pl = vendido > 0 ? 1 - pw : 0
+  if (compacto) return <span className="whitespace-nowrap text-xs">🏪 {P(pl)} · 💬 {P(pw)}</span>
+  return (
+    <div>
+      <div className="flex h-3 overflow-hidden rounded-full bg-[#0b1324]">
+        <i className="block h-full bg-cyan-400" style={{ width: `${pl * 100}%` }} title="Loja" />
+        <i className="block h-full bg-emerald-400" style={{ width: `${pw * 100}%` }} title="WhatsApp" />
+      </div>
+      <div className="mt-1.5 flex justify-between text-sm">
+        <span>🏪 Loja <b>{P(pl)}</b> <span className="text-xs text-slate-400">{R0(vendido - whatsapp)}</span></span>
+        <span>💬 WhatsApp <b className="text-emerald-300">{P(pw)}</b> <span className="text-xs text-slate-400">{R0(whatsapp)}</span></span>
+      </div>
+    </div>
+  )
+}

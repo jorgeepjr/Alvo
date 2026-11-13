@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { apagarVenda } from './actions'
 import { datasDoMes, ddmm, diaSemana, hojeBR, MESES_NOME, mesDe, ymDe } from '@/lib/datas'
 import { TopoPagina } from '@/components/topo-pagina'
-import { Cartao, N1, R, R0 } from '@/components/bloco-mes'
+import { Cartao, N1, OrigemVenda, R, R0 } from '@/components/bloco-mes'
 import { NovaVenda } from './nova-venda'
 
 // Vendedor: registra venda por venda, só no dia de hoje. Dia que passou fica
@@ -46,7 +46,7 @@ export default async function LancarVendasVendedor() {
                 {X.map((s) => (
                   <tr key={s.id} className="border-b border-white/5">
                     <td className="py-2 text-slate-400">{s.hora}</td>
-                    <td>{s.pecas} peça{s.pecas > 1 ? 's' : ''}{s.whatsapp ? ' · 💬' : ''}</td>
+                    <td>{s.pecas} peça{s.pecas > 1 ? 's' : ''} · {s.whatsapp ? '💬 WhatsApp' : '🏪 Loja'}</td>
                     <td className="text-right font-bold">{R(Number(s.valor))}</td>
                     <td className="w-10 text-right">
                       <form action={apagarVenda.bind(null, s.id)}>
@@ -65,6 +65,11 @@ export default async function LancarVendasVendedor() {
             <div><b className="block text-xl">{n}</b><span className="text-xs text-slate-400">atendimentos · {pc} peças</span></div>
             <div><b className="block text-xl">{n ? R(val / n) : '—'}</b><span className="text-xs text-slate-400">ticket · PA {n ? N1(pc / n) : '—'}</span></div>
           </div>
+          {n > 0 && (
+            <div className="mt-3">
+              <OrigemVenda vendido={val} whatsapp={X.filter((s) => s.whatsapp).reduce((a, s) => a + Number(s.valor), 0)} />
+            </div>
+          )}
           {cota > 0 && (
             <>
               <div className="mt-3 h-2.5 rounded-full bg-[#0b1324]"><i className="block h-full rounded-full bg-cyan-400" style={{ width: `${Math.min(100, (val / cota) * 100)}%` }} /></div>

@@ -6,7 +6,7 @@ import { addMes, anoDe, ddmm, DIAS_SEMANA, diaSemana, hojeBR, MESES_NOME, mesDe,
 import { statusMes } from '@/lib/projecao'
 import { TopoPagina } from '@/components/topo-pagina'
 import { AvisosMes } from '@/components/avisos-mes'
-import { BlocoMes, Cartao, dadosGraficoMes, N1, P, R, R0, Seta } from '@/components/bloco-mes'
+import { BlocoMes, Cartao, dadosGraficoMes, N1, OrigemVenda, P, R, R0, Seta } from '@/components/bloco-mes'
 import { MesAtualChart } from '@/components/mes-atual-chart'
 import { ResumoDia } from './resumo-dia'
 
@@ -54,6 +54,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
   if (ehAtual && ontem) {
     const at = lancOntem.reduce((a, l) => a + l.atendimentos, 0)
     const pc = lancOntem.reduce((a, l) => a + l.pecas, 0)
+    const waOntem = lancOntem.reduce((a, l) => a + Number(l.valor_whatsapp ?? 0), 0)
     const porV = H.vendedores
       .map((v) => {
         const x = lancOntem.filter((l) => l.vendedor_id === v.id)
@@ -63,6 +64,7 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
     resumo =
       `📊 Resumo de ${ddmm(ontem)} — ZYNK\n` +
       `💰 Vendido: ${R(vendOntem)}${cotaOntem ? ` (cota ${R0(cotaOntem)}) ${vendOntem >= cotaOntem ? '✅' : '⚠️'}` : ''}\n` +
+      `🏪 Loja ${P(vendOntem ? 1 - waOntem / vendOntem : 0)} · 💬 WhatsApp ${P(vendOntem ? waOntem / vendOntem : 0)}\n` +
       `👥 Atendimentos: ${at} | 👕 Peças: ${pc} | 🎟️ Ticket: ${R(at ? vendOntem / at : 0)}\n\n` +
       `Por vendedor:\n${porV}\n\n` +
       `📅 Mês: ${R(I.vendido)} de ${R0(I.meta)} (${P(I.pct)}) | Provável: ${R0(I.provavel)} (${P(I.meta ? I.provavel / I.meta : 0)})\n` +
@@ -141,11 +143,15 @@ export default async function Inicio({ searchParams }: { searchParams: Promise<{
               <div title="Peças por atendimento (peças ÷ atendimentos). Subir o PA sobe o ticket."><b className="block text-xl">{N1(I.pa)}</b><span className="text-xs text-slate-400">PA</span></div>
               <div title="Preço médio de cada peça vendida (valor ÷ peças)."><b className="block text-xl">{R(I.precoMedio)}</b><span className="text-xs text-slate-400">preço médio</span></div>
             </div>
-            {I.valorWhatsapp > 0 && (
-              <p className="mt-3 rounded-lg bg-emerald-400/10 px-3 py-2 text-sm">
-                💬 <b>{R(I.valorWhatsapp)} vieram do WhatsApp</b> ({P(I.vendido ? I.valorWhatsapp / I.vendido : 0)} das vendas)
-              </p>
-            )}
+            <div className="mt-4">
+              <div className="mb-1.5 text-xs font-semibold text-slate-400">De onde veio a venda</div>
+              <OrigemVenda vendido={I.vendido} whatsapp={I.valorWhatsapp} />
+              <div className="mt-2 space-y-0.5">
+                {ranking.map(({ v, x }) => (
+                  <div key={v.id} className="flex justify-between text-xs text-slate-400"><span>{v.nome}</span><OrigemVenda vendido={x.vendido} whatsapp={x.valorWhatsapp} compacto /></div>
+                ))}
+              </div>
+            </div>
           </Cartao>
 
           {resumo && (
