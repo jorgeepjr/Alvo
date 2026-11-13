@@ -3,6 +3,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { distribuirCotaInteira, distribuirCotaRedonda, dividirEntreVendedores, calcularSugestaoMeta, calcularSugestaoTendencia } from '@/lib/calculos'
 import { revalidatePath } from 'next/cache'
+import { pesosAnoPassado } from '@/lib/cota-ano-passado'
+import { vendaDiariaDoMes } from '@/lib/dados-mes'
+import { hojeBR } from '@/lib/datas'
+import type { SupabaseClient } from '@supabase/supabase-js'
 
 const PESOS_DEFAULT: Record<number, number> = {
   0: 0, // domingo — sem cota por padrão (loja normalmente fechada)
@@ -28,6 +32,10 @@ export async function salvarMetaMensal(formData: FormData): Promise<void> {
     .from('metas_mensais')
     .upsert({ ano, mes, meta_valor, meta_atendimentos, meta_pecas, super_meta_valor, super_meta_premio }, { onConflict: 'ano,mes' })
 
+  // Meta mudou: os dias livres (não salvos e que ainda não passaram) são recalculados.
+  await rebalancearMes(supabase, ano, mes)
+  await distribuirParaVendedores(supabase, ano, mes)
+
   revalidatePath('/gestor/metas')
   revalidatePath('/gestor')
   revalidatePath('/painel')
@@ -46,20 +54,15 @@ function diasDoMes(ano: number, mes: number): { data: string; pesoPadrao: number
 
 type SupabaseSrv = Awaited<ReturnType<typeof createClient>>
 
-function pesoDoDia(data: string): number {
-  const [a, m, d] = data.split('-').map(Number)
-  const dow = new Date(a, m - 1, d).getDay()
-  // Domingo marcado como "normal" (data festiva) recebe peso de dia comum.
-  return PESOS_DEFAULT[dow] || 1
-}
-
 // Rebalanceia a distribuição da loja no mês:
-// - dias FIXOS (já salvos pelo gestor, ou feriado/fechado) não mudam;
-// - o que falta para fechar a meta (valor, atendimentos e peças) é dividido
-//   entre os dias normais ainda NÃO salvos, pelos pesos do dia da semana;
-// - valores em múltiplos de R$ 100, e só o último dia não salvo absorve a
-//   diferença do arredondamento, para a soma bater exatamente com a meta.
-async function rebalancearMes(supabase: SupabaseSrv, ano: number, mes: number): Promise<void> {
+// - dias FIXOS (salvos pelo gestor, feriado/fechado) não mudam;
+// - dias que já passaram não mudam (o "onde deveria estar" fica estável);
+// - com `depoisDe`, só os dias DEPOIS dele recebem a diferença (salvar um dia
+//   não mexe nos anteriores — regra do Junior, 12/11/2026);
+// - o que falta pra meta vai pros dias livres pelo peso do ano passado
+//   (mesmo dia da semana, 364 dias antes; a sobra vai pro último dia);
+// - valores em R$ 100, e o último dia livre absorve o arredondamento.
+async function rebalancearMes(supabase: SupabaseSrv, ano: number, mes: number, opts: { depoisDe?: string; todos?: boolean } = {}): Promise<void> {
   const dias = diasDoMes(ano, mes)
   const { data: meta } = await supabase
     .from('metas_mensais')
@@ -78,13 +81,25 @@ async function rebalancearMes(supabase: SupabaseSrv, ano: number, mes: number): 
     .order('data')
   const linhas = todos ?? []
 
-  const livres = linhas.filter((d) => d.situacao === 'normal' && !d.cota_fixada)
+  const hoje = hojeBR()
+  const naoSalvos = linhas.filter((d) => d.situacao === 'normal' && !d.cota_fixada)
+  const candidatos = [
+    naoSalvos.filter((d) => opts.todos || ((!opts.depoisDe || d.data > opts.depoisDe) && d.data >= hoje)),
+    naoSalvos.filter((d) => !opts.depoisDe || d.data > opts.depoisDe),
+    naoSalvos,
+  ]
+  // Se não sobrar dia livre depois do corte, usa o que tiver (a soma precisa fechar na meta).
+  const livres = candidatos.find((c) => c.length > 0) ?? []
   if (livres.length === 0) return
-  const fixos = linhas.filter((d) => !(d.situacao === 'normal' && !d.cota_fixada))
+  const idsLivres = new Set(livres.map((d) => d.id))
+  const fixos = linhas.filter((d) => !idsLivres.has(d.id))
   const soma = (campo: 'cota_valor' | 'cota_atendimentos' | 'cota_pecas') =>
-    fixos.reduce((acc, d) => acc + Number(d[campo] ?? 0), 0)
+    fixos.filter((d) => d.situacao === 'normal').reduce((acc, d) => acc + Number(d[campo] ?? 0), 0)
 
-  const pesos = livres.map((d) => ({ data: d.data, peso: pesoDoDia(d.data) }))
+  const mm = String(mes).padStart(2, '0')
+  const vendaLY = await vendaDiariaDoMes(supabase as unknown as SupabaseClient, `${ano - 1}-${mm}`)
+  const W = pesosAnoPassado(linhas.map((d) => ({ data: d.data, situacao: d.situacao })), vendaLY)
+  const pesos = livres.map((d) => ({ data: d.data, peso: W[d.data] || 1 }))
   const valor = distribuirCotaRedonda(pesos, Math.max(Math.round(Number(meta.meta_valor)) - soma('cota_valor'), 0), 100)
   const atend = distribuirCotaInteira(pesos, Math.max(Number(meta.meta_atendimentos) - soma('cota_atendimentos'), 0))
   const pecas = distribuirCotaInteira(pesos, Math.max(Number(meta.meta_pecas) - soma('cota_pecas'), 0))
@@ -141,7 +156,7 @@ export async function gerarDistribuicaoAutomatica(formData: FormData): Promise<v
   await supabase.from('distribuicao_diaria').insert(rows)
 
   // Preenche os dias (todos livres) com valores redondos que somam a meta.
-  await rebalancearMes(supabase, ano, mes)
+  await rebalancearMes(supabase, ano, mes, { todos: true })
 
   // Mantém as cotas dos vendedores em dia com a nova distribuição da loja.
   await distribuirParaVendedores(supabase, ano, mes)
@@ -171,7 +186,7 @@ export async function ajustarDiaSituacao(
     .update({ situacao, cota_fixada: false, cota_valor: 0, cota_atendimentos: 0, cota_pecas: 0 })
     .eq('id', distribuicaoId)
 
-  await rebalancearMes(supabase, ano, mes)
+  await rebalancearMes(supabase, ano, mes, situacao === 'normal' ? {} : { depoisDe: dia.data })
   await distribuirParaVendedores(supabase, ano, mes)
   revalidatePath('/gestor/metas')
 }
@@ -190,12 +205,14 @@ export async function ajustarCotaDia(
 
   const supabase = await createClient()
 
-  await supabase
+  const { data: dia } = await supabase
     .from('distribuicao_diaria')
     .update({ cota_valor, cota_atendimentos, cota_pecas, cota_fixada: true })
     .eq('id', distribuicaoId)
+    .select('data')
+    .maybeSingle()
 
-  await rebalancearMes(supabase, ano, mes)
+  await rebalancearMes(supabase, ano, mes, { depoisDe: dia?.data })
   await distribuirParaVendedores(supabase, ano, mes)
   revalidatePath('/gestor/metas')
 }
@@ -330,18 +347,17 @@ export async function gerarMetasFuturas(formData: FormData): Promise<{ criadas: 
     const mes = (total % 12) + 1
     if (jaTem.has(`${ano}-${mes}`)) continue
 
-    const tendencia = calcularSugestaoTendencia(hist, ano, mes, 'venda_total')
-    if (tendencia === null) continue // sem base do ano anterior → não cria
-    const tAtend = calcularSugestaoTendencia(hist, ano, mes, 'atendimentos')
-    const tPecas = calcularSugestaoTendencia(hist, ano, mes, 'pecas')
+    // Regra do Junior: mesmo mês do ano passado +20% (valor em R$ 100 redondos).
+    const base = hist.find((h) => h.ano === ano - 1 && h.mes === mes)
+    if (!base || base.venda_total <= 0) continue // sem base do ano anterior → não cria
 
     await supabase.from('metas_mensais').upsert(
       {
         ano,
         mes,
-        meta_valor: Math.round(tendencia),
-        meta_atendimentos: Math.round(tAtend ?? 0),
-        meta_pecas: Math.round(tPecas ?? 0),
+        meta_valor: Math.round((base.venda_total * 1.2) / 100) * 100,
+        meta_atendimentos: Math.round(base.atendimentos * 1.2),
+        meta_pecas: Math.round(base.pecas * 1.2),
       },
       { onConflict: 'ano,mes' }
     )
@@ -404,4 +420,32 @@ export async function aplicarSugestaoTendencia(formData: FormData): Promise<void
     )
 
   revalidatePath('/gestor/metas')
+}
+
+// "Usar →" da sugestão (mesmo mês do ano passado +20%): grava a meta e já
+// distribui pelos dias como o ano passado. Se o mês já tem distribuição, só
+// recalcula os dias livres (os salvos 📌 e os que já passaram não mudam).
+export async function usarSugestaoAnoPassado(ano: number, mes: number, valor: number, atendimentos: number, pecas: number): Promise<void> {
+  const supabase = await createClient()
+  await supabase
+    .from('metas_mensais')
+    .upsert({ ano, mes, meta_valor: Math.round(valor), meta_atendimentos: Math.round(atendimentos), meta_pecas: Math.round(pecas) }, { onConflict: 'ano,mes' })
+  const mm = String(mes).padStart(2, '0')
+  const { count } = await supabase
+    .from('distribuicao_diaria')
+    .select('id', { count: 'exact', head: true })
+    .is('vendedor_id', null)
+    .gte('data', `${ano}-${mm}-01`)
+    .lte('data', `${ano}-${mm}-${new Date(ano, mes, 0).getDate()}`)
+  if (!count) {
+    const fd = new FormData()
+    fd.set('ano', String(ano))
+    fd.set('mes', String(mes))
+    await gerarDistribuicaoAutomatica(fd)
+  } else {
+    await rebalancearMes(supabase, ano, mes)
+    await distribuirParaVendedores(supabase, ano, mes)
+  }
+  revalidatePath('/gestor/metas')
+  revalidatePath('/gestor')
 }

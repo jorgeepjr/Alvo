@@ -22,7 +22,7 @@ export function MesAtualChart({
   return (
     <ResponsiveContainer width="100%" height={300}>
       <LineChart data={dados}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#1a2540" />
         <XAxis dataKey="dia" stroke="#94a3b8" />
         <YAxis stroke="#94a3b8" tickFormatter={(v) => `${Math.round(Number(v) / 1000)}k`} />
         <Tooltip
@@ -31,10 +31,10 @@ export function MesAtualChart({
           labelFormatter={(dia) => `Dia ${dia}`}
         />
         <Legend />
-        <Line type="monotone" dataKey="atual" name={`${anoAtual} (real)`} stroke="#efefef" strokeWidth={3} connectNulls dot={false} />
-        <Line type="monotone" dataKey="projecao" name="Projeção (no ritmo atual)" stroke="#38bdf8" strokeWidth={2} strokeDasharray="6 4" connectNulls dot={false} />
-        <Line type="monotone" dataKey="anoPassado" name={`Ritmo ${anoPassado}`} stroke="#f59e0b" strokeWidth={2} strokeDasharray="6 4" dot={false} />
-        <Line type="monotone" dataKey="meta" name="Ritmo da meta" stroke="#22c55e" strokeWidth={2} strokeDasharray="3 3" dot={false} />
+        <Line type="monotone" dataKey="atual" name={`${anoAtual} (vendido)`} stroke="#22d3ee" strokeWidth={3} connectNulls dot={false} />
+        <Line type="monotone" dataKey="projecao" name="Projeção provável" stroke="#22d3ee" strokeWidth={2} strokeDasharray="6 4" connectNulls dot={false} />
+        <Line type="monotone" dataKey="anoPassado" name={`${anoPassado}`} stroke="#55637d" strokeWidth={2} dot={false} />
+        <Line type="monotone" dataKey="meta" name="Ritmo da meta" stroke="#a78bfa" strokeWidth={2} strokeDasharray="3 3" dot={false} />
       </LineChart>
     </ResponsiveContainer>
   )

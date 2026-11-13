@@ -4,14 +4,14 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/app/login/actions'
-import { LayoutDashboard, FilePlus, LogOut, Menu, ChevronLeft, ChevronRight, Sparkles, BookOpen, Trophy } from 'lucide-react'
+import { LayoutDashboard, FilePlus, LogOut, Menu, ChevronLeft, ChevronRight, BookOpen, Trophy } from 'lucide-react'
 
 const links = [
-  { href: '/painel', label: 'Meu Painel', icon: LayoutDashboard },
-  { href: '/painel/lancamento', label: 'Lançar Vendas', icon: FilePlus },
-  { href: '/painel/desempenho', label: 'Meu Desempenho', icon: Trophy },
-  { href: '/painel/assistente', label: 'Assistente IA', icon: Sparkles },
-  { href: '/painel/manuais', label: 'Manuais', icon: BookOpen },
+  { href: '/painel', label: 'Meu dia', icon: LayoutDashboard },
+  { href: '/painel/lancamento', label: 'Lançar vendas', icon: FilePlus },
+  { href: '/painel/desempenho', label: 'Meu desempenho', icon: Trophy },
+  // Assistente IA guardado (repaginada 12/11): a página continua existindo.
+  { href: '/painel/manuais', label: 'Ajuda', icon: BookOpen },
 ]
 
 export function SidebarVendedor() {
