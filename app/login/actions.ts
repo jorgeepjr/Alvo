@@ -27,11 +27,12 @@ export async function signIn(formData: FormData) {
   if (!usuario || !password) return { error: ERRO }
 
   const email = await emailDoUsuario(usuario)
-  if (!email) return { error: ERRO }
 
+  // Nome que não existe também passa pelo Supabase (com um e-mail que não existe),
+  // pra resposta demorar igual e não entregar quais nomes têm conta.
   const supabase = await createClient()
-  const { error } = await supabase.auth.signInWithPassword({ email, password })
-  if (error) return { error: ERRO }
+  const { error } = await supabase.auth.signInWithPassword({ email: email ?? 'ninguem@metaflow.invalid', password })
+  if (error || !email) return { error: ERRO }
 
   redirect('/')
 }
