@@ -121,3 +121,27 @@ export async function carregarConfig(supabase: SupabaseClient) {
     avalFinalFim: Number(data?.aval_final_fim ?? 25),
   }
 }
+
+export interface MesVendedor { ym: string; vendido: number; atendimentos: number; pecas: number; meta: number }
+
+/** Vendas de cada vendedor mês a mês (últimos `meses`, até o mês `ate`). */
+export async function historicoVendedores(supabase: SupabaseClient, ate: string, meses = 6): Promise<Record<string, MesVendedor[]>> {
+  const de = addMes(ate, -(meses - 1))
+  const [{ data: lanc }, { data: dist }] = await Promise.all([
+    supabase.from('lancamentos').select('vendedor_id, data, valor, atendimentos, pecas').not('vendedor_id', 'is', null).gte('data', inicioDoMes(de)).lte('data', fimDoMes(ate)),
+    supabase.from('distribuicao_diaria').select('vendedor_id, data, cota_valor, situacao').not('vendedor_id', 'is', null).gte('data', inicioDoMes(de)).lte('data', fimDoMes(ate)),
+  ])
+  const out: Record<string, MesVendedor[]> = {}
+  const pega = (v: string, ym: string) => {
+    out[v] ??= Array.from({ length: meses }, (_, k) => ({ ym: addMes(de, k), vendido: 0, atendimentos: 0, pecas: 0, meta: 0 }))
+    return out[v].find((m) => m.ym === ym)!
+  }
+  for (const l of lanc ?? []) {
+    const m = pega(l.vendedor_id, l.data.slice(0, 7))
+    m.vendido += Number(l.valor)
+    m.atendimentos += l.atendimentos
+    m.pecas += l.pecas
+  }
+  for (const d of dist ?? []) if (d.situacao === 'normal') pega(d.vendedor_id, d.data.slice(0, 7)).meta += Number(d.cota_valor)
+  return out
+}

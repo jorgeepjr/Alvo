@@ -1,149 +1,78 @@
-import { createClient } from '@/lib/supabase/server'
-import { calcularProjecao, calcularTicketMedio, formatBRL } from '@/lib/calculos'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Progress } from '@/components/ui/progress'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { notFound } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { editarVendedor } from '../actions'
+import { carregarConfig, historicoVendedores } from '@/lib/dados-mes'
+import { hojeBR, nomeMes, nomeMesCurto, ymDe } from '@/lib/datas'
+import { calcularComissao } from '@/lib/comissao'
+import { TopoPagina } from '@/components/topo-pagina'
+import { Cartao, N1, P, R, R0, Tag } from '@/components/bloco-mes'
 import { BarrasChart } from '@/components/barras-chart'
 
-const MESES_CURTO = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+const inp = 'w-full rounded-lg border border-white/10 bg-[#0b1324] px-3 py-2.5'
 
-export default async function VendedorDetalhePage({ params }: { params: Promise<{ id: string }> }) {
+// Histórico do vendedor mês a mês (pedido do Junior, 12/11).
+export default async function VendedorDetalhe({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
-
   const { data: vendedor } = await supabase.from('profiles').select('*').eq('id', id).single()
   if (!vendedor) notFound()
+  const ymHoje = ymDe(hojeBR())
 
-  const hoje = new Date()
-  const ano = hoje.getFullYear()
-  const mes = hoje.getMonth() + 1
-  const inicioMes = `${ano}-${String(mes).padStart(2, '0')}-01`
-  const ultimoDia = new Date(ano, mes, 0).getDate()
-  const fimMes = `${ano}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`
-
-  const { data: lancamentos } = await supabase
-    .from('lancamentos')
-    .select('*')
-    .eq('vendedor_id', id)
-    .gte('data', inicioMes)
-    .lte('data', fimMes)
-
-  const { data: distribuicoes } = await supabase
-    .from('distribuicao_diaria')
-    .select('*')
-    .eq('vendedor_id', id)
-    .gte('data', inicioMes)
-    .lte('data', fimMes)
-
-  const valorVendido = lancamentos?.reduce((acc, l) => acc + Number(l.valor), 0) ?? 0
-  const valorCota = distribuicoes?.reduce((acc, d) => acc + Number(d.cota_valor), 0) ?? 0
-  const atendimentos = lancamentos?.reduce((acc, l) => acc + l.atendimentos, 0) ?? 0
-  const pecas = lancamentos?.reduce((acc, l) => acc + l.pecas, 0) ?? 0
-  const diasTrabalhados = lancamentos?.filter((l) => l.situacao_vendedor === 'normal').length ?? 0
-  const totalDiasUteis = distribuicoes?.filter((d) => d.situacao === 'normal').length ?? 0
-  const projecao = calcularProjecao(valorVendido, diasTrabalhados, totalDiasUteis)
-  const ticketCliente = calcularTicketMedio(valorVendido, atendimentos)
-  const ticketPeca = calcularTicketMedio(valorVendido, pecas)
-  const percentual = valorCota > 0 ? (valorVendido / valorCota) * 100 : 0
-
-  // Evolução dos últimos 12 meses (vendas do vendedor por mês)
-  const inicio12 = new Date(ano, mes - 12, 1)
-  const inicio12Str = `${inicio12.getFullYear()}-${String(inicio12.getMonth() + 1).padStart(2, '0')}-01`
-  const { data: lanc12 } = await supabase
-    .from('lancamentos')
-    .select('data, valor')
-    .eq('vendedor_id', id)
-    .gte('data', inicio12Str)
-    .lte('data', fimMes)
-  const mapaMes = new Map<string, number>()
-  for (const l of lanc12 ?? []) {
-    const chave = l.data.slice(0, 7) // YYYY-MM
-    mapaMes.set(chave, (mapaMes.get(chave) ?? 0) + Number(l.valor))
-  }
-  const evolucao = Array.from({ length: 12 }, (_, i) => {
-    const d = new Date(ano, mes - 12 + i, 1)
-    const chave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    return { label: `${MESES_CURTO[d.getMonth()]}/${String(d.getFullYear()).slice(2)}`, valor: Math.round((mapaMes.get(chave) ?? 0) * 100) / 100 }
-  })
+  const [hist, cfg] = await Promise.all([historicoVendedores(supabase, ymHoje, 12), carregarConfig(supabase)])
+  const H = hist[id] ?? []
 
   const { createClient: createSupabaseClient } = await import('@supabase/supabase-js')
-  const admin = createSupabaseClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
+  const admin = createSupabaseClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
   const { data: authData } = await admin.auth.admin.getUserById(id)
   const email = authData?.user?.email ?? ''
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{vendedor.nome}</h1>
+    <div className="space-y-4">
+      <TopoPagina area="Equipe" titulo={vendedor.nome} descricao="Vendas mês a mês, meta, ticket, PA e comissão." />
 
-      <Card className="border-slate-800 bg-slate-900">
-        <CardHeader>
-          <CardTitle className="text-base">Editar Vendedor</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form action={editarVendedor.bind(null, id)} className="grid grid-cols-1 sm:grid-cols-4 gap-3 items-end">
-            <div className="space-y-1">
-              <Label htmlFor="nome">Nome</Label>
-              <Input id="nome" name="nome" defaultValue={vendedor.nome} required className="bg-slate-800 border-slate-700" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="email">E-mail</Label>
-              <Input id="email" name="email" type="email" defaultValue={email} autoComplete="off" className="bg-slate-800 border-slate-700" />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="senha">Nova senha (opcional)</Label>
-              <Input id="senha" name="senha" type="password" placeholder="deixe em branco para manter" autoComplete="new-password" className="bg-slate-800 border-slate-700" />
-            </div>
-            <Button type="submit" className="bg-zinc-100 text-zinc-950 hover:bg-white font-medium">Salvar</Button>
-          </form>
-        </CardContent>
-      </Card>
+      <Cartao titulo="📊 Últimos 12 meses">
+        <BarrasChart dados={H.map((m) => ({ label: nomeMesCurto(m.ym), valor: Math.round(m.vendido) }))} destaque={nomeMesCurto(ymHoje)} />
+      </Cartao>
 
-      <Card className="border-slate-800 bg-slate-900">
-        <CardHeader>
-          <CardTitle className="text-base">Progresso do Mês</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          <div className="flex justify-between text-sm">
-            <span>R$ {formatBRL(valorVendido)} / R$ {formatBRL(valorCota)}</span>
-            <span>{percentual.toFixed(1)}%</span>
-          </div>
-          <Progress value={Math.min(percentual, 100)} />
-          <p className="text-sm text-slate-400">
-            Projeção: R$ {formatBRL(projecao)} ({valorCota > 0 ? ((projecao / valorCota) * 100).toFixed(1) : '0'}% da meta)
-          </p>
-        </CardContent>
-      </Card>
+      <Cartao titulo="Mês a mês">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-white/10 text-left text-xs text-slate-400">
+                <th className="py-2">Mês</th><th className="text-right">Vendido</th><th className="text-right">Meta</th><th className="text-right">%</th><th className="text-right">Atend.</th><th className="text-right">Ticket</th><th className="text-right">PA</th><th className="text-right">Comissão</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[...H].reverse().map((m) => {
+                const c = calcularComissao(m.vendido, m.meta, { pctComMeta: cfg.comMeta, pctSemMeta: cfg.comSem })
+                return (
+                  <tr key={m.ym} className="border-b border-white/5">
+                    <td className="py-2">{nomeMes(m.ym)} {m.ym === ymHoje && <Tag tom="neu">parcial</Tag>}</td>
+                    <td className="text-right">{R0(m.vendido)}</td>
+                    <td className="text-right">{m.meta ? R0(m.meta) : '—'}</td>
+                    <td className={`text-right font-bold ${m.meta && m.vendido >= m.meta ? 'text-emerald-300' : ''}`}>{m.meta ? P(m.vendido / m.meta) : '—'}</td>
+                    <td className="text-right">{m.atendimentos}</td>
+                    <td className="text-right">{m.atendimentos ? R0(m.vendido / m.atendimentos) : '—'}</td>
+                    <td className="text-right">{m.atendimentos ? N1(m.pecas / m.atendimentos) : '—'}</td>
+                    <td className="text-right">{m.vendido ? <>{R(c.comissao)} <span className="text-xs text-slate-400">{c.percentual}%</span></> : '—'}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-2 text-xs text-slate-400">Até mai/2026 os lançamentos por vendedor estão incompletos (o histórico da loja veio das planilhas).</p>
+      </Cartao>
 
-      <Card className="border-slate-800 bg-slate-900">
-        <CardHeader><CardTitle className="text-base">Evolução — últimos 12 meses</CardTitle></CardHeader>
-        <CardContent>
-          <BarrasChart dados={evolucao} destaque={`${MESES_CURTO[mes - 1]}/${String(ano).slice(2)}`} />
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-slate-800 bg-slate-900">
-          <CardHeader><CardTitle className="text-sm text-slate-400">Atendimentos</CardTitle></CardHeader>
-          <CardContent className="text-xl font-bold">{atendimentos}</CardContent>
-        </Card>
-        <Card className="border-slate-800 bg-slate-900">
-          <CardHeader><CardTitle className="text-sm text-slate-400">Peças</CardTitle></CardHeader>
-          <CardContent className="text-xl font-bold">{pecas}</CardContent>
-        </Card>
-        <Card className="border-slate-800 bg-slate-900">
-          <CardHeader><CardTitle className="text-sm text-slate-400">Ticket Médio</CardTitle></CardHeader>
-          <CardContent className="text-xl font-bold">
-            R$ {formatBRL(ticketCliente)} / cliente · R$ {formatBRL(ticketPeca)} / peça
-          </CardContent>
-        </Card>
-      </div>
+      <details className="rounded-2xl border border-white/10 bg-[#111a2d] p-4">
+        <summary className="cursor-pointer text-sm font-semibold text-emerald-300">Editar nome, e-mail ou senha</summary>
+        <form action={editarVendedor.bind(null, id)} autoComplete="off" className="mt-3 grid items-end gap-3 sm:grid-cols-4">
+          <div><label className="mb-1 block text-xs text-slate-400">Nome</label><input name="nome" defaultValue={vendedor.nome} required className={inp} /></div>
+          <div><label className="mb-1 block text-xs text-slate-400">E-mail</label><input name="email" type="email" defaultValue={email} autoComplete="off" className={inp} /></div>
+          <div><label className="mb-1 block text-xs text-slate-400">Nova senha (opcional)</label><input name="senha" type="password" placeholder="deixe em branco pra manter" autoComplete="new-password" className={inp} /></div>
+          <button className="rounded-lg bg-emerald-400 px-4 py-2.5 text-sm font-bold text-[#04111a]">Salvar</button>
+        </form>
+      </details>
     </div>
   )
 }

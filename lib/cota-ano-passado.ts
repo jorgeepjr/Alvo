@@ -1,4 +1,4 @@
-import { addMes, diaSemana, mesmoDiaAnoPassado, ymDe } from '@/lib/datas'
+import { addMes, diaSemana, mesmoDiaAnoPassado, ymDe } from './datas'
 
 // Como o Junior monta a meta (12/11/2026):
 // - cada dia recebe a venda do MESMO DIA DA SEMANA do ano passado (364 dias antes,

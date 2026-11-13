@@ -96,7 +96,9 @@ export function AvisosMes({
   const vend = atual.vendedores.filter((v) => !vendedorId || v.id === vendedorId)
   const pend = fontes.flatMap((d) => {
     const lanc = new Set(d.lancamentos.filter((l) => l.vendedor_id).map((l) => `${l.vendedor_id}|${l.data}`))
-    const uteis = d.diasLoja.filter((x) => x.situacao === 'normal').map((x) => x.data)
+    // O vendedor não enxerga a linha da loja: usa os dias dele (mesma situação).
+    const base = vendedorId && d.diasVend[vendedorId]?.some((x) => x.cota > 0) ? d.diasVend[vendedorId] : d.diasLoja
+    const uteis = base.filter((x) => x.situacao === 'normal').map((x) => x.data)
     return diasPendentes(uteis, hoje, vend, lanc)
   })
   if (pend.length) {

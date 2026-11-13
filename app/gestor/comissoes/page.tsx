@@ -4,7 +4,10 @@ import { calcularComissao } from '@/lib/comissao'
 import { formatBRL } from '@/lib/calculos'
 import { salvarConfigComissao } from './actions'
 import { BotaoCsvComissao, type LinhaCSV } from '@/components/botao-csv-comissao'
-import { SeletorMesComissao } from './seletor-mes'
+import { mesSelecionado } from '@/lib/mes-selecionado'
+import { anoDe, hojeBR, mesDe, ymDe, addMes } from '@/lib/datas'
+import { TopoPagina } from '@/components/topo-pagina'
+import { Aviso } from '@/components/bloco-mes'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -20,10 +23,11 @@ export default async function ComissoesPage({
 }) {
   const sp = await searchParams
   const supabase = await createClient()
-  const hoje = new Date()
-  const ano = Number(sp.ano ?? hoje.getFullYear())
-  const mes = Number(sp.mes ?? hoje.getMonth() + 1)
-  const anos = Array.from(new Set([hoje.getFullYear(), hoje.getFullYear() - 1, ano])).sort((a, b) => b - a)
+  // Seletor de mês único (vale pra tela toda). Aceita também o link antigo ?mes=11&ano=2026.
+  const ym = sp.ano ? `${sp.ano}-${String(sp.mes ?? 1).padStart(2, '0')}` : await mesSelecionado(sp)
+  const ano = anoDe(ym)
+  const mes = mesDe(ym)
+  const fechado = ym < ymDe(hojeBR())
 
   const { vendedores, config } = await calcularGamificacao(supabase, ano, mes, true)
   const cfg = { pctComMeta: Number(config.com_pct_meta), pctSemMeta: Number(config.com_pct_sem) }
@@ -43,18 +47,23 @@ export default async function ComissoesPage({
 
   return (
     <div className="space-y-6">
+      <TopoPagina area="Metas" titulo="Comissão" ym={ym} ajuda="/gestor/ajuda#comissao" descricao={<>O fechamento do mês: <b className="text-slate-200">quanto cada vendedor recebe</b>.</>} />
+      {fechado ? (
+        <Aviso tom="ok" icone="📋" titulo={`${MESES[mes - 1]}/${ano} fechado`}>Esses são os valores pra pagar.</Aviso>
+      ) : (
+        <Aviso tom="warn" icone="⏳" titulo={`${MESES[mes - 1]}/${ano} ainda está em andamento`} acao={{ href: `/gestor/comissoes?mes=${addMes(ym, -1)}`, texto: 'Ver mês anterior →' }}>Valor parcial: muda até o último dia do mês.</Aviso>
+      )}
       <div>
-        <h1 className="text-2xl font-bold">Comissão — {MESES[mes - 1]}/{ano}</h1>
         <p className="text-sm text-zinc-400">
           {cfg.pctComMeta}% se bateu a meta · {cfg.pctSemMeta}% se não bateu · Total a pagar:{' '}
           <span className="font-semibold text-foreground">R$ {formatBRL(totalComissao)}</span>
         </p>
       </div>
 
-      {/* Seletor de mês/ano + regra + CSV */}
+      {/* Regra + CSV */}
       <Card className="border-slate-800 bg-slate-900">
         <CardContent className="pt-6 flex flex-wrap items-end justify-between gap-4">
-          <SeletorMesComissao mes={mes} ano={ano} anos={anos} />
+          <span className="text-sm text-slate-400">Regra da comissão:</span>
 
           <form action={salvarConfigComissao} className="flex items-end gap-2">
             <div className="space-y-1">

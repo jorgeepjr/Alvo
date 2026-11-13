@@ -6,15 +6,27 @@ import { redirect } from 'next/navigation'
 import { atualizarHistoricoMes } from '@/lib/historico'
 import { parseValorBR } from '@/lib/valor'
 
+type Srv = Awaited<ReturnType<typeof createClient>>
+
+/** Só o gestor usa estas ações (o vendedor lança pela tela dele, só hoje). */
+async function exigirGestor(supabase: Srv) {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+  const { data: p } = await supabase.from('profiles').select('perfil').eq('id', user.id).maybeSingle()
+  return p?.perfil === 'gestor' ? user : null
+}
+const dataValida = (d: string) => /^\d{4}-\d{2}-\d{2}$/.test(d)
+
 // O gestor lança ou corrige qualquer dia (pelo fechamento de caixa). O que ele
 // salva é o número oficial do dia e fica marcado "corrigido por <nome> em <data hora>".
 // Depois disso, as vendas que o vendedor registrar nesse dia não sobrescrevem mais.
 export async function salvarLancamentoGestor(formData: FormData): Promise<void> {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await exigirGestor(supabase)
   if (!user) return
 
   const data = formData.get('data') as string
+  if (!dataValida(data)) return
   const vendedorIdRaw = formData.get('vendedor_id') as string
   const vendedor_id = vendedorIdRaw === 'loja' ? null : vendedorIdRaw
   const atendimentos = Math.max(0, Math.round(Number(formData.get('atendimentos')) || 0))
@@ -53,6 +65,7 @@ export async function salvarLancamentoGestor(formData: FormData): Promise<void> 
 
 export async function apagarLancamento(id: string, data: string, vendedor: string): Promise<void> {
   const supabase = await createClient()
+  if (!(await exigirGestor(supabase)) || !dataValida(data)) return
   await supabase.from('lancamentos').delete().eq('id', id)
   await atualizarHistoricoMes(supabase, data)
   revalidar()
@@ -68,6 +81,7 @@ function revalidar() {
 
 export async function salvarNotaDia(data: string, formData: FormData): Promise<void> {
   const supabase = await createClient()
+  if (!(await exigirGestor(supabase))) return
   const motivo = ((formData.get('motivo') as string) || '').trim()
   if (motivo) {
     await supabase.from('dia_nota').upsert({ data, motivo, atualizado_em: new Date().toISOString() }, { onConflict: 'data' })
@@ -82,6 +96,7 @@ export async function salvarNotaDia(data: string, formData: FormData): Promise<v
 // e quebrava a projeção. Loja fechada/feriado é feito pela aba Metas.
 export async function fecharDia(data: string): Promise<void> {
   const supabase = await createClient()
+  if (!(await exigirGestor(supabase))) return
   await supabase.from('lancamentos').update({ dia_fechado: true }).eq('data', data)
   revalidatePath('/gestor/lancamento')
   revalidatePath('/painel/lancamento')

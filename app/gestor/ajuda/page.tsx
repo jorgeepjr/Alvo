@@ -1,100 +1,87 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import Link from 'next/link'
+import { TopoPagina } from '@/components/topo-pagina'
+import { Cartao } from '@/components/bloco-mes'
 
-type Item = { titulo: string; itens: string[] }
+type Secao = { id: string; titulo: string; href: string; praQue: string; passos: string[]; dica?: string }
 
-const SECOES: Item[] = [
+// Um "pra que serve" + passo a passo de cada tela (repaginada 12/11/2026).
+const SECOES: Secao[] = [
   {
-    titulo: '📊 Dashboard',
-    itens: [
-      'Cartões do dia: vendido, atendimentos, peças e venda da loja.',
-      'Alerta no topo: aparece em vermelho quando a projeção do mês cai abaixo de 90% da meta ou um vendedor está atrás do ritmo.',
-      'Gráfico "Mês Atual": linha branca = vendido real; azul = projeção no ritmo atual; verde = ritmo da meta; laranja = mesmo mês do ano passado (dia a dia real).',
-      'Gráfico "Vendas por Dia": barras de cada dia (verde = bateu a cota do dia, vermelho = abaixo).',
-      'Resumo do Dia: texto pronto — clique em "Copiar para o WhatsApp" e cole no grupo da equipe.',
-      'Projeção do Mês com IA: usa o histórico para projetar o fechamento considerando sazonalidade (precisa da chave de IA).',
-      'Ranking de vendedores por % da meta.',
+    id: 'inicio', titulo: '🏠 Início', href: '/gestor',
+    praQue: 'O dia e o mês da loja numa tela só: quanto vendeu, a meta e se vai bater.',
+    passos: [
+      'Escolha o mês nas setas lá em cima. O mês escolhido vale pra todas as telas até você clicar em "hoje".',
+      'Avisos no topo: dia sem lançamento (aparece no dia seguinte, porque o dia fecha às 18h), fechamento do mês anterior (do dia 1 ao 10) e as 2 avaliações do mês (dia 15 e do dia 20 ao 25).',
+      'A marca branca na barra é onde a loja deveria estar até o último dia lançado.',
+      '"Vai bater?": 3 projeções. A do meio (pela cota) é a mais confiável, porque já sabe que sexta e sábado vendem mais. A da curva usa o mesmo mês do ano passado (pega a Black e o Natal).',
+      '"Precisa R$ X por dia": quanto falta dividido pelos dias úteis que sobram.',
+      'Clique num vendedor pra ver o histórico dele. Copie o resumo e cole no grupo da loja.',
     ],
   },
   {
-    titulo: '🎯 Metas',
-    itens: [
-      'Cotas Futuras (automático): um clique gera as metas dos próximos 12 meses com base no histórico. Não altera o que você já definiu.',
-      'Passo 1 — defina a meta do mês (valor, atendimentos, peças). Tudo em número redondo.',
-      'Passo 2 — "Gerar Distribuição Automática" divide a meta pelos dias (domingo entra fechado). A linha "Total distribuído" mostra ✓ verde quando bate com a meta.',
-      'Edite a cota de um dia: o sistema reequilibra os outros dias sozinho para continuar batendo a meta.',
-      'Marque Feriado/Fechado num dia: o valor é redistribuído automaticamente entre os outros dias.',
-      'Passo 3 — defina o % de cada vendedor; a distribuição por vendedor é recalculada sozinha.',
+    id: 'lancar', titulo: '✍️ Lançar vendas', href: '/gestor/lancamento',
+    praQue: 'Lançar ou corrigir o dia de cada vendedor pelo fechamento de caixa. O que você salva é o número oficial.',
+    passos: [
+      '1. Escolha o dia (os últimos 4 dias úteis ficam à mão; pra outro dia, use o calendário).',
+      '2. Escolha quem vendeu ("Loja" = venda sua ou sem vendedor).',
+      '3. Atendimentos, peças e valor. O campo do WhatsApp é opcional.',
+      'Fica marcado "corrigido por você em dd/mm hh:mm". Depois disso as vendas que o vendedor registrar nesse dia não mudam mais o número.',
+      'O quadro "Quem lançou" mostra o mês inteiro: clique em qualquer quadradinho pra lançar ou corrigir. Vermelho = dia útil sem lançamento.',
+    ],
+    dica: 'Os vendedores registram venda por venda durante o dia (só hoje). Isso vira uma prévia do dia que você confere pelo caixa.',
+  },
+  {
+    id: 'metas', titulo: '🎯 Metas', href: '/gestor/metas',
+    praQue: 'A meta do mês, a cota de cada dia e a parte de cada vendedor.',
+    passos: [
+      '1. Meta do mês: digite ou clique em "Usar →" na sugestão (mesmo mês do ano passado +20%).',
+      '2. Cota de cada dia: cada dia recebe a venda do mesmo dia da semana do ano passado (364 dias antes, o que alinha a Black), proporcional à meta. O dia do ano passado que sobra vai pro último dia.',
+      'Clique num dia do calendário pra mudar a cota ou marcar feriado/fechado. O dia salvo fica 📌; os dias de antes e os que já passaram não mudam, e a diferença vai só pros dias seguintes.',
+      '3. Parte de cada vendedor: os percentuais têm que somar 100%.',
     ],
   },
   {
-    titulo: '🧾 Lançamento',
-    itens: [
-      'Lance ou edite as vendas do dia (por vendedor ou venda da loja).',
-      'O valor aceita vírgula (ex: 150,00).',
-      'Totais no rodapé: "Total dos Vendedores" (base da cota) e "Total Geral" (vendedores + loja).',
-      'Motivo / Observação do Dia: anote o que explica um dia fraco ou forte (chuva, evento, feriado próximo).',
-      '"Fechar Dia" bloqueia novos lançamentos naquela data.',
-    ],
+    id: 'comissao', titulo: '💰 Comissão', href: '/gestor/comissoes',
+    praQue: 'O fechamento pra pagar os vendedores.',
+    passos: ['Escolha o mês lá em cima (normalmente o anterior). Do dia 1 ao 10 o Início já avisa e traz você pra cá.', 'Veja quanto cada um vendeu, se bateu a meta e quanto recebe.', 'Exporte a planilha do fechamento.'],
   },
   {
-    titulo: '✅ Rotina Diária',
-    itens: [
-      'Crie tarefas avulsas para um dia.',
-      'Divisão da Rotina: "Dividir automaticamente" dá um dono para cada bloco (equilibrando a carga) e mantém vitrine/looks e estratégia digital como "Ambos".',
-      'Os papéis trocam toda semana (rotação semanal) — ninguém fica preso na mesma função.',
-      'Você pode ajustar manualmente cada bloco (Ambos / Grupo A / Grupo B).',
-    ],
+    id: 'vendedores', titulo: '👥 Vendedores', href: '/gestor/vendedores',
+    praQue: 'Como cada vendedor está no mês e nos últimos meses.',
+    passos: ['Vendido, meta, atendimentos, peças, ticket e PA de cada um no mês escolhido.', 'Clique no nome pro histórico de 12 meses com a comissão de cada mês.', 'Cadastrar, ativar ou inativar fica no fim da tela.'],
   },
   {
-    titulo: '📈 Histórico',
-    itens: [
-      'Faturamento por ano, por mês e por dia (gráficos de barras).',
-      '"Vendas por Dia" compara o mês atual com o mesmo mês do ano passado, dia a dia.',
-      'Comparativos mês a mês de valor, atendimentos e peças (crescimento/queda ▲▼).',
-      'Histórico diário importado das suas planilhas (2023, 2024, 2025).',
-    ],
+    id: 'rotina', titulo: '✅ Rotina (hábitos)', href: '/gestor/rotina',
+    praQue: 'No máximo 5 hábitos por dia, iguais pra todo mundo.',
+    passos: ['Você escolhe os hábitos (dá pra mudar o texto, tirar ou pôr, até 5).', 'O vendedor marca no "Meu dia".', 'Aqui aparece quem cumpriu na semana: verde fez todos, amarelo parte, vermelho nenhum.'],
   },
   {
-    titulo: '🤝 Engajamento',
-    itens: [
-      'Veja quantos itens da rotina cada vendedor concluiu nos últimos 7 dias.',
-      'Análise Semanal com IA: resumo da semana por vendedor.',
-      'Insights das Perguntas: a IA resume o que os vendedores mais perguntam ao assistente, com oportunidades de melhoria.',
-    ],
+    id: 'historico', titulo: '📈 Histórico', href: '/gestor/historico',
+    praQue: 'As vendas da loja desde 2023.',
+    passos: ['Ano contra ano, comparando só os mesmos meses (justo com o ano que não acabou).', 'A leitura diz se o crescimento vem de mais clientes ou de mais peças por cliente.', 'Mês a mês com vendas, atendimentos, peças, ticket e PA. Clique num mês pra abrir no Início.'],
   },
   {
-    titulo: '🤖 Assistente IA e 📚 Manuais',
-    itens: [
-      'Assistente IA: chat para vendedores e gestora pedirem ideias de campanha, vídeos e estratégias (conhece os números do mês).',
-      'Manuais: materiais da ZYNK (Cartilha de Conduta, Instagram, Diagnóstico) para leitura no sistema.',
-      'As funções de IA dependem da chave GEMINI_API_KEY configurada no servidor.',
-    ],
+    id: 'ajustes', titulo: '⚙️ Ajustes', href: '/gestor/ajustes',
+    praQue: 'Configurações e o que ficou guardado.',
+    passos: ['Os dias das avaliações do mês.', 'Importar planilha.', '"Guardado pra depois": campanhas, desafios, assistente, tarefas, engajamento. Saíram do menu, nada foi apagado.'],
   },
 ]
 
 export default function AjudaPage() {
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Manual do Sistema</h1>
-        <p className="text-sm text-zinc-400">Guia rápido de tudo que o sistema faz e onde encontrar.</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+    <div className="space-y-4">
+      <TopoPagina area="Ajustes" titulo="Ajuda" descricao="Pra que serve cada tela e como usar." />
+      <div className="grid gap-4 lg:grid-cols-2">
         {SECOES.map((s) => (
-          <Card key={s.titulo} className="border-slate-800 bg-slate-900">
-            <CardHeader><CardTitle className="text-base">{s.titulo}</CardTitle></CardHeader>
-            <CardContent>
-              <ul className="space-y-1.5">
-                {s.itens.map((it, i) => (
-                  <li key={i} className="text-sm text-zinc-300 leading-relaxed flex gap-2">
-                    <span className="text-zinc-500 shrink-0">•</span>
-                    <span>{it}</span>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+          <Cartao key={s.id} id={s.id} className="scroll-mt-6" titulo={s.titulo} extra={<Link href={s.href} className="text-sm font-bold text-cyan-300 hover:underline">abrir →</Link>}>
+            <p className="mb-2 text-sm text-slate-200"><b>Pra que serve:</b> {s.praQue}</p>
+            <ul className="space-y-1.5">
+              {s.passos.map((p, i) => (
+                <li key={i} className="flex gap-2 text-sm leading-relaxed text-slate-300"><span className="shrink-0 text-slate-500">•</span><span>{p}</span></li>
+              ))}
+            </ul>
+            {s.dica && <p className="mt-2 rounded-lg bg-cyan-400/10 px-3 py-2 text-xs text-slate-300">💡 {s.dica}</p>}
+          </Cartao>
         ))}
       </div>
     </div>
