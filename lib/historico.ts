@@ -5,6 +5,10 @@ export async function atualizarHistoricoMes(supabase: SupabaseClient, data: stri
   const ano = Number(anoStr)
   const mes = Number(mesStr)
 
+  // Até mai/2026 o histórico veio das planilhas e os lançamentos daquela época
+  // estão incompletos: recalcular pela soma dos lançamentos apagaria venda.
+  if (`${anoStr}-${mesStr}` < '2026-06') return
+
   const inicioMes = `${ano}-${String(mes).padStart(2, '0')}-01`
   const ultimoDia = new Date(ano, mes, 0).getDate()
   const fimMes = `${ano}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`

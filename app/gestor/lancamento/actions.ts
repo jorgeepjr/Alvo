@@ -2,9 +2,13 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { atualizarHistoricoMes } from '@/lib/historico'
 import { parseValorBR } from '@/lib/valor'
 
+// O gestor lança ou corrige qualquer dia (pelo fechamento de caixa). O que ele
+// salva é o número oficial do dia e fica marcado "corrigido por <nome> em <data hora>".
+// Depois disso, as vendas que o vendedor registrar nesse dia não sobrescrevem mais.
 export async function salvarLancamentoGestor(formData: FormData): Promise<void> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -13,12 +17,11 @@ export async function salvarLancamentoGestor(formData: FormData): Promise<void> 
   const data = formData.get('data') as string
   const vendedorIdRaw = formData.get('vendedor_id') as string
   const vendedor_id = vendedorIdRaw === 'loja' ? null : vendedorIdRaw
-  const atendimentos = Number(formData.get('atendimentos'))
-  const vendas = Number(formData.get('vendas')) || 0
-  const pecas = Number(formData.get('pecas'))
+  const atendimentos = Math.max(0, Math.round(Number(formData.get('atendimentos')) || 0))
+  const pecas = Math.max(0, Math.round(Number(formData.get('pecas')) || 0))
   const valor = parseValorBR(formData.get('valor'))
-  const observacao = (formData.get('observacao') as string) || null
-  const situacao_vendedor = (formData.get('situacao_vendedor') as string) || 'normal'
+  const valor_whatsapp = parseValorBR(formData.get('valor_whatsapp'))
+  const corr = { corrigido_por: user.id, corrigido_em: new Date().toISOString() }
 
   let query = supabase.from('lancamentos').select('id').eq('data', data)
   query = vendedor_id === null ? query.is('vendedor_id', null) : query.eq('vendedor_id', vendedor_id)
@@ -27,24 +30,36 @@ export async function salvarLancamentoGestor(formData: FormData): Promise<void> 
   if (existente) {
     await supabase
       .from('lancamentos')
-      .update({ atendimentos, vendas, pecas, valor, observacao, situacao_vendedor })
+      .update({ atendimentos, pecas, valor, valor_whatsapp, ...corr })
       .eq('id', existente.id)
   } else {
     await supabase.from('lancamentos').insert({
       vendedor_id,
       data,
       atendimentos,
-      vendas,
       pecas,
       valor,
-      observacao,
-      situacao_vendedor,
+      valor_whatsapp,
+      situacao_vendedor: 'normal',
       criado_por: user.id,
+      ...corr,
     })
   }
 
   await atualizarHistoricoMes(supabase, data)
+  revalidar()
+  redirect(`/gestor/lancamento?data=${data}&vendedor=${vendedorIdRaw}&ok=1`)
+}
 
+export async function apagarLancamento(id: string, data: string, vendedor: string): Promise<void> {
+  const supabase = await createClient()
+  await supabase.from('lancamentos').delete().eq('id', id)
+  await atualizarHistoricoMes(supabase, data)
+  revalidar()
+  redirect(`/gestor/lancamento?data=${data}&vendedor=${vendedor}`)
+}
+
+function revalidar() {
   revalidatePath('/gestor/lancamento')
   revalidatePath('/gestor')
   revalidatePath('/painel')
